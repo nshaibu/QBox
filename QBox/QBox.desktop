@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=QBox
+GenericName=Virtual Machine Manager
+Encoding=UTF-8
+Comment=QBox for easy management of VMs locally or remotely
+Terminal=true
+Exec=/usr/local/bin/QBox/QBox
+Icon=/usr/local/bin/QBox/icon/QBox.png
+Categories=Application;Emulator;Utility
+StartupNotify=true
+StartupWMClass=QBox
+MimeType=text/qvm;
+Keywords=vm;VM;Virtual;QBox;qvm;

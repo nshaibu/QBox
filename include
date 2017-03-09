@@ -1,0 +1,248 @@
+#!/bin/bash
+
+######################Thu 09 Feb 2017 08:39:59 PM GMT##########################
+#	true_test.h, host_ip.h, loggs.h, network.h, architecture.h, vnc_info.h	  #
+#	error.h, disk_details.h, audio_display.h, boot_system.h, curses_dialog.h  #
+
+HD_IMG_DIR=$HOME/.img_qemubox ##contains harddisk images
+LOG_DIR=${HD_IMG_DIR}/logs_dir
+QBOX_DIR=/usr/local/bin/QBox
+TEMP_FOLDER=${HD_IMG_DIR}/.tmp_qbox
+QDB_FOLDER=${HD_IMG_DIR}/.qdb ##qbox database files location
+
+: ${PYTHON_LOC:=${QBOX_DIR}/python3}
+
+: ${LIB_DIR:=$HOME/my_script/QB}
+
+function DEFINE(){
+	[[ ${#@} -eq 1 ]] && eval $1=0 || eval $1=$2
+}
+
+function NOT_DEFINE(){
+	local _return=
+
+	case "$1" in
+		0) _return=1 ;;
+		*) _return=0 ;;
+	esac
+
+	return ${_return}
+}
+
+if [[ $1 = "<loggs.h>" ]]; then
+
+DEFINE LOGGS_H
+
+##logger_func
+##logger_func sed ':a;N;$!ba;s/\n/ /g'
+#1. :a create a label 'a'
+#2. N append the next line to the pattern space
+#3. $! if not the last line, ba branch (go to) label 'a'
+#4. s substitute, /\n/ regex for new line, / / by a space, /g global match (as many times as it can)
+function logger_logging(){
+	if [ -f $1 ]; then
+		${QBOX_DIR}/bin/qemubox_logger "`sed ':a;N;$!ba;s/\n/ /g' $1`" ${LOG_DIR}/qboxlog
+		rm -f $1
+	fi
+}
+
+elif [[ "$1" = "<network.h>" ]]; then
+	DEFINE NETWORK_H 0
+	#define USER_MODE ADAPTER 0
+	NETWORK0=
+	VLAN0=
+	MAC0=
+	MODEL0=
+	USER0=
+	VLAN_USER0=
+	TAP0=
+	VLAN_TAP0=
+	IFNAME0=
+	SCRIPT0=
+	FD_TAP0=
+	SOCKET0=
+	VLAN_SOCKET0=
+	LISTEN0=
+	CONNECT0=
+	FD_SOCKET0=
+	MCAST0=
+
+	#define ADAPTER 1
+	NETWORK1=
+	VLAN1=
+	MAC1=
+	MODEL1=
+	USER1=
+	VLAN_USER1=
+	TAP1=
+	VLAN_TAP1=
+	IFNAME1=
+	SCRIPT1=
+	FD_TAP1=
+	SOCKET1=
+	VLAN_SOCKET1=
+	LISTEN1=
+	CONNECT1=
+	FD_SOCKET1=
+	MCAST1=
+
+	#define ADAPTER 2
+	NETWORK2=
+	VLAN2=
+	MAC2=
+	MODEL2=
+	USER2=
+	VLAN_USER2=
+	TAP2=
+	VLAN_TAP2=
+	IFNAME2=
+	SCRIPT2=
+	FD_TAP2=
+	SOCKET2=
+	VLAN_SOCKET2=
+	LISTEN2=
+	CONNECT2=
+	FD_SOCKET2=
+	MCAST2=
+
+	#define ADAPTER 3
+	NETWORK3=
+	VLAN3=
+	MAC3=
+	MODEL3=
+	USER3=
+	VLAN_USER3=
+	TAP3=
+	VLAN_TAP3=
+	IFNAME3=
+	SCRIPT3=
+	FD_TAP3=
+	SOCKET3=
+	VLAN_SOCKET3=
+	LISTEN3=
+	CONNECT3=
+	FD_SOCKET3=
+	MCAST3=
+
+elif [[ "$1" = "<architecture.h>" ]]; then
+	DEFINE ARCHITECTURE_H 0
+
+	QEMU_ARCH=
+	VM_NAME=
+	CPU=
+	CORE=
+	RAM_SIZE=
+	SMB_SERVER=
+	QEMU_FULLSCREEN=
+	NUM_CPU=
+	QEMU_USB=
+	CDROM=
+
+	function pointing_dev_choice(){
+		case $1 in
+			2) QEMU_USB="-usbdevice mouse" ;;
+			3) QEMU_USB="-usbdevice tablet" ;;
+			1) QEMU_USB="" ;;
+		esac
+	}
+
+
+	function architecture_type_choice(){
+        case $1 in
+            1) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-i386` ;;
+            2) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-x86_64` ;;
+            3) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-arm` ;;
+            4) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-armeb` ;;
+            5) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc` ;;
+            6) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc64` ;;
+            7) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc` ;;
+            8) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc64` ;;
+            9) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mipsel` ;;
+            10) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mips` ;;
+        esac
+
+        return ${QEMU}
+	}
+
+elif [[ "$1" = "<error.h>" ]]; then
+	DEFINE ERROR_H 0
+
+	mac_err_str=
+	vlan_err_str=
+	ip_err_str=
+	fd_err_str=
+	port_err_str=
+
+elif [[ $1 = "<disk_details.h>" ]]; then
+	DEFINE DISK_DETAILS_H 0
+
+	. ${LIB_DIR}/include "<loggs.h>"
+	: ${QEMU_DSKIMG_CREATOR:=`${QBOX_DIR}/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-img`}
+
+	DISK_FORMAT=
+	DISK_SIZE=
+	
+	RANDOM_UID=`cat /dev/urandom |tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
+	printf -v RAND "%04d" $RANDOM 
+	Disk_Name=${HD_IMG_DIR}/${RANDOM_UID}${RAND}.img
+
+	function disk_image_creation(){
+		local _return=0
+
+		case $1 in
+			1) ${QEMU_DSKIMG_CREATOR} create -f qcow2 $2 $3 2>${TEMP_FOLDER}/.error.tt 1>&2 ;;
+			2) ${QEMU_DSKIMG_CREATOR} create -f raw -o size=$3 $2 2>${TEMP_FOLDER}/.error.tt 1>&2 ;;
+			3) ${QEMU_DSKIMG_CREATOR} create -f qed -o size=$3 $2 2>${TEMP_FOLDER}/.error.tt 1>&2 ;;
+			4) ${QEMU_DSKIMG_CREATOR} create -f vmdk -o size=$3 $2 2>${TEMP_FOLDER}/.error.tt 1>&2 ;;
+			5) ${QEMU_DSKIMG_CREATOR} create -f vdi -o size=$3 $2 2>${TEMP_FOLDER}/.error.tt 1>&2 ;;
+		esac
+
+		[[ $? -ne 0 ]] && _return=1
+		logger_logging ${TEMP_FOLDER}/.error.tt
+
+		return ${_return}
+	}
+
+elif [[ $1 = "<audio_display.h>" ]]; then
+	DEFINE AUDIO_DISPLAY_H
+
+	QEMU_SOUND=
+	DISPLAY=
+	VGA=
+elif [[ $1 = "<boot_system.h>" ]]; then
+	DEFINE BOOT_SYSTEM_H
+
+	printf -v MACADDR "52:54:%02x:%02x:%02x:%02x" $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff )) $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff ))
+	default_install_network="-net nic,vlan=0,macaddr=${MACADDR},model=e1000 -net user,vlan=0"
+
+	#boot function
+	function boot_system(){
+		: # arch ...
+	}
+
+elif [[ $1 = "<curses_dialog.h>" ]]; then
+	DEFINE CURSES_DIALOG_H
+
+	: ${DIALOG:=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% dialog`}
+
+	: ${DIALOG_OK:=0}
+	: ${DIALOG_BACK:=3}
+	: ${DIALOG_CANCEL:=1}
+
+elif [[ $1 = "<true_test.h>" ]]; then		#Wed 08 Feb 2017 10:26:58 PM GMT
+	DEFINE TRUE_TEST_H
+# return
+	declare -i SUCCESS=0
+	declare -i FAILURE=1
+
+elif [[ $1 = "<vnc_info.h>" ]]; then
+	DEFINE VNC_INFO_H
+
+	VNC_DISPLAY=3`${QBOX_DIR}/bin/qemubox_random 15`00
+	VNC_PORT=`expr ${VNC_DISPLAY} + 5900`
+elif [[ $1 = "<host_ip.h>" ]]; then
+	DEFINE HOST_IP_H
+
+	HOST_IP=`python ${PYTHON_LOC}/netiface_deter.py`
+	[ "${HOST_IP}" = "" ] && HOST_IP="127.0.0.1"
+fi

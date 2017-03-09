@@ -1,0 +1,12 @@
+[Unit]
+Description=Tap Qemubox
+After=networking.service, openvswitch-switch.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/nafiu/my_script/qemu-box/service/qemu-tap-box.sh stop
+ExecStop=/home/nafiu/my_script/qemu-box/service/qemu-tap-box.sh stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

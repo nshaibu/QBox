@@ -1,0 +1,1422 @@
+
+In qbox_create_vm.sh line 3:
+: ${LIB_DIR:=$HOME/my_script/QB}
+  ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 5:
+. ${LIB_DIR}/include '<disk_details.h>' ##include disk creation functions
+  ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 7:
+if  NOT_DEFINE ${ARCHITECTURE_H} || NOT_DEFINE ${AUDIO_DISPLAY_H} || NOT_DEFINE ${BOOT_SYSTEM_H} || NOT_DEFINE ${CURSES_DIALOG_H} ; then
+               ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                               ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                                               ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 8:
+	. ${LIB_DIR}/include '<architecture.h>'
+          ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 9:
+	. ${LIB_DIR}/include '<audio_display.h>'
+          ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 10:
+	. ${LIB_DIR}/include '<boot_system.h>'
+          ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 11:
+	. ${LIB_DIR}/include '<curses_dialog.h>'
+          ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 14:
+if NOT_DEFINE ${HOST_IP_H} || NOT_DEFINE ${VNC_INFO_H} || NOT_DEFINE ${TRUE_TEST_H} ; then
+              ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                         ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 15:
+	. ${LIB_DIR}/include '<host_ip.h>'
+          ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 16:
+	. ${LIB_DIR}/include '<vnc_info.h>'
+          ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 17:
+	. ${LIB_DIR}/include '<true_test.h>'
+          ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 63:
+		return 	$FAILURE
+                        ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 67:
+		[[:digit:]]|[[:digit:]]*) return $SUCCESS ;;
+                                                 ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 68:
+		*)	return $FAILURE ;;
+                               ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 75:
+	. ${LIB_DIR}/include "<error.h>"
+          ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 79:
+	[ $1 -eq ${SUCCESS} ] && [ $2 -eq ${SUCCESS} ] && [ $3 -eq ${SUCCESS} ] && [ $4 -eq ${SUCCESS} ] && [ $5 -eq ${SUCCESS} ] || {
+          ^-- SC2086: Double quote to prevent globbing and word splitting.
+                 ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                   ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                          ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                            ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                   ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                            ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                                         ^-- SC2015: Note that A && B || C is not if-then-else. C may run when A is true.
+                                                                                                              ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 99:
+			error_str=`echo ${error_str} | tr -s " "`
+                                  ^-- SC2006: Use $(..) instead of legacy `..`.
+                                        ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 106:
+	return ${_return}
+               ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 113:
+	local unique=$(gawk -F "|" -v var=$search '$1 ~ var {print $1}' ${QDB_FOLDER}/vms.qdb 2>/dev/null)
+              ^-- SC2155: Declare and assign separately to avoid masking return values.
+                                          ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                        ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 114:
+	[ -z ${unique} ] && _return=${SUCCESS}
+             ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 115:
+	return ${_return}
+               ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 123:
+		return ${FAILURE}
+                       ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 129:
+	isdigit ${first_part} && [[ ${first_part} -ge 1 ]] && [[ ${second_part} =~ [[:alpha:]] ]] && [[ "${second_part}" = "G" || "${second_part}" = "M" ]] && { return ${SUCCESS}; } 
+                ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                                                                                                        ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 131:
+	return ${FAILURE}
+               ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 134:
+while [ 1 ]; do 
+        ^-- SC2078: This expression is constant. Did you forget a $ somewhere?
+
+
+In qbox_create_vm.sh line 143:
+		value=`${DIALOG} \
+                      ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 158:
+		vm_name=$(echo $vm_name | awk '{print toupper($0)}')
+                               ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 160:
+		if [[ -n $vm_name ]] && is_VMName_unique $vm_name ; then
+                                                         ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 164:
+		error_display ${test_vmname} ${SUCCESS} ${SUCCESS} ${SUCCESS} ${SUCCESS}
+                              ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                             ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                        ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                   ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                              ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 170:
+			VM_NAME=$value # set vm name 
+                        ^-- SC2034: VM_NAME appears unused. Verify it or export it.
+
+
+In qbox_create_vm.sh line 174:
+				value_=`${DIALOG} \
+                                       ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 189:
+									value=`${DIALOG} \
+                                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 208:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[1]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 209:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[1]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 212:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[2]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 213:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[2]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 216:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[3]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 217:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[3]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 220:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[4]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 221:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[4]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 224:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[5]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 225:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[5]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 228:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[6]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 229:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[6]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 232:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[8]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 233:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[9]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 236:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[8]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 237:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[8]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 240:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[9]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 241:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[9]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 244:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[10]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 245:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[10]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 248:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[11]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 249:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[11]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 252:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[12]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 253:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[12]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 256:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[13]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 257:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[13]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 260:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[14]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 261:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[14]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 264:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[15]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 265:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[15]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 268:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[16]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 269:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[16]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 272:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[17]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 273:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[17]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 276:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[18]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 277:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[18]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 280:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[19]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 281:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[19]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 284:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[20]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 285:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[20]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 288:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[21]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 289:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[21]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 292:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[22]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 293:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[22]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 296:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[23]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 297:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[23]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 300:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[24]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 301:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[24]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 304:
+												RECOM_RAM_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[0]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 305:
+												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[0]} | cut -d "|" -f3`
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 317:
+									value=`${DIALOG} \
+                                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 337:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[0]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 338:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[0]} | cut -d "|" -f3`
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 341:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[1]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 342:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[1]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 345:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[2]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 346:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[2]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 349:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[3]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 350:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[3]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 353:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[4]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 354:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[4]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 357:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[5]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 358:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[5]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 361:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[6]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 362:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[6]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 365:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[7]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 366:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[7]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 369:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[8]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 370:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[8]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 373:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[9]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 374:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[9]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 377:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[10]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 378:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[10]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 381:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[11]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 382:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[11]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 385:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[12]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 386:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[12]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 389:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[13]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 390:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[13]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 393:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[14]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 394:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[14]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 397:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[15]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 398:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[15]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 401:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[16]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 402:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[16]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 405:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[17]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 406:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[17]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 409:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[18]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 410:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[18]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 413:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[19]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 414:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[19]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 417:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[20]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 418:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[20]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 421:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[21]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 422:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[21]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 425:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[22]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 426:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[22]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 429:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[23]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 430:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[23]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 433:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[24]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 434:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[24]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 437:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[25]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 438:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[25]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 441:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[26]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 442:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[26]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 445:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[27]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 446:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[27]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 449:
+												RECOM_RAM_SIZE=`echo ${ARR_LINUX[28]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 450:
+												RECOM_DISK_SIZE=`echo ${ARR_LINUX[28]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 462:
+									value=`${DIALOG} \
+                                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 475:
+												RECOM_RAM_SIZE=`echo ${ARR_SOLARIS[1]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 476:
+												RECOM_DISK_SIZE=`echo ${ARR_SOLARIS[1]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 479:
+												RECOM_RAM_SIZE=`echo ${ARR_SOLARIS[2]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 480:
+												RECOM_DISK_SIZE=`echo ${ARR_SOLARIS[2]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 483:
+												RECOM_RAM_SIZE=`echo ${ARR_SOLARIS[3]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 484:
+												RECOM_DISK_SIZE=`echo ${ARR_SOLARIS[3]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 487:
+												RECOM_RAM_SIZE=`echo ${ARR_SOLARIS[4]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 488:
+												RECOM_DISK_SIZE=`echo ${ARR_SOLARIS[4]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 491:
+												RECOM_RAM_SIZE=`echo ${ARR_SOLARIS[0]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 492:
+												RECOM_DISK_SIZE=`echo ${ARR_SOLARIS[0]} | cut -d "|" -f3`
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 504:
+									value=`${DIALOG} \
+                                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 516:
+												RECOM_RAM_SIZE=`echo ${ARR_BSD[1]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 517:
+												RECOM_DISK_SIZE=`echo ${ARR_BSD[1]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 520:
+												RECOM_RAM_SIZE=`echo ${ARR_BSD[2]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 521:
+												RECOM_DISK_SIZE=`echo ${ARR_BSD[2]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 524:
+												RECOM_RAM_SIZE=`echo ${ARR_BSD[3]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 525:
+												RECOM_DISK_SIZE=`echo ${ARR_BSD[3]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 528:
+												RECOM_RAM_SIZE=`echo ${ARR_BSD[4]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 529:
+												RECOM_DISK_SIZE=`echo ${ARR_BSD[4]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 532:
+												RECOM_RAM_SIZE=`echo ${ARR_BSD[5]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 533:
+												RECOM_DISK_SIZE=`echo ${ARR_BSD[5]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 536:
+												OS_VERSION=`echo ${ARR_BSD[0]} | cut -d "|" -f1`
+                                                                                                ^-- SC2034: OS_VERSION appears unused. Verify it or export it.
+                                                                                                           ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                 ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 537:
+												RECOM_RAM_SIZE=`echo ${ARR_BSD[0]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 538:
+												RECOM_DISK_SIZE=`echo ${ARR_BSD[0]} | cut -d "|" -f3`
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 550:
+									value=`${DIALOG} \
+                                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 562:
+												RECOM_RAM_SIZE=`echo ${ARR_IBMOS2[1]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 563:
+												RECOM_DISK_SIZE=`echo ${ARR_IBMOS2[1]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 566:
+												RECOM_RAM_SIZE=`echo ${ARR_IBMOS2[2]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 567:
+												RECOM_DISK_SIZE=`echo ${ARR_IBMOS2[2]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 570:
+												RECOM_RAM_SIZE=`echo ${ARR_IBMOS2[3]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 571:
+												RECOM_DISK_SIZE=`echo ${ARR_IBMOS2[3]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 574:
+												RECOM_RAM_SIZE=`echo ${ARR_IBMOS2[4]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 575:
+												RECOM_DISK_SIZE=`echo ${ARR_IBMOS2[4]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 578:
+												RECOM_RAM_SIZE=`echo ${ARR_IBMOS2[5]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 579:
+												RECOM_DISK_SIZE=`echo ${ARR_IBMOS2[5]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 582:
+												RECOM_RAM_SIZE=`echo ${ARR_IBMOS2[0]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 583:
+												RECOM_DISK_SIZE=`echo ${ARR_IBMOS2[0]} | cut -d "|" -f3`
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 595:
+									value=`${DIALOG} \
+                                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 608:
+												RECOM_RAM_SIZE=`echo ${ARR_MACOSX[1]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 609:
+												RECOM_DISK_SIZE=`echo ${ARR_MACOSX[1]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 612:
+												RECOM_RAM_SIZE=`echo ${ARR_MACOSX[2]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 613:
+												RECOM_DISK_SIZE=`echo ${ARR_MACOSX[2]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 616:
+												RECOM_RAM_SIZE=`echo ${ARR_MACOSX[3]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 617:
+												RECOM_DISK_SIZE=`echo ${ARR_MACOSX[3]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 620:
+												RECOM_RAM_SIZE=`echo ${ARR_MACOSX[4]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 621:
+												RECOM_DISK_SIZE=`echo ${ARR_MACOSX[4]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 624:
+												RECOM_RAM_SIZE=`echo ${ARR_MACOSX[5]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 625:
+												RECOM_DISK_SIZE=`echo ${ARR_MACOSX[5]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 628:
+												RECOM_RAM_SIZE=`echo ${ARR_MACOSX[6]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 629:
+												RECOM_DISK_SIZE=`echo ${ARR_MACOSX[6]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 632:
+												RECOM_RAM_SIZE=`echo ${ARR_MACOSX[7]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 633:
+												RECOM_DISK_SIZE=`echo ${ARR_MACOSX[7]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 636:
+												RECOM_RAM_SIZE=`echo ${ARR_MACOSX[8]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 637:
+												RECOM_DISK_SIZE=`echo ${ARR_MACOSX[8]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 640:
+												RECOM_RAM_SIZE=`echo ${ARR_MACOSX[0]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 641:
+												RECOM_DISK_SIZE=`echo ${ARR_MACOSX[0]} | cut -d "|" -f3`
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 653:
+									value=`${DIALOG} \
+                                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 666:
+												RECOM_RAM_SIZE=`echo ${ARR_OTHEROS[1]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 667:
+												RECOM_DISK_SIZE=`echo ${ARR_OTHEROS[1]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 670:
+												RECOM_RAM_SIZE=`echo ${ARR_OTHEROS[2]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 671:
+												RECOM_DISK_SIZE=`echo ${ARR_OTHEROS[2]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 674:
+												RECOM_RAM_SIZE=`echo ${ARR_OTHEROS[3]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 675:
+												RECOM_DISK_SIZE=`echo ${ARR_OTHEROS[3]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 678:
+												RECOM_RAM_SIZE=`echo ${ARR_OTHEROS[4]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 679:
+												RECOM_DISK_SIZE=`echo ${ARR_OTHEROS[4]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 682:
+												RECOM_RAM_SIZE=`echo ${ARR_OTHEROS[5]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 683:
+												RECOM_DISK_SIZE=`echo ${ARR_OTHEROS[5]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 686:
+												RECOM_RAM_SIZE=`echo ${ARR_OTHEROS[6]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 687:
+												RECOM_DISK_SIZE=`echo ${ARR_OTHEROS[6]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 690:
+												RECOM_RAM_SIZE=`echo ${ARR_OTHEROS[${index}]} | cut -d "|" -f2`
+                                                                                                               ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                     ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 691:
+												RECOM_DISK_SIZE=`echo ${ARR_OTHEROS[${index}]} | cut -d "|" -f3`				
+                                                                                                                ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 710:
+	while [ 1 ]; do 
+                ^-- SC2078: This expression is constant. Did you forget a $ somewhere?
+
+
+In qbox_create_vm.sh line 712:
+		value=`${DIALOG} \
+                      ^-- SC2006: Use $(..) instead of legacy `..`.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 721:
+				RAM_SIZE=$value 
+                                ^-- SC2034: RAM_SIZE appears unused. Verify it or export it.
+
+
+In qbox_create_vm.sh line 723:
+				while [ 1 ]; do 
+                                        ^-- SC2078: This expression is constant. Did you forget a $ somewhere?
+
+
+In qbox_create_vm.sh line 725:
+					value=`${DIALOG} \
+                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 744:
+									value=`${DIALOG} \
+                                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 754:
+										disk_size_valid $value
+                                                                                                ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 755:
+										error_display ${SUCCESS} $? ${SUCCESS} ${SUCCESS} ${SUCCESS}
+                                                                                              ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                                            ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                                                       ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                                                                  ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 761:
+											disk_image_creation ${DISK_FORMAT} ${Disk_Name} ${DISK_SIZE}
+                                                                                                            ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                                                           ^-- SC2154: Disk_Name is referenced but not assigned.
+                                                                                                                           ^-- SC2086: Double quote to prevent globbing and word splitting.
+                                                                                                                                        ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 773:
+													${DIALOG_BACK}) rm -f ${Disk_Name} 2>/dev/null 2>&1; break 4 ;;
+                                                                                                                              ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 799:
+			value=`${DIALOG} \
+                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 808:
+				declare -i value_audio=${value##*|}
+                                           ^-- SC2034: value_audio appears unused. Verify it or export it.
+
+
+In qbox_create_vm.sh line 814:
+							value=`${DIALOG} \
+                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 825:
+									3) QEMU_SOUND="-soundhw hda" ;;
+                                                                           ^-- SC2034: QEMU_SOUND appears unused. Verify it or export it.
+
+
+In qbox_create_vm.sh line 829:
+						[[ "$value_redir" = "1" ]] && { QEMU_FULLSCREEN="-full-screen"; }
+                                                    ^-- SC2154: value_redir is referenced but not assigned.
+                                                                                ^-- SC2034: QEMU_FULLSCREEN appears unused. Verify it or export it.
+
+
+In qbox_create_vm.sh line 834:
+			while [ 1 ]; do 
+                                ^-- SC2078: This expression is constant. Did you forget a $ somewhere?
+
+
+In qbox_create_vm.sh line 837:
+				value=`${DIALOG} \
+                                      ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 852:
+								DISPLAY="-display vnc=:${VNC_DISPLAY}"
+                                                                ^-- SC2034: DISPLAY appears unused. Verify it or export it.
+
+
+In qbox_create_vm.sh line 860:
+						while [ 1 ]; do 
+                                                        ^-- SC2078: This expression is constant. Did you forget a $ somewhere?
+
+
+In qbox_create_vm.sh line 863:
+							value=`${DIALOG} \
+                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 874:
+									[[ $value -eq 1 ]] && VGA="-vga cirrus" || VGA="-vga std" 
+                                                                                                                   ^-- SC2034: VGA appears unused. Verify it or export it.
+
+
+In qbox_create_vm.sh line 876:
+									while [ 1 ]; do 
+                                                                                ^-- SC2078: This expression is constant. Did you forget a $ somewhere?
+
+
+In qbox_create_vm.sh line 879:
+										value=`${DIALOG} \
+                                                                                      ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 888:
+												NUM_CPU="-cpu host -smp $value"
+                                                                                                ^-- SC2034: NUM_CPU appears unused. Verify it or export it.
+
+
+In qbox_create_vm.sh line 893:
+													value=`${DIALOG} \
+                                                                                                              ^-- SC2006: Use $(..) instead of legacy `..`.
+
+
+In qbox_create_vm.sh line 903:
+															pointing_dev_choice $value
+                                                                                                                                            ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 919:
+								${DIALOG_BACK}) rm -f ${Disk_Name} 2>/dev/null 2>&1; break ;;
+                                                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 920:
+								${DIALOG_CANCEL}) rm -f ${Disk_Name} 2>/dev/null 2>&1; break 4 ;;
+                                                                                        ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 925:
+						rm -f ${Disk_Name} 2>/dev/null 2>&1
+                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+
+
+In qbox_create_vm.sh line 928:
+						rm -f ${Disk_Name} 2>/dev/null 2>&1
+                                                      ^-- SC2086: Double quote to prevent globbing and word splitting.
+

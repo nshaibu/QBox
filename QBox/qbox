@@ -1,0 +1,8 @@
+#!/bin/bash
+
+HD_IMG_DIR=$HOME/.img_qemubox
+QBOX_DIR=/usr/local/bin/QBox
+PYTHON_LOC=${QBOX_DIR}/python3
+
+python ${PYTHON_LOC}/change_icon.py "${QBOX_DIR}/QBox" "${QBOX_DIR}/icon/QBox.png"
+
