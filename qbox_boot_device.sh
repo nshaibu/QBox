@@ -4,8 +4,9 @@
 
 . ${LIB_DIR}/include
 
-if NOT_DEFINE ${CURSES_DIALOG_H} ; then
+if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
+	. ${LIB_DIR}/include '<basic_utils.h>'
 fi
 
 declare -i HEIGHT=18
@@ -37,16 +38,19 @@ while true; do
 				case ${test_return} in 
 					${DIALOG_OK}) 
 						if [[ $value -eq 1 ]]; then
-							exec 3>&1
-							value=`${DIALOG} \
-								--no-shadow --colors --clear --title "\Zb\Z0Select a file\Zn\ZB" \
-								--fselect $HOME/ 10 50 2>&1 1>&3`
-							exec 3>&-
-							echo $value 
-							break		
+							until check_is_file $value; do 
+								exec 3>&1
+								value=`${DIALOG} \
+									--no-shadow --colors --clear --title "\Zb\Z0Select a file\Zn\ZB" \
+									--fselect $HOME/ 10 50 2>&1 1>&3`
+								exec 3>&-
+							done
+							#echo $value 
+							VM_CDROM="-cdrom ${value}"
 						else
 							VM_CDROM="-cdrom /dev/fb0"
 						fi 
+						break
 					;;
 					${DIALOG_BACK}) ;;
 					${DIALOG_CANCEL}) break ;;
@@ -65,30 +69,21 @@ while true; do
 					${DIALOG_OK}) 
 						if [[ $value -eq 1 ]]; then
 							
-							let "chk_is_dir=${SUCCESS}"
-								
-							while [ ${chk_is_dir} -ne ${FAILURE} ]; do 
+							until check_is_file $value ; do
 								exec 3>&1
 								value=`${DIALOG} \
 									--no-shadow --colors --clear --title "\Zb\Z0Select a file\Zn\ZB" \
 									--fselect $HOME/ 10 50 2>&1 1>&3`
 								exec 3>&-
 								#Sat 18 Feb 2017 05:55:42 PM GMT 
-								[[ ! -f $value ]] && {
-									chk_is_dir=${FAILURE}
-								} || {
-									
-									${DIALOG} \
-										--and-widget --colors --msgbox "\nNot a file $value" $((HEIGHT-7)) $((WIDTH-7))
-										
-									chk_is_dir=${FAILURE}
-								}
-							#break
-							
 							done
+							
+							VM_CDROM="-cdrom ${value}"
 						else
 							VM_CDROM="-cdrom /dev/cdrom"
 						fi 	
+						
+						break
 					;;
 					${DIALOG_BACK}) ;;
 					${DIALOG_CANCEL}) break ;;
