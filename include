@@ -172,6 +172,43 @@ elif [[ "$1" = "<error.h>" ]]; then
 	ip_err_str=
 	fd_err_str=
 	port_err_str=
+	
+	##Error strings format [name of variable]=error string
+	declare -A STRERROR=([QEMU]="Architecture is NULL" [VM_NAME]="VM Name not set" \
+						[NUM_CPU]="Number of CPU NULL" [RAM_SIZE]="Ram size is NULL" \
+						[QEMU_GRAPH]="Display is NULL" [QEMU_SOUND]="Sound is NULL" \
+						[QEMU_USB]="Pointing device is NULL" [VM_CDROM]="cdrom is NULL" )
+	
+	##input is in this format [values to test]:[error strings]:[function to test truth of values]
+	function err_str() {
+		local err_=""
+		local tmp=$1
+		
+		local var_name=${tmp%%:*} ##get the name of variable
+		local test_function=${tmp##*:} ##get the name of function to use for testing
+		local str_error=$(echo ${tmp%:*} | cut -d ":" -f2)
+		
+		eval ${test_function} '$'${var_name}
+		
+		echo "$?:${str_error}" ## return Test:ERROR_MSG
+	}
+	
+	##Error format [[ Test:ERROR_MSG ]]
+	function error_func_display() {
+		declare -a ERR_FORMAT=($1)
+		
+		local msg_str=""
+		for (( i=1; i<${#ERR_FORMAT[@]}; i++ )); do 
+			local _test_= $(echo ${ERR_FORMAT[$i]} | cut -d ":" -f1)
+			
+			if [[ ${_test_} -ne ${SUCCESS} ]]; then
+				msg_str+="$(echo ${ERR_FORMAT[$i]} | cut -d ":" -f2)"
+			fi 
+		done
+		
+		${DIALOG} \
+			--colors --title "\Zb\Z1Parsing Error\Zn\ZB" --msgbox "${msg_str}" $((HEIGHT-7)) $((WIDTH-20))		
+	}
 
 elif [[ $1 = "<disk_details.h>" ]]; then
 	DEFINE DISK_DETAILS_H 0
@@ -212,40 +249,57 @@ elif [[ $1 = "<audio_display.h>" ]]; then
 elif [[ $1 = "<boot_system.h>" ]]; then
 	DEFINE BOOT_SYSTEM_H
 	
-	if NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${CURSES_DIALOG_H}; then
+	if NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${ERROR_H}; then
 		. ${LIB_DIR}/include '<basic_utils.h>'
 		. ${LIB_DIR}/include '<curses_dialog.h>'
+		. ${LIB_DIR}/include '<error.h>'
 	fi
+	
+	function boot_system_err_func() {
+		local y=""
+		
+		eval y='$'$1
+		check_is_set $y
+		
+		return $?
+	}
 	
 	printf -v MACADDR "52:54:%02x:%02x:%02x:%02x" $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff )) $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff ))
 	default_install_network="-net nic,vlan=0,macaddr=${MACADDR},model=e1000 -net user,vlan=0"
 
 	#boot function
 	function boot_system(){
-#		${QEMU:? Architecture NULL} ${VM_NAME:? VM Name NULL} ${NUM_CPU:? Num of cpu NULL} ${RAM_SIZE:? Ram size NULL} ${default_install_network} \
-#		${QEMU_GRAPH:? Display NULL} ${QEMU_SOUND:? Sound NULL} ${QEMU_USB:? Pointing device NULL} ${Disk_Name:? disk img NULL} ${VM_CDROM:? CDrom NULL} \
-#		${KVM_ENABLE} ${BOOT_ORDER} 2>${TEMP_FOLDER}/.error.tt
-		
+		let err_set=0 
+		let i_var=0
 		declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "NUM_CPU" "RAM_SIZE" "NET_CON" "QEMU_GRAPH" "QEMU_SOUND" "QEMU_USB" "Disk_Name" \
 									"VM_CDROM" "KVM_ENABLE" "BOOT_ORDER")
 		
 		let i=0
 		let percentage=0
+		
 		while [[ $i -lt ${#CONFIG_PARAMS[@]} ]]; do
-			
-			if check_is_set ${CONFIG_PARAMS[$i]}; then
+			eval tmp_param='$'${CONFIG_PARAMS[$i]}
+			if check_is_set $tmp_param; then
 				echo "XXX"
-				#$percentage
-				echo "checking ${CONFIG_PARAMS[$i]} ($percentage%)"
+				echo $percentage
+				echo "checking ${CONFIG_PARAMS[$i]} ($percentage)"
 				echo "XXX"
 			else
-				exit 1
+				err_set=255
+				break
 			fi
 			
+			(( i_var=i ))
 			(( i+=1 ))
-			(( percentage=i * 100 / ${#CONFIG_PARAMS[@]} ))
+			(( percentage=i * 100 / ${#CONFIG_PARAMS[@]} + 5))
 			sleep 1
 		done | ${DIALOG} --title "checking Configurations" --gauge "Please wait" 7 70 0
+		
+		if [[ ${err_set} -ne 255 ]]; then
+			local TMP_CMP=${CONFIG_PARAMS[$i_var]}
+			error_func_display $(err_str "${TMP_CMP}:${STRERROR[$TMP_CMP]}:boot_system_err_func")
+			exit 1			
+		fi
 	}
 
 elif [[ $1 = "<curses_dialog.h>" ]]; then
@@ -276,20 +330,18 @@ elif [[ $1 = "<host_ip.h>" ]]; then
 elif [[ $1 = "<basic_utils.h>" ]]; then
 	DEFINE BASIC_UTILS_H
 	#basic system utilities
+	
+	if NOT_DEFINE ${TRUE_TEST_H}; then
+		. ${LIB_DIR}/include '<true_test.h>'
+	fi
+	
 	function check_is_file() {
-		if [[ -f $1 ]]; then
-			return ${SUCCESS}
-		else
-			return ${FAILURE}
-		fi 
+		[ -f $1 ] && return ${SUCCESS} || return ${FAILURE}
 	}
 	
-	function check_is_set(){
-		eval tmp_param='$'$1
-		[[ -n $tmp_param ]] && {
-			return ${SUCCESS} 
-			tmp_param=""
-		} || return ${FAILURE}
+	function check_is_set() {
+		local tmp=$1
+		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${FAILURE}; }
 	}
 	
 else 
