@@ -217,7 +217,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 
 	#boot function
 	function boot_system(){
-		: # arch ...
+		eval ${QEMU:? Architecture NULL} ${VM_NAME:? VM Name NULL} ${NUM_CPU:? Num of cpu NULL} ${}
 	}
 
 elif [[ $1 = "<curses_dialog.h>" ]]; then
