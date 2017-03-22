@@ -211,13 +211,41 @@ elif [[ $1 = "<audio_display.h>" ]]; then
 	VGA=
 elif [[ $1 = "<boot_system.h>" ]]; then
 	DEFINE BOOT_SYSTEM_H
-
+	
+	if NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${CURSES_DIALOG_H}; then
+		. ${LIB_DIR}/include '<basic_utils.h>'
+		. ${LIB_DIR}/include '<curses_dialog.h>'
+	fi
+	
 	printf -v MACADDR "52:54:%02x:%02x:%02x:%02x" $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff )) $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff ))
 	default_install_network="-net nic,vlan=0,macaddr=${MACADDR},model=e1000 -net user,vlan=0"
 
 	#boot function
 	function boot_system(){
-		eval ${QEMU:? Architecture NULL} ${VM_NAME:? VM Name NULL} ${NUM_CPU:? Num of cpu NULL} ${}
+#		${QEMU:? Architecture NULL} ${VM_NAME:? VM Name NULL} ${NUM_CPU:? Num of cpu NULL} ${RAM_SIZE:? Ram size NULL} ${default_install_network} \
+#		${QEMU_GRAPH:? Display NULL} ${QEMU_SOUND:? Sound NULL} ${QEMU_USB:? Pointing device NULL} ${Disk_Name:? disk img NULL} ${VM_CDROM:? CDrom NULL} \
+#		${KVM_ENABLE} ${BOOT_ORDER} 2>${TEMP_FOLDER}/.error.tt
+		
+		declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "NUM_CPU" "RAM_SIZE" "NET_CON" "QEMU_GRAPH" "QEMU_SOUND" "QEMU_USB" "Disk_Name" \
+									"VM_CDROM" "KVM_ENABLE" "BOOT_ORDER")
+		
+		let i=0
+		let percentage=0
+		while [[ $i -lt ${#CONFIG_PARAMS[@]} ]]; do
+			
+			if check_is_set ${CONFIG_PARAMS[$i]}; then
+				echo "XXX"
+				#$percentage
+				echo "checking ${CONFIG_PARAMS[$i]} ($percentage%)"
+				echo "XXX"
+			else
+				exit 1
+			fi
+			
+			(( i+=1 ))
+			(( percentage=i * 100 / ${#CONFIG_PARAMS[@]} ))
+			sleep 1
+		done | ${DIALOG} --title "checking Configurations" --gauge "Please wait" 7 70 0
 	}
 
 elif [[ $1 = "<curses_dialog.h>" ]]; then
@@ -254,6 +282,14 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 		else
 			return ${FAILURE}
 		fi 
+	}
+	
+	function check_is_set(){
+		eval tmp_param='$'$1
+		[[ -n $tmp_param ]] && {
+			return ${SUCCESS} 
+			tmp_param=""
+		} || return ${FAILURE}
 	}
 	
 else 
