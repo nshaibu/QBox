@@ -27,6 +27,8 @@ function until_is_iso_file() {
 		exec 3>&-
 		#Sat 18 Feb 2017 05:55:42 PM GMT 
 	done
+	
+	architecture_type_choice $(detect_architecture $value)
 }
 
 
