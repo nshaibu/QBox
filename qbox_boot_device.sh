@@ -14,12 +14,14 @@ if NOT_DEFINE ${ARCHITECTURE_H}; then
 	. ${LIB_DIR}/include '<architecture.h>'
 fi
 
+Disk_Name="nafiu_nafiu.img"
+
 declare -i HEIGHT=18
 declare -i WIDTH=50
 
 function until_is_iso_file() {
 	let value=$1
-	until check_is_file $value ; do
+	until check_is_file $value && check_is_iso_file $value ; do
 		exec 3>&1
 		value=`${DIALOG} \
 			--no-shadow --colors --clear --title "\Zb\Z0Select a file\Zn\ZB" \
@@ -28,7 +30,9 @@ function until_is_iso_file() {
 		#Sat 18 Feb 2017 05:55:42 PM GMT 
 	done
 	
-	architecture_type_choice $(detect_architecture $value)
+	detect_architecture $value
+	architecture_type_choice $?
+	
 }
 
 
