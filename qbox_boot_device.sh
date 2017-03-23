@@ -4,13 +4,31 @@
 
 . ${LIB_DIR}/include
 
-if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
+if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${BOOT_SYSTEM_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
 	. ${LIB_DIR}/include '<basic_utils.h>'
+	. ${LIB_DIR}/include '<boot_system.h>'
+fi
+
+if NOT_DEFINE ${ARCHITECTURE_H}; then
+	. ${LIB_DIR}/include '<architecture.h>'
 fi
 
 declare -i HEIGHT=18
 declare -i WIDTH=50
+
+function until_is_iso_file() {
+	let value=$1
+	until check_is_file $value ; do
+		exec 3>&1
+		value=`${DIALOG} \
+			--no-shadow --colors --clear --title "\Zb\Z0Select a file\Zn\ZB" \
+			--fselect $HOME/ 10 50 2>&1 1>&3`
+		exec 3>&-
+		#Sat 18 Feb 2017 05:55:42 PM GMT 
+	done
+}
+
 
 while true; do
 	exec 3>&1
@@ -82,7 +100,9 @@ while true; do
 						else
 							VM_CDROM="-cdrom /dev/cdrom"
 						fi 	
-						
+						QEMU="SDSD"
+						VM_NAME="nafiu"
+						boot_system ##try
 						break
 					;;
 					${DIALOG_BACK}) ;;
