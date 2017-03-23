@@ -147,12 +147,12 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 	}
 	
 	function detection_msg() {
-		exec 3>&1
+		#exec 3>&1
 		${DIALOG} \
 			--colors --title "\Zb\Z1Architecture Detection\Zn\ZB" --yesno "Detected $1 architecture.Do you want to use $1 ?" $((HEIGHT-7)) $((WIDTH-20))	
 		
 		let "test_return=$?"
-		exec 3>&-
+		#exec 3>&-
 		
 		case ${test_return} in 
 			${DIALOG_OK}) return ${SUCCESS} ;;
@@ -182,71 +182,81 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 		
 		case ${arch} in 
 			x86_64|x86|amd64|i686) 
-				if detection_msg ${arch}; then
-					echo 2
+				detection_msg ${arch} 
+				if [[ $? -eq ${SUCCESS} ]]; then
+					return 2
 				else 
 					detect_architecture "GLOBBING"
 				fi 
 			;;
 			i386|x86_32) 
-				if detection_msg ${arch}; then
-					echo 1
+				detection_msg ${arch} 
+				if [[ $? -eq ${SUCCESS} ]]; then
+					return 1
 				else 
 					detect_architecture "GLOBBING"
 				fi 				
 			;;
 			arm) 
-				if detection_msg ${arch}; then
-					echo 3
+				detection_msg ${arch} 
+				if [[ $? -eq ${SUCCESS} ]]; then
+					return 3
 				else 
 					detect_architecture "GLOBBING"
 				fi 				
 			;;
 			armeb) 
-				if detection_msg ${arch}; then
-					echo 4
+				detection_msg ${arch} 
+				if [[ $? -eq ${SUCCESS} ]]; then
+					return 4
 				else 
 					detect_architecture "GLOBBING"
 				fi
 			;;
 			ppc) 
-				if detection_msg ${arch}; then
-					echo 5
+				detection_msg ${arch} 
+				if [[ $? -eq ${SUCCESS} ]]; then
+					return 5
 				else 
 					detect_architecture "GLOBBING"
 				fi
 			;;
 			ppc64) 
-				if detection_msg ${arch}; then
-					echo 6
+				detection_msg ${arch} 
+				if [[ $? -eq ${SUCCESS} ]]; then
+					return 6
 				else 
 					detect_architecture "GLOBBING"
 				fi
 			;;
 			sparc) 
-				if detection_msg ${arch}; then
-					echo 7
+				detection_msg ${arch} 
+				if [[ $? -eq ${SUCCESS} ]]; then
+					return 7
 				else 
 					detect_architecture "GLOBBING"
 				fi
 			;;
 			sparc64) 
-				if detection_msg ${arch}; then
-					echo 8
+				detection_msg ${arch} 
+				if [[ $? -eq ${SUCCESS} ]]; then
+					return 8
 				else 
 					detect_architecture "GLOBBING"
 				fi
 			;;
 			mips) 
-				if detection_msg ${arch}; then
-					echo 10
+				detection_msg ${arch} 
+				if [[ $? -eq ${SUCCESS} ]]; then
+					return 10
 				else 
 					detect_architecture "GLOBBING"
 				fi
 			;;
 			mipsel) 
-				if detection_msg ${arch}; then
-					echo 9
+				detection_msg ${arch} 
+				if [[ $? -eq ${SUCCESS} ]]; then
+					return 9
 				else 
 					detect_architecture "GLOBBING"
 				fi
@@ -262,7 +272,8 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 				let "test_return=$?"
 				exec 3>&-
 				
-				architecture_type_choice $test_return
+				#architecture_type_choice $value
+				return $value
 			;;
 		esac
 	}
@@ -356,7 +367,7 @@ elif [[ $1 = "<audio_display.h>" ]]; then
 	DEFINE AUDIO_DISPLAY_H
 
 	QEMU_SOUND=
-	DISPLAY=
+	DISPLAY_=
 	VGA=
 elif [[ $1 = "<boot_system.h>" ]]; then
 	DEFINE BOOT_SYSTEM_H
@@ -433,8 +444,8 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				echo "Saving $VM_NAME ($percentage%)"
 				echo "XXX"	
 				
-				eval ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-				%${VGA} %${DISPLAY} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
+				bash ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+				%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
 				%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
 				%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${HOSTNAME1} %${TAP1} \
 				%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
@@ -443,7 +454,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${HOSTNAME3} %${TAP3} \
 				%${VLAN_TAP3} %${FD_TAP3} %${IFNAME3} %${SCRIPT3} %${SOCKET3} %${VLAN_SOCKET3} %${FD_SOCKET3} %${LISTEN3} %${CONNECT3} \
 				%${MCAST3} %${SMB_SERVER} %${REDIRECT} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} % % %${QEMU_KEYBOARD} \
-				%${QEMU_FULLSCREEN} % %${SNAP_OT} % % %
+				%${QEMU_FULLSCREEN} % %${SNAP_OT} % % % #2>/dev/null
 				
 				sleep 0.6			
 			}
@@ -514,6 +525,19 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	
 	function String_to_Lower() {
 		echo $(echo $1 | awk '{print tolower($0)}')
+	}
+	
+	function check_is_iso_file() {
+		local tmp=$(String_to_Lower `basename $1`)
+		
+		if check_is_file $1; then
+			case ${tmp##*.} in 
+				iso|img) return ${SUCCESS} ;;
+				*) return ${FAILURE} ;;
+			esac
+		else
+			return ${FAILURE}
+		fi 
 	}
 	
 elif [[ $1 = "%%IMPORT%%" ]]; then
