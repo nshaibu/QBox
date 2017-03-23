@@ -846,10 +846,10 @@ while [ 1 ]; do
 				 
 					if [[ ${test_return} -eq ${DIALOG_OK} ]]; then
 						case ${value} in 
-							2) DISPLAY="-display curses" ;;
-							1) DISPLAY="-display sdl" ;;
+							2) DISPLAY_="-display curses" ;;
+							1) DISPLAY_="-display sdl" ;;
 							3)
-								DISPLAY="-display vnc=:${VNC_DISPLAY}"
+								DISPLAY_="-display vnc=:${VNC_DISPLAY}"
 								${DIALOG} \
 									--clear --colors --title "\Zb\Z0VNC ACCESS\Zn\ZB" \
 									--msgbox "\nTo view the Virtual Machine.Enter:\n\n   \Zb\Z0[vncviewer] ${HOST_IP}:${VNC_PORT}\Zn\ZB" \
