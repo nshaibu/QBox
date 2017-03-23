@@ -173,41 +173,49 @@ elif [[ "$1" = "<error.h>" ]]; then
 	fd_err_str=
 	port_err_str=
 	
-	##Error strings format [name of variable]=error string
-	declare -A STRERROR=([QEMU]="Architecture is NULL" [VM_NAME]="VM Name not set" \
-						[NUM_CPU]="Number of CPU NULL" [RAM_SIZE]="Ram size is NULL" \
-						[QEMU_GRAPH]="Display is NULL" [QEMU_SOUND]="Sound is NULL" \
-						[QEMU_USB]="Pointing device is NULL" [VM_CDROM]="cdrom is NULL" )
+	##Error strings format [name of variable]=error string //space char is not allowed in error string
+	declare -A STRERROR=([QEMU]="Architecture_is_NULL" [VM_NAME]="VM_Name_not_set" \
+						[NUM_CPU]="Number_of_CPU_NULL" [RAM_SIZE]="Ram_size_is_NULL" \
+						[QEMU_GRAPH]="Display_is_NULL" [QEMU_SOUND]="Sound_is_NULL" \
+						[QEMU_USB]="Pointing_device_is_NULL" [VM_CDROM]="cdrom_is_NULL" )
 	
 	##input is in this format [values to test]:[error strings]:[function to test truth of values]
 	function err_str() {
 		local err_=""
 		local tmp=$1
+		local ret=${SUCCESS}
 		
 		local var_name=${tmp%%:*} ##get the name of variable
 		local test_function=${tmp##*:} ##get the name of function to use for testing
 		local str_error=$(echo ${tmp%:*} | cut -d ":" -f2)
 		
-		eval ${test_function} '$'${var_name}
+		eval ${test_function} '$'${var_name} #function pointer in bash
 		
-		echo "$?:${str_error}" ## return Test:ERROR_MSG
+		echo "$?:${str_error}"  ## return Test:ERROR_MSG
 	}
 	
 	##Error format [[ Test:ERROR_MSG ]]
 	function error_func_display() {
-		declare -a ERR_FORMAT=($1)
+		declare -a ERR_FORMAT=($@)
+		local err_ocurred=${FAILURE}
 		
 		local msg_str=""
-		for (( i=1; i<${#ERR_FORMAT[@]}; i++ )); do 
-			local _test_= $(echo ${ERR_FORMAT[$i]} | cut -d ":" -f1)
+		for (( i=0; i<${#ERR_FORMAT[@]}; i++ )); do 
+			local arr_=${ERR_FORMAT[$i]} 
+			local _test_=${arr_%%:*}
 			
 			if [[ ${_test_} -ne ${SUCCESS} ]]; then
-				msg_str+="$(echo ${ERR_FORMAT[$i]} | cut -d ":" -f2)"
+				msg_str+=${arr_##*:}
+				err_ocurred=${SUCCESS}
 			fi 
 		done
 		
-		${DIALOG} \
-			--colors --title "\Zb\Z1Parsing Error\Zn\ZB" --msgbox "${msg_str}" $((HEIGHT-7)) $((WIDTH-20))		
+		[ ${err_ocurred} -eq ${SUCCESS} ] && {
+			msg_str=${msg_str//_/ } ##remove _ char from msg_str
+			
+			${DIALOG} \
+				--colors --title "\Zb\Z1Error\Zn\ZB" --msgbox "${msg_str}" $((HEIGHT-7)) $((WIDTH-20))		
+		}
 	}
 
 elif [[ $1 = "<disk_details.h>" ]]; then
@@ -258,10 +266,10 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 	function boot_system_err_func() {
 		local y=""
 		
-		eval y='$'$1
-		check_is_set $y
+		eval y=$1
 		
-		return $?
+		check_is_set $y
+		return $? 
 	}
 	
 	printf -v MACADDR "52:54:%02x:%02x:%02x:%02x" $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff )) $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff ))
@@ -297,7 +305,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 		
 		if [[ ${err_set} -ne 255 ]]; then
 			local TMP_CMP=${CONFIG_PARAMS[$i_var]}
-			error_func_display $(err_str "${TMP_CMP}:${STRERROR[$TMP_CMP]}:boot_system_err_func")
+			error_func_display "$(err_str "${TMP_CMP}:${STRERROR[$TMP_CMP]}:boot_system_err_func")" 
 			exit 1			
 		fi
 	}
