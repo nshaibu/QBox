@@ -196,11 +196,11 @@ elif [[ $1 = "%DISPLAY%" ]]; then
 
 	case "$sd" in 
 		3)
-			DISPLAY="-display vnc=:${VNC_DISPLAY}"
+			DISPLAY_="-display vnc=:${VNC_DISPLAY}"
 			printf "%s\n" "To veiw your vm.Enter vncviewer ${IF_ADDR}:${VNC_PORT}"
 		;;
-		1) DISPLAY="-display curses" ;;
-		*) DISPLAY="-display sdl" ;;
+		1) DISPLAY_="-display curses" ;;
+		*) DISPLAY_="-display sdl" ;;
 	esac
 	
 	printf "%s\n" "[2]Choose a Video Card for the VM[ENTER]"

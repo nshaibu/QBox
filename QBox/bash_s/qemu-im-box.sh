@@ -217,8 +217,8 @@ function boot_func(){
 					NET_CON=""
 					
 					##Generates boot file naming it with the name of the virtual hard disk already created
-					eval ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-					%${VGA} %${DISPLAY} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
+					bash ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
 					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
 					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${HOSTNAME1} %${TAP1} \
 					%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
@@ -233,8 +233,8 @@ function boot_func(){
 					
 				else
 					##generate boot file
-					eval ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-					%${VGA} %${DISPLAY} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
+					bash ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
 					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
 					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${HOSTNAME1} %${TAP1} \
 					%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
@@ -279,8 +279,8 @@ function boot_func(){
 					stop_tap_if
 					NET_CON=""
 					
-					eval ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-					%${VGA} %${DISPLAY} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
+					bash ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
 					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
 					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${HOSTNAME1} %${TAP1} \
 					%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
@@ -294,8 +294,8 @@ function boot_func(){
 					rm -f ${TEMP_FOLDER}/.test_tap_exit.tt
 					
 				else
-					eval ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-					%${VGA} %${DISPLAY} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
+					bash ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
 					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
 					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${HOSTNAME1} %${TAP1} \
 					%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
