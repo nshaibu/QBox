@@ -58,14 +58,14 @@ while true; do
 				case ${test_return} in 
 					${DIALOG_OK}) 
 						if [[ $value -eq 1 ]]; then
-							until check_is_file $value; do 
-								exec 3>&1
-								value=`${DIALOG} \
-									--no-shadow --colors --clear --title "\Zb\Z0Select a file\Zn\ZB" \
-									--fselect $HOME/ 10 50 2>&1 1>&3`
-								exec 3>&-
-							done
-							#echo $value 
+#							until check_is_file $value; do 
+#								exec 3>&1
+#								value=`${DIALOG} \
+#									--no-shadow --colors --clear --title "\Zb\Z0Select a file\Zn\ZB" \
+#									--fselect $HOME/ 10 50 2>&1 1>&3`
+#								exec 3>&-
+#							done
+							until_is_iso_file $value
 							VM_CDROM="-cdrom ${value}"
 						else
 							VM_CDROM="-cdrom /dev/fb0"
@@ -88,15 +88,15 @@ while true; do
 				case ${test_return} in 
 					${DIALOG_OK}) 
 						if [[ $value -eq 1 ]]; then
-							
-							until check_is_file $value ; do
-								exec 3>&1
-								value=`${DIALOG} \
-									--no-shadow --colors --clear --title "\Zb\Z0Select a file\Zn\ZB" \
-									--fselect $HOME/ 10 50 2>&1 1>&3`
-								exec 3>&-
-								#Sat 18 Feb 2017 05:55:42 PM GMT 
-							done
+							until_is_iso_file $value
+#							until check_is_file $value ; do
+#								exec 3>&1
+#								value=`${DIALOG} \
+#									--no-shadow --colors --clear --title "\Zb\Z0Select a file\Zn\ZB" \
+#									--fselect $HOME/ 10 50 2>&1 1>&3`
+#								exec 3>&-
+#								#Sat 18 Feb 2017 05:55:42 PM GMT 
+#							done
 							
 							VM_CDROM="-cdrom ${value}"
 						else
