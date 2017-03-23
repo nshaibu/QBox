@@ -15,8 +15,9 @@ BEGIN{
 	ARH_TYPE[7]="sparc" 
 	ARH_TYPE[8]="sparc64" 
 	ARH_TYPE[9]="mips" 
-	ARH_TYPE[10]="mips64" 
-	ARH_TYPE[11]="i686"
+	ARH_TYPE[10]="mipsel" 
+	ARH_TYPE[11]="i686" 
+	ARH_TYPE[12]="armeb"
 }
 
 
