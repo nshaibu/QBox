@@ -127,7 +127,7 @@ elif [[ "$1" = "<network.h>" ]]; then
 elif [[ "$1" = "<architecture.h>" ]]; then
 	DEFINE ARCHITECTURE_H 0
 
-	QEMU_ARCH=
+	QEMU=
 	VM_NAME=
 	CPU=
 	CORE=
@@ -145,8 +145,21 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 			1) QEMU_USB="" ;;
 		esac
 	}
-
-
+	
+	function detection_msg() {
+		exec 3>&1
+		${DIALOG} \
+			--colors --title "\Zb\Z1Architecture Detection\Zn\ZB" --yesno "Detected $1 architecture.Do you want to use $1 ?" $((HEIGHT-7)) $((WIDTH-20))	
+		
+		let "test_return=$?"
+		exec 3>&-
+		
+		case ${test_return} in 
+			${DIALOG_OK}) return ${SUCCESS} ;;
+			${DIALOG_CANCEL}) return ${FAILURE} ;;
+		esac
+	}
+	
 	function architecture_type_choice(){
         case $1 in
             1) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-i386` ;;
@@ -160,10 +173,101 @@ elif [[ "$1" = "<architecture.h>" ]]; then
             9) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mipsel` ;;
             10) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mips` ;;
         esac
-
-        return ${QEMU}
+	}	
+	
+	function detect_architecture() {
+		local iso_file_name=$(basename $1)
+		
+		local arch=$(echo ${iso_file_name} | gawk -f ${QBOX_DIR}/awk/qemu-s-arch.awk)
+		
+		case ${arch} in 
+			x86_64|x86|amd64|i686) 
+				if detection_msg ${arch}; then
+					echo 2
+				else 
+					detect_architecture "GLOBBING"
+				fi 
+			;;
+			i386|x86_32) 
+				if detection_msg ${arch}; then
+					echo 1
+				else 
+					detect_architecture "GLOBBING"
+				fi 				
+			;;
+			arm) 
+				if detection_msg ${arch}; then
+					echo 3
+				else 
+					detect_architecture "GLOBBING"
+				fi 				
+			;;
+			armeb) 
+				if detection_msg ${arch}; then
+					echo 4
+				else 
+					detect_architecture "GLOBBING"
+				fi
+			;;
+			ppc) 
+				if detection_msg ${arch}; then
+					echo 5
+				else 
+					detect_architecture "GLOBBING"
+				fi
+			;;
+			ppc64) 
+				if detection_msg ${arch}; then
+					echo 6
+				else 
+					detect_architecture "GLOBBING"
+				fi
+			;;
+			sparc) 
+				if detection_msg ${arch}; then
+					echo 7
+				else 
+					detect_architecture "GLOBBING"
+				fi
+			;;
+			sparc64) 
+				if detection_msg ${arch}; then
+					echo 8
+				else 
+					detect_architecture "GLOBBING"
+				fi
+			;;
+			mips) 
+				if detection_msg ${arch}; then
+					echo 10
+				else 
+					detect_architecture "GLOBBING"
+				fi
+			;;
+			mipsel) 
+				if detection_msg ${arch}; then
+					echo 9
+				else 
+					detect_architecture "GLOBBING"
+				fi
+			;;
+			*) 
+				exec 3>&1
+				
+				value=`${DIALOG} \
+					--no-shadow --nook --nocancel --title "Linux Direct Boot" --menu "Choose Architecture" 18 50 30 1 "PC,intel-8086(32bit)" \
+					2 "PC,intel-8086(64bit)" 3 "PC,ARM,little endian" 4 "PC,ARM,big endian" 5 "PC,PowerPC(32bit)" 6 "PC,PowerPC(64bit)" 7 "PC,SPARC(32bit)" \
+					8 "PC,SPARC(64bit)" 9 "PC,MIPS,little endian" 10 "PC,MIPS,big endian" 2>&1 1>&3`
+				
+				let "test_return=$?"
+				exec 3>&-
+				
+				architecture_type_choice $test_return
+			;;
+		esac
 	}
-
+	
+	
 elif [[ "$1" = "<error.h>" ]]; then
 	DEFINE ERROR_H 0
 
@@ -174,10 +278,10 @@ elif [[ "$1" = "<error.h>" ]]; then
 	port_err_str=
 	
 	##Error strings format [name of variable]=error string //space char is not allowed in error string
-	declare -A STRERROR=([QEMU]="Architecture_is_NULL" [VM_NAME]="VM_Name_not_set" \
-						[NUM_CPU]="Number_of_CPU_NULL" [RAM_SIZE]="Ram_size_is_NULL" \
-						[QEMU_GRAPH]="Display_is_NULL" [QEMU_SOUND]="Sound_is_NULL" \
-						[QEMU_USB]="Pointing_device_is_NULL" [VM_CDROM]="cdrom_is_NULL" )
+	declare -A STRERROR=([QEMU]="Architecture_is_NULL\n" [VM_NAME]="VM_Name_not_set\n" \
+						[NUM_CPU]="Number_of_CPU_NULL\n" [RAM_SIZE]="Ram_size_is_NULL\n" \
+						[QEMU_GRAPH]="Display_is_NULL\n" [QEMU_SOUND]="Sound_is_NULL\n" \
+						[QEMU_USB]="Pointing_device_is_NULL\n" [VM_CDROM]="cdrom_is_NULL\n" )
 	
 	##input is in this format [values to test]:[error strings]:[function to test truth of values]
 	function err_str() {
@@ -289,9 +393,8 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 		let let_move_boot=${FAILURE}
 		let let_move_save=${FAILURE}
 		
-		while : ; do #[[ $i -le ${#CONFIG_PARAMS[@]} ]]; do
-			
-			#[ "${CONFIG_PARAMS[$i]}" = "%END%" ] && break
+		while : ; do 
+			#Thu 23 Mar 2017 07:13:30 PM GMT -----Checking that values are set-------
 			[ ${let_move_boot} -eq ${FAILURE} ] && [ ${let_move_save} -eq ${FAILURE} ] && {
 				
 				eval tmp_param='$'${CONFIG_PARAMS[$i]}
@@ -309,6 +412,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				fi
 			}
 			
+			#-----------------Booting VM---------------------
 			[ ${let_move_boot} -eq ${SUCCESS} ] && [ ${let_move_save} -eq ${FAILURE} ] && {
 				echo "XXX"
 				echo $percentage
@@ -322,6 +426,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				sleep 1
 			}
 			
+			#---------------Saving VM----------------------
 			[ ${let_move_boot} -eq ${SUCCESS} ] && [ ${let_move_save} -eq ${SUCCESS} ] && {
 				echo "XXX"
 				echo $percentage
@@ -358,15 +463,6 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			exit 1			
 		fi
 		
-#		let i=0
-#		while : ; do 
-#		(( i+=20 ))
-#		echo "XXX"
-#		echo $perct
-#		echo "Booting $VM_NAME"
-#		echo "XXX"
-#		sleep 0.2
-#		done | ${DIALOG} --title "Booting VM" --gauge "Please wait" 7 70 0
 		
 	}
 
