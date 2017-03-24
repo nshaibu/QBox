@@ -392,7 +392,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 	function boot_system(){
 		let err_set=0 
 		let i_var=0
-		declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "NUM_CPU" "RAM_SIZE" "NET_CON" "QEMU_GRAPH" "QEMU_SOUND" "QEMU_USB" "Disk_Name" \
+		declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "NUM_CPU" "RAM_SIZE" "QEMU_GRAPH" "QEMU_SOUND" "QEMU_USB" "Disk_Name" \
 									"VM_CDROM" "KVM_ENABLE" "BOOT_ORDER" )
 		
 		let i=0
@@ -429,7 +429,9 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${default_install_network} ${QEMU_GRAPH} ${QEMU_SOUND} \
 				${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>/dev/null
 				
+				[[ $? -eq ${FAILURE} ]] && break
 				let_move_save=${SUCCESS}
+				
 				sleep 1
 			}
 			
@@ -458,7 +460,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			(( i_var=i ))
 			(( i+=1 ))
 			
-			(( percentage=i * 100 / 15 + 7 ))
+			(( percentage=i * 100 / 14 + 7 ))
 			[ $percentage -gt 100 ] && break
 			
 			sleep 0.3
@@ -512,7 +514,7 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	
 	function check_is_set() {
 		local tmp=$1
-		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${FAILURE}; }
+		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${SUCCESS}; }
 	}
 	
 	function String_to_Upper() {
