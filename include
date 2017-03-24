@@ -137,7 +137,12 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 	NUM_CPU=
 	QEMU_USB=
 	CDROM=
-
+	
+	declare -A STR_ARCH=([x86_64]="Intel-8086(64bit)" [x86]="Intel-8086(64bit)" [amd64]="Intel-8086(64bit)" [i686]="Intel-8086(64bit)" \
+						 [x86_32]="Intel-8086(32bit)" [i386]="Intel-8086(32bit)" [arm]="ARM_little_endian" [armeb]="ARM_big_endian" \
+						 [ppc]="PowerPC(32bit)" [ppc64]="PowerPC(64bit)" [sparc]="SPARC(32bit)" [sparc64]="SPARC(64bit)" [mips]="MIPS_little_endian" \
+						 [mipsel]="MIPS_big_endian")
+						 
 	function pointing_dev_choice(){
 		case $1 in
 			2) QEMU_USB="-usbdevice mouse" ;;
@@ -147,12 +152,10 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 	}
 	
 	function detection_msg() {
-		#exec 3>&1
 		${DIALOG} \
-			--colors --title "\Zb\Z1Architecture Detection\Zn\ZB" --yesno "Detected $1 architecture.Do you want to use $1 ?" $((HEIGHT-7)) $((WIDTH-20))	
+			--colors --title "\Zb\Z0Architecture Detection\Zn\ZB" --yesno "\nDetected ${STR_ARCH[$1]} architecture...\n\n\Zb\Z1Do you want to use ${STR_ARCH[$1]} ?\Zn\ZB" $((HEIGHT-5)) $((WIDTH-5))	
 		
 		let "test_return=$?"
-		#exec 3>&-
 		
 		case ${test_return} in 
 			${DIALOG_OK}) return ${SUCCESS} ;;
@@ -182,64 +185,57 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 		
 		case ${arch} in 
 			x86_64|x86|amd64|i686) 
-				detection_msg ${arch} 
-				if [[ $? -eq ${SUCCESS} ]]; then
+				if detection_msg ${arch}; then
 					return 2
 				else 
 					detect_architecture "GLOBBING"
 				fi 
 			;;
 			i386|x86_32) 
-				detection_msg ${arch} 
-				if [[ $? -eq ${SUCCESS} ]]; then
+				if detection_msg ${arch}; then
 					return 1
 				else 
 					detect_architecture "GLOBBING"
 				fi 				
 			;;
 			arm) 
-				detection_msg ${arch} 
-				if [[ $? -eq ${SUCCESS} ]]; then
+				if detection_msg ${arch}; then
 					return 3
 				else 
 					detect_architecture "GLOBBING"
 				fi 				
 			;;
 			armeb) 
-				detection_msg ${arch} 
-				if [[ $? -eq ${SUCCESS} ]]; then
+				if detection_msg ${arch}; then
 					return 4
 				else 
 					detect_architecture "GLOBBING"
 				fi
 			;;
 			ppc) 
-				detection_msg ${arch} 
-				if [[ $? -eq ${SUCCESS} ]]; then
+				if detection_msg ${arch}; then
 					return 5
 				else 
 					detect_architecture "GLOBBING"
 				fi
 			;;
 			ppc64) 
-				detection_msg ${arch} 
-				if [[ $? -eq ${SUCCESS} ]]; then
+				if detection_msg ${arch}; then
 					return 6
 				else 
 					detect_architecture "GLOBBING"
 				fi
 			;;
 			sparc) 
-				detection_msg ${arch} 
-				if [[ $? -eq ${SUCCESS} ]]; then
+				if detection_msg ${arch}; then
 					return 7
 				else 
 					detect_architecture "GLOBBING"
 				fi
 			;;
 			sparc64) 
-				detection_msg ${arch} 
-				if [[ $? -eq ${SUCCESS} ]]; then
+				 
+				if detection_msg ${arch}; then
 					return 8
 				else 
 					detect_architecture "GLOBBING"
@@ -516,7 +512,7 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	
 	function check_is_set() {
 		local tmp=$1
-		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${SUCCESS}; }
+		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${FAILURE}; }
 	}
 	
 	function String_to_Upper() {
