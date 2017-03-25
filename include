@@ -285,12 +285,13 @@ elif [[ "$1" = "<error.h>" ]]; then
 	port_err_str=
 	
 	##Error strings format [name of variable]=error string //space char is not allowed in error string
-	declare -A STRERROR=([QEMU]="|Architecture_is_NULL\n" [VM_NAME]="|VM_Name_not_set\n" \
-						[NUM_CPU]="|Number_of_CPU_NULL\n" [RAM_SIZE]="|Ram_size_is_NULL\n" \
-						[QEMU_GRAPH]="|Display_is_NULL\n" [QEMU_SOUND]="|Sound_is_NULL\n" \
-						[QEMU_USB]="|Pointing_device_is_NULL\n" [VM_CDROM]="|cdrom_is_NULL\n" \
-						[VLAN_NUM]="|VLAN_number_should_be_within_this_range_[0-1000]\n" [FD_N]="|File_descriptor_should_be_within_this_range_[0-1000]\n"\
-						[PORT_NUM]="|Port_Number_should_be_with_this_range_[1-65535]\n")
+	declare -A STRERROR=([QEMU]="|*Architecture_is_NULL\n" [VM_NAME]="|*VM_Name_not_set\n" \
+						[NUM_CPU]="|*Number_of_CPU_NULL\n" [RAM_SIZE]="|*Ram_size_is_NULL\n" \
+						[QEMU_GRAPH]="|*Display_is_NULL\n" [QEMU_SOUND]="|*Sound_is_NULL\n" \
+						[QEMU_USB]="|*Pointing_device_is_NULL\n" [VM_CDROM]="|*cdrom_is_NULL\n" \
+						[VLAN_NUM]="|*VLAN_number_should_be_within_this_range_[0-1000]\n" [FD_N]="|*File_descriptor_should_be_within_this_range_[0-1000]\n" \
+						[PORT_NUM]="|*Port_Number_should_be_with_this_range_[1-65535]\n" [MAC_ADDR]="|*Mac_Address_format_error\n" \
+						[IP_ADDR]="|*IP_format_error_[xxx.xxx.xxx.xxx]" [HOST_PORT_NUM]="${STRERROR[PORT_NUM]}" [GUEST_PORT_NUM]="${STRERROR[PORT_NUM]}")
 	
 	##input is in this format [values to test]:[error strings]:[function to test truth of values]
 	function err_str() {
@@ -310,7 +311,8 @@ elif [[ "$1" = "<error.h>" ]]; then
 	##Error format [[ Test:ERROR_MSG ]]
 	function error_func_display() {
 		declare -a ERR_FORMAT=($@)
-		local err_ocurred=${FAILURE}
+		local err_ocurred=${FAILURE} #true
+		local did_err_ocurred=${FAILURE}
 		
 		local msg_str=""
 		for (( i=0; i<${#ERR_FORMAT[@]}; i++ )); do 
@@ -319,11 +321,14 @@ elif [[ "$1" = "<error.h>" ]]; then
 			
 			if [[ ${_test_} -ne ${SUCCESS} ]]; then
 				msg_str+=${arr_##*:}
-				err_ocurred=${SUCCESS}
+				err_ocurred=${SUCCESS} #false
+			else
+				err_ocurred=${FAILURE}
 			fi 
+			did_err_ocurred=$(( did_err_ocurred & err_ocurred ))
 		done
 		
-		[ ${err_ocurred} -eq ${SUCCESS} ] && {
+		[ ${did_err_ocurred} -eq ${SUCCESS} ] && {
 			msg_str=${msg_str//_/ } ##remove _ char from msg_str
 			msg_str=${msg_str//|/\\n} ## replace "|" with "\n"
 			
@@ -331,7 +336,7 @@ elif [[ "$1" = "<error.h>" ]]; then
 				--colors --title "\Zb\Z1Error\Zn\ZB" --msgbox "${msg_str}" $((HEIGHT-7)) $((WIDTH-20))		
 		}
 		
-		return ${_test_}
+		return ${did_err_ocurred}
 	}
 
 elif [[ $1 = "<disk_details.h>" ]]; then
