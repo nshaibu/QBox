@@ -88,7 +88,6 @@ while true; do
 							VM_CDROM="-cdrom /dev/cdrom"
 						fi 	
 						
-						VM_NAME="nafiu"
 						boot_system ##try
 						#break
 					;;
