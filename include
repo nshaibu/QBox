@@ -327,6 +327,8 @@ elif [[ "$1" = "<error.h>" ]]; then
 			${DIALOG} \
 				--colors --title "\Zb\Z1Error\Zn\ZB" --msgbox "${msg_str}" $((HEIGHT-7)) $((WIDTH-20))		
 		}
+		
+		return ${_test_}
 	}
 
 elif [[ $1 = "<disk_details.h>" ]]; then
