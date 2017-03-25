@@ -14,10 +14,6 @@ if NOT_DEFINE ${ARCHITECTURE_H}; then
 	. ${LIB_DIR}/include '<architecture.h>'
 fi
 
-Disk_Name="nafiu_nafiu.img"
-
-declare -i HEIGHT=18
-declare -i WIDTH=50
 
 function until_is_iso_file() {
 	let value=$1
