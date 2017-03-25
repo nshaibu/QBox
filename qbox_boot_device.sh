@@ -36,7 +36,7 @@ while true; do
 	exec 3>&1
 	
 	value=`${DIALOG} \
-		--no-tags --no-shadow --clear --ok-label "Next" --colors --title "\Zb\Z0Create Virtual Machine\Zn\ZB" \
+		--no-tags --no-shadow --clear --ok-label "Next" --cancel-label "Back" --colors --title "\Zb\Z0Create Virtual Machine\Zn\ZB" \
 		--radiolist "\Zb\Z0Boot Disk\Zn\ZB \nChoose a boot device to use. The boot device could be either a cdrom or floppy disk. You can use the host floppy device(/dev/fb0) or host cdrom device(/dev/cdrom).\n\nPress \Zb\Z0SPACE-KEY\Zn\ZB to make a choice." ${HEIGHT} ${WIDTH} 2 1 "Floppy Disk" off 2 "CD ROM" on 2>&1 1>&3`
 	
 	let "test_return=$?"
@@ -66,7 +66,6 @@ while true; do
 						fi 
 						break
 					;;
-					${DIALOG_BACK}) ;;
 					${DIALOG_CANCEL}) break ;;
 				esac
 			} || {
