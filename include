@@ -575,6 +575,47 @@ function is_IP_Valid(){
 	
 	return $_return
 }	
+
+## verify macaddress
+function is_valid_macaddr() {
+	local test_mac=${FAILURE}
+	
+	if [[ $1 =~ [[:xdigit:]][[:xdigit:]]:[[:xdigit:]][[:xdigit:]]:[[:xdigit:]][[:xdigit:]]:[[:xdigit:]][[:xdigit:]]:[[:xdigit:]][[:xdigit:]]:[[:xdigit:]][[:xdigit:]] ]]; then
+		test_mac=${SUCCESS}
+	fi 	
+	
+	return ${test_mac}
+}
+
+function is_valid_VLAN() {
+	local test_vlan=${FAILURE}
+	
+	if isdigit $1 && [ $1 -ge 0 ] && [ $1 -le 1000 ]; then
+		test_vlan=${SUCCESS}
+	fi	
+	return ${test_vlan}
+}
+
+##is valid file descriptor
+function is_valid_fd() {
+	local test_fd=${FAILURE}
+	
+	if isdigit $1 && [ $1 -ge 0 ] && [ $1 -le 1000 ]; then
+		test_fd=${SUCCESS}
+	fi		
+	
+	return ${test_fd}
+}
+
+function is_valid_port_num() {
+	local test_port=${FAILURE}
+	
+	if isdigit $1 && [ $1 -ge 1 ] && [ $1 -le 65535 ]; then
+		test_port=${SUCCESS}
+	fi 			
+	return ${test_port}
+}
+
 elif [[ $1 = "%%IMPORT%%" ]]; then
 	##Include defines from a file 
 	
