@@ -285,10 +285,10 @@ elif [[ "$1" = "<error.h>" ]]; then
 	port_err_str=
 	
 	##Error strings format [name of variable]=error string //space char is not allowed in error string
-	declare -A STRERROR=([QEMU]="Architecture_is_NULL\n" [VM_NAME]="VM_Name_not_set\n" \
-						[NUM_CPU]="Number_of_CPU_NULL\n" [RAM_SIZE]="Ram_size_is_NULL\n" \
-						[QEMU_GRAPH]="Display_is_NULL\n" [QEMU_SOUND]="Sound_is_NULL\n" \
-						[QEMU_USB]="Pointing_device_is_NULL\n" [VM_CDROM]="cdrom_is_NULL\n" )
+	declare -A STRERROR=([QEMU]="|Architecture_is_NULL\n" [VM_NAME]="|VM_Name_not_set\n" \
+						[NUM_CPU]="|Number_of_CPU_NULL\n" [RAM_SIZE]="|Ram_size_is_NULL\n" \
+						[QEMU_GRAPH]="|Display_is_NULL\n" [QEMU_SOUND]="|Sound_is_NULL\n" \
+						[QEMU_USB]="|Pointing_device_is_NULL\n" [VM_CDROM]="|cdrom_is_NULL\n" )
 	
 	##input is in this format [values to test]:[error strings]:[function to test truth of values]
 	function err_str() {
@@ -323,6 +323,7 @@ elif [[ "$1" = "<error.h>" ]]; then
 		
 		[ ${err_ocurred} -eq ${SUCCESS} ] && {
 			msg_str=${msg_str//_/ } ##remove _ char from msg_str
+			msg_str=${msg_str//|/\\n} ## replace "|" with "\n"
 			
 			${DIALOG} \
 				--colors --title "\Zb\Z1Error\Zn\ZB" --msgbox "${msg_str}" $((HEIGHT-7)) $((WIDTH-20))		
