@@ -400,6 +400,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 		let let_move_boot=${FAILURE}
 		let let_move_save=${FAILURE}
 		
+		${DIALOG} --gauge "Please wait" 7 70 < <( 
 		while : ; do 
 			#Thu 23 Mar 2017 07:13:30 PM GMT -----Checking that values are set-------
 			[ ${let_move_boot} -eq ${FAILURE} ] && [ ${let_move_save} -eq ${FAILURE} ] && {
@@ -414,9 +415,9 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 					
 					[ $i -eq ${#CONFIG_PARAMS[@]} ] && { let_move_boot=${SUCCESS}; }
 				else
-					err_set=255
-					break
-				fi
+						err_set=255
+						break
+				fi 
 			}
 			
 			#-----------------Booting VM---------------------
@@ -429,7 +430,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${default_install_network} ${QEMU_GRAPH} ${QEMU_SOUND} \
 				${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>/dev/null
 				
-				[[ $? -eq ${FAILURE} ]] && break
+				#[[ $? -eq ${FAILURE} ]] && break
 				let_move_save=${SUCCESS}
 				
 				sleep 1
@@ -464,7 +465,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			[ $percentage -gt 100 ] && break
 			
 			sleep 0.3
-		done | ${DIALOG} --gauge "Please wait" 7 70 0
+		done ) #| ${DIALOG} --gauge "Please wait" 7 70 0
 		
 		if [[ ${err_set} -ne 255 ]]; then
 			local TMP_CMP=${CONFIG_PARAMS[$i_var]}
@@ -472,12 +473,15 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			exit 1			
 		fi
 		
-		
+		return 0
 	}
 
 elif [[ $1 = "<curses_dialog.h>" ]]; then
 	DEFINE CURSES_DIALOG_H
-
+	
+	declare -i HEIGHT=18
+	declare -i WIDTH=50
+	
 	: ${DIALOG:=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% dialog`}
 
 	: ${DIALOG_OK:=0}

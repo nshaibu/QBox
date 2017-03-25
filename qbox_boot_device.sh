@@ -95,7 +95,7 @@ while true; do
 						
 						VM_NAME="nafiu"
 						boot_system ##try
-						break
+						#break
 					;;
 					${DIALOG_BACK}) ;;
 					${DIALOG_CANCEL}) break ;;
