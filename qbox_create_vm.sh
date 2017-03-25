@@ -901,6 +901,8 @@ while [ 1 ]; do
 													case ${test_return} in 
 														${DIALOG_OK}) 
 															pointing_dev_choice $value
+															
+															break 6
 															####################Sun 12 Feb 2017 05:27:01 PM GMT 
 														;;
 														${DIALOG_BACK}) break ;;
