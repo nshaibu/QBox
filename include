@@ -288,7 +288,9 @@ elif [[ "$1" = "<error.h>" ]]; then
 	declare -A STRERROR=([QEMU]="|Architecture_is_NULL\n" [VM_NAME]="|VM_Name_not_set\n" \
 						[NUM_CPU]="|Number_of_CPU_NULL\n" [RAM_SIZE]="|Ram_size_is_NULL\n" \
 						[QEMU_GRAPH]="|Display_is_NULL\n" [QEMU_SOUND]="|Sound_is_NULL\n" \
-						[QEMU_USB]="|Pointing_device_is_NULL\n" [VM_CDROM]="|cdrom_is_NULL\n" )
+						[QEMU_USB]="|Pointing_device_is_NULL\n" [VM_CDROM]="|cdrom_is_NULL\n" \
+						[VLAN_NUM]="|VLAN_number_should_be_within_this_range_[0-1000]\n" [FD_N]="|File_descriptor_should_be_within_this_range_[0-1000]\n"\
+						[PORT_NUM]="|Port_Number_should_be_with_this_range_[1-65535]\n")
 	
 	##input is in this format [values to test]:[error strings]:[function to test truth of values]
 	function err_str() {
