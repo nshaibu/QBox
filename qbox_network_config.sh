@@ -5,9 +5,10 @@
 . ${LIB_DIR}/include '<network.h>'
 . ${LIB_DIR}/include '<true_test.h>'
 
-if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${ARCHITECTURE_H} ; then
+if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${ARCHITECTURE_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
 	. ${LIB_DIR}/include '<architecture.h>'
+	. ${LIB_DIR}/include '<basic_utils.h>'
 fi 
 
 if NOT_DEFINE ${HOST_IP_H} ; then
@@ -26,36 +27,6 @@ global_MAC_FOR_USER_MODE=
 global_MODEL_FOR_USER_MODE=
 global_VLAN_FOR_USER_MODE=
 		
-		
-##Test whether input is char 
-function isdigit(){
-	if [ -z "$1" ]; then
-		return 	$FAILURE
-	fi 
-	
-	case "$1" in 
-		[[:digit:]]|[[:digit:]]*) return $SUCCESS ;;
-		*)	return $FAILURE ;;
-	esac
-}
-
-##Verify IP address format
-function is_IP_Valid(){
-	
-	local _return=${FAILURE}
-	
-	if [[ $1 =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ]]; then
-		OLDIFS=${IFS}
-		IFS="."
-		declare -a IP=($1)
-		IFS=${OLDIFS}
-		[[ ${IP[0]} -le 255 ]] && [[ ${IP[1]} -le 255 ]] && [[ ${IP[2]} -le 255 ]] && [[ ${IP[3]} -le 255 ]] && {
-			_return=${SUCCESS}
-		}
-	fi 
-	
-	return $_return
-}
 
 printf -v MACADDR "52:54:%02x:%02x:%02x:%02x" $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff )) $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff ))
 

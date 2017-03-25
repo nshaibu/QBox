@@ -545,6 +545,36 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 		fi 
 	}
 	
+		
+##Test whether input is char 
+function isdigit(){
+	if [ -z "$1" ]; then
+		return 	$FAILURE
+	fi 
+	
+	case "$1" in 
+		[[:digit:]]|[[:digit:]]*) return $SUCCESS ;;
+		*)	return $FAILURE ;;
+	esac
+}
+
+##Verify IP address format
+function is_IP_Valid(){
+	
+	local _return=${FAILURE}
+	
+	if [[ $1 =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ]]; then
+		OLDIFS=${IFS}
+		IFS="."
+		declare -a IP=($1)
+		IFS=${OLDIFS}
+		[[ ${IP[0]} -le 255 ]] && [[ ${IP[1]} -le 255 ]] && [[ ${IP[2]} -le 255 ]] && [[ ${IP[3]} -le 255 ]] && {
+			_return=${SUCCESS}
+		}
+	fi 
+	
+	return $_return
+}	
 elif [[ $1 = "%%IMPORT%%" ]]; then
 	##Include defines from a file 
 	
