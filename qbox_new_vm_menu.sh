@@ -9,8 +9,8 @@ if NOT_DEFINE ${CURSES_DIALOG_H}; then
 fi 
 
 while : ; do 
-	exec 3>&1
 	
+	exec 3>&1
 		value=$(${DIALOG} \
 				--no-shadow --clear --extra-button --extra-label "Back" --colors --title "\Zb\Z0Create New Virtual Machine\Zn\ZB" \
 				--menu "\Zb\Z0New VM\Zn\ZB\nThis menu will help you configure the VM." ${HEIGHT} ${WIDTH} 3 1 "Basic configurations" \
