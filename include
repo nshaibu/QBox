@@ -53,8 +53,11 @@ elif [[ "$1" = "<network.h>" ]]; then
 	VLAN0=
 	MAC0=
 	MODEL0=
+	
 	USER0=
 	VLAN_USER0=
+	REDIRECT0=
+	
 	TAP0=
 	VLAN_TAP0=
 	IFNAME0=
@@ -72,8 +75,11 @@ elif [[ "$1" = "<network.h>" ]]; then
 	VLAN1=
 	MAC1=
 	MODEL1=
+	
 	USER1=
 	VLAN_USER1=
+	REDIRECT1=
+	
 	TAP1=
 	VLAN_TAP1=
 	IFNAME1=
@@ -91,8 +97,11 @@ elif [[ "$1" = "<network.h>" ]]; then
 	VLAN2=
 	MAC2=
 	MODEL2=
+	
 	USER2=
 	VLAN_USER2=
+	REDIRECT2=
+	
 	TAP2=
 	VLAN_TAP2=
 	IFNAME2=
@@ -110,8 +119,11 @@ elif [[ "$1" = "<network.h>" ]]; then
 	VLAN3=
 	MAC3=
 	MODEL3=
+	
 	USER3=
 	VLAN_USER3=
+	REDIRECT3=
+	
 	TAP3=
 	VLAN_TAP3=
 	IFNAME3=
@@ -449,16 +461,16 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				echo "Saving $VM_NAME ($percentage%)"
 				echo "XXX"	
 				
-				bash ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-				%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
+				bash ${LIB_DIR}/QBox/bash_s/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+				%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${REDIRECT0} %${TAP0} \
 				%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
-				%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${HOSTNAME1} %${TAP1} \
+				%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${REDIRECT1} %${TAP1} \
 				%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
-				%${MCAST1} %${NETWORK2} %${VLAN2} %${MAC2} %${MODEL2} %${USER2} %${VLAN_USER2} %${HOSTNAME2} %${TAP2} \
+				%${MCAST1} %${NETWORK2} %${VLAN2} %${MAC2} %${MODEL2} %${USER2} %${VLAN_USER2} %${REDIRECT2} %${TAP2} \
 				%${VLAN_TAP2} %${FD_TAP2} %${IFNAME2} %${SCRIPT2} %${SOCKET2} %${VLAN_SOCKET2} %${FD_SOCKET2} %${LISTEN2} %${CONNECT2} \
-				%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${HOSTNAME3} %${TAP3} \
+				%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${REDIRECT3} %${TAP3} \
 				%${VLAN_TAP3} %${FD_TAP3} %${IFNAME3} %${SCRIPT3} %${SOCKET3} %${VLAN_SOCKET3} %${FD_SOCKET3} %${LISTEN3} %${CONNECT3} \
-				%${MCAST3} %${SMB_SERVER} %${REDIRECT} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} % % %${QEMU_KEYBOARD} \
+				%${MCAST3} %${SMB_SERVER} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} % % %${QEMU_KEYBOARD} \
 				%${QEMU_FULLSCREEN} % %${SNAP_OT} % % % #2>/dev/null
 				
 				sleep 0.6			
@@ -524,7 +536,7 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	
 	function check_is_set() {
 		local tmp=$1
-		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${FAILURE}; }
+		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${SUCCESS}; }
 	}
 	
 	function String_to_Upper() {
@@ -654,11 +666,7 @@ elif [[ $1 = "%%IMPORT%%" ]]; then
 	if NOT_DEFINE ${BASIC_UTILS_H}; then
 		. ${LIB_DIR}/include '<basic_utils.h>'
 	fi
-	#temp_f=$(basename $2 .h)
-	#TEST_H_NAME=$(String_to_Upper $temp_f)
-	#TEST_H_NAME=${TEST_H_NAME//./_}
 	
-	#if NOT_DEFINE ${TEST_H_NAME}
-		 source $2
-	#fi 
+	source $2
+	
 fi
