@@ -53,20 +53,20 @@ function set_parameters(){
 		
 		USER0=${5//_/ }
 		VLAN_USER0=$6	
-		REDIRECT0=
+		REDIRECT0=$7
 		
-		TAP0=$7
-		VLAN_TAP0=$8
-		IFNAME0=$9
-		SCRIPT0=${10}
-		FD_TAP0=${11}
+		TAP0=$8
+		VLAN_TAP0=$9
+		IFNAME0=${10}
+		SCRIPT0=${11}
+		FD_TAP0=${12}
 		
-		SOCKET0=${12}	
-		VLAN_SOCKET0=${13}	
-		LISTEN0=${14}
-		CONNECT0=${15}	
-		FD_SOCKET0=${16} 
-		MCAST0=${17}
+		SOCKET0=${13}	
+		VLAN_SOCKET0=${14}	
+		LISTEN0=${15}
+		CONNECT0=${16}	
+		FD_SOCKET0=${17} 
+		MCAST0=${18}
 		
 	elif [[ $1 -eq 1 ]]; then
 		
@@ -77,20 +77,20 @@ function set_parameters(){
 		
 		USER1=${5//_/ }
 		VLAN_USER1=$6	
-		REDIRECT1=
+		REDIRECT1=$7
 		
-		TAP1=$7
-		VLAN_TAP1=$8
-		IFNAME1=$9
-		SCRIPT1=${10}
-		FD_TAP1=${11}
+		TAP1=$8
+		VLAN_TAP1=$9
+		IFNAME1=${10}
+		SCRIPT1=${11}
+		FD_TAP1=${12}
 		
-		SOCKET1=${12}	
-		VLAN_SOCKET1=${13}	
-		LISTEN1=${14}
-		CONNECT1=${15}	
-		FD_SOCKET1=${16} 
-		MCAST1=${17}
+		SOCKET1=${13}	
+		VLAN_SOCKET1=${14}	
+		LISTEN1=${15}
+		CONNECT1=${16}	
+		FD_SOCKET1=${17} 
+		MCAST1=${18}
 		
 		
 	elif [[ $1 -eq 2 ]]; then
@@ -102,20 +102,20 @@ function set_parameters(){
 		
 		USER2=${5//_/ }
 		VLAN_USER2=$6	
-		REDIRECT2=
+		REDIRECT2=$7
 		
-		TAP2=$7
-		VLAN_TAP2=$8
-		IFNAME2=$9
-		SCRIPT2=${10}
-		FD_TAP2=${11}
+		TAP2=$8
+		VLAN_TAP2=$9
+		IFNAME2=${10}
+		SCRIPT2=${11}
+		FD_TAP2=${12}
 		
-		SOCKET2=${12}	
-		VLAN_SOCKET2=${13}	
-		LISTEN2=${14}
-		CONNECT2=${15}	
-		FD_SOCKET2=${16}
-		MCAST2=${17}	
+		SOCKET2=${13}	
+		VLAN_SOCKET2=${14}	
+		LISTEN2=${15}
+		CONNECT2=${16}	
+		FD_SOCKET2=${17}
+		MCAST2=${18}	
 		
 	elif [[ $1 -eq 3 ]]; then
 		NETWORK3="-net nic"
@@ -125,20 +125,20 @@ function set_parameters(){
 		
 		USER3=${5//_/ }
 		VLAN_USER3=$6	
-		REDIRECT3=
+		REDIRECT3=$7
 		
-		TAP3=$7
-		VLAN_TAP3=$8
-		IFNAME3=$9
-		SCRIPT3=${10}
-		FD_TAP3=${11}
+		TAP3=$8
+		VLAN_TAP3=$9
+		IFNAME3=${10}
+		SCRIPT3=${11}
+		FD_TAP3=${12}
 		
-		SOCKET3=${12}	
-		VLAN_SOCKET3=${13}	
-		LISTEN3=${14}
-		CONNECT3=${15}	
-		FD_SOCKET3=${16} 
-		MCAST3=${17}	
+		SOCKET3=${13}	
+		VLAN_SOCKET3=${14}	
+		LISTEN3=${15}
+		CONNECT3=${16}	
+		FD_SOCKET3=${17} 
+		MCAST3=${18}	
 	fi	
 }
 
@@ -232,7 +232,7 @@ while [ 1 ]; do
 										TEMP_VLAN=${values#*|}
 										VLAN_NUM=${TEMP_VLAN/|/}
 									
-										error_func_display $(err_str "MAC_ADDR:${STRERROR[MAC_ADDR]}:is_valid_macaddr") $(err_str "VLAN_NUM:${STRERROR[VLAN_NUM]}:is_valid_VLAN")
+										error_func_display $(err_str "MAC_ADDR:${STRERROR[MAC_ADDR]}:is_valid_macaddr") $(err_str "VLAN_NUM:${STRERROR[VLAN_NUM]}:is_valid_VLAN")								
 										TEST_ERROR_OCURRED=$?
 										
 										[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ] && {
@@ -249,8 +249,9 @@ while [ 1 ]; do
 #											global_MODEL_FOR_USER_MODE=${MODELi}
 #											global_VLAN_FOR_USER_MODE=${VLANi}
 											
-											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${TAPi} ${VLAN_TAPi} ${IFNAMEi} \
-											${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} ${FD_SOCKETi} ${MCASTi}
+											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${REDIRECT0} ${TAPi} \
+											${VLAN_TAPi} ${IFNAMEi} ${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} \
+											${FD_SOCKETi} ${MCASTi}
 											
 											#break 3
 										}
@@ -638,9 +639,6 @@ while [ 1 ]; do
 					
 					test_using_user_mode=${FAILURE}
 					
-					#${DIALOG} \
-					#	--clear --colors --title "\Zb\Z0VM Port Redirection\Zn\ZB" \
-					#	--yesno "\nDo you want to allow port redirection  for the Virtual Machine \Zb[adapter ${i}]\ZB" $((HEIGHT-7)) $((WIDTH-10)) 
 					exec 3>&1
 					
 					value=`${DIALOG} \
@@ -753,7 +751,7 @@ while [ 1 ]; do
 													HOSTFWD=",hostfwd=udp:${HOST_IP}:${HOST_PORT_NUM}-${GUEST_IP_ADDR}:${GUEST_PORT_NUM}"
 													[[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ]] && {
 														
-														set_parameters ${j} ${global_VLAN_FOR_USER_MODE} ${global_MAC_FOR_USER_MODE} \
+														set_parameters ${j} "" ${global_MAC_FOR_USER_MODE} \
 														 ${global_MODEL_FOR_USER_MODE} ${HOSTFWD} ${global_VLAN_FOR_USER_MODE} "" "" "" \
 														 "" "" "" "" "" "" "" ""	
 														

@@ -14,11 +14,11 @@ QDB_FOLDER=${HD_IMG_DIR}/.qdb ##qbox database files location
 
 : ${LIB_DIR:=$HOME/my_script/QB}
 
-function DEFINE(){
+function DEFINE() {
 	[[ ${#@} -eq 1 ]] && eval $1=0 || eval $1=$2
 }
 
-function NOT_DEFINE(){
+function NOT_DEFINE() {
 	local _return=
 
 	case "$1" in
@@ -418,7 +418,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 		let let_move_boot=${FAILURE}
 		let let_move_save=${FAILURE}
 		
-		${DIALOG} --gauge "Please wait" 7 70 < <( 
+		${DIALOG} --gauge "Please wait" 7 70 < <(
 		while : ; do 
 			#Thu 23 Mar 2017 07:13:30 PM GMT -----Checking that values are set-------
 			[ ${let_move_boot} -eq ${FAILURE} ] && [ ${let_move_save} -eq ${FAILURE} ] && {
