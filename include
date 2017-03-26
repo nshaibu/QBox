@@ -137,6 +137,7 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 	NUM_CPU=
 	QEMU_USB=
 	CDROM=
+	QEMU_GRAPH=
 	
 	declare -A STR_ARCH=([x86_64]="Intel-8086(64bit)" [x86]="Intel-8086(64bit)" [amd64]="Intel-8086(64bit)" [i686]="Intel-8086(64bit)" \
 						 [x86_32]="Intel-8086(32bit)" [i386]="Intel-8086(32bit)" [arm]="ARM_little_endian" [armeb]="ARM_big_endian" \
@@ -278,12 +279,6 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 elif [[ "$1" = "<error.h>" ]]; then
 	DEFINE ERROR_H 0
 
-	mac_err_str=
-	vlan_err_str=
-	ip_err_str=
-	fd_err_str=
-	port_err_str=
-	
 	##Error strings format [name of variable]=error string //space char is not allowed in error string
 	declare -A STRERROR=([QEMU]="|*Architecture_is_NULL\n" [VM_NAME]="|*VM_Name_not_set\n" \
 						[NUM_CPU]="|*Number_of_CPU_NULL\n" [RAM_SIZE]="|*Ram_size_is_NULL\n" \
@@ -291,7 +286,8 @@ elif [[ "$1" = "<error.h>" ]]; then
 						[QEMU_USB]="|*Pointing_device_is_NULL\n" [VM_CDROM]="|*cdrom_is_NULL\n" \
 						[VLAN_NUM]="|*VLAN_number_should_be_within_this_range_[0-1000]\n" [FD_N]="|*File_descriptor_should_be_within_this_range_[0-1000]\n" \
 						[PORT_NUM]="|*Port_Number_should_be_with_this_range_[1-65535]\n" [MAC_ADDR]="|*Mac_Address_format_error\n" \
-						[IP_ADDR]="|*IP_format_error_[xxx.xxx.xxx.xxx]" [HOST_PORT_NUM]="${STRERROR[PORT_NUM]}" [GUEST_PORT_NUM]="${STRERROR[PORT_NUM]}")
+						[IP_ADDR]="|*IP_format_error_[xxx.xxx.xxx.xxx]\n" [HOST_PORT_NUM]="${STRERROR[PORT_NUM]}" [GUEST_PORT_NUM]="${STRERROR[PORT_NUM]}" \
+						[vm_name]="|*Name_is_not_unique_or_Name_is_empty\n" [DSK_VALID_SIZE]="|*Input_not_valid_Input_cannot_be_less_than_one_and_it_should_be_in_the_format_[0-9][G,M]_eg.10G")
 	
 	##input is in this format [values to test]:[error strings]:[function to test truth of values]
 	function err_str() {
@@ -528,7 +524,7 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	
 	function check_is_set() {
 		local tmp=$1
-		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${SUCCESS}; }
+		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${FAILURE}; }
 	}
 	
 	function String_to_Upper() {
@@ -612,6 +608,35 @@ function is_valid_fd() {
 	fi		
 	
 	return ${test_fd}
+}
+
+##unique for the vms. The name is used as the primary key for vms database
+function is_VMName_unique(){
+	local _return=${FAILURE}
+	
+	if check_is_set $1 ; then
+		local search="^$1\$"
+		local unique=$(gawk -F "|" -v var=$search '$1 ~ var {print $1}' ${QDB_FOLDER}/vms.qdb 2>/dev/null)
+		[ -z ${unique} ] && _return=${SUCCESS}
+	fi 
+	
+	return ${_return}
+}
+
+
+function disk_size_valid(){
+#Sat 28 Jan 2017 12:18:24 AM GMT 
+	local tmp=$1
+	if [[ -z "$1" ]]; then
+		return ${FAILURE}
+	fi 
+	
+	local first_part=${tmp%%[[:alpha:]]*}
+	local second_part=${tmp##*[[:digit:]]}
+	
+	isdigit ${first_part} && [[ ${first_part} -ge 1 ]] && [[ ${second_part} =~ [[:alpha:]] ]] && [[ "${second_part}" = "G" || "${second_part}" = "M" ]] && { return ${SUCCESS}; } 
+	
+	return ${FAILURE}
 }
 
 function is_valid_port_num() {

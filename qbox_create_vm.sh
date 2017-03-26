@@ -4,11 +4,10 @@
 
 . ${LIB_DIR}/include '<disk_details.h>' ##include disk creation functions
 
-if  NOT_DEFINE ${ARCHITECTURE_H} || NOT_DEFINE ${AUDIO_DISPLAY_H} || NOT_DEFINE ${BOOT_SYSTEM_H} || NOT_DEFINE ${CURSES_DIALOG_H} ; then
+if  NOT_DEFINE ${ARCHITECTURE_H} || NOT_DEFINE ${AUDIO_DISPLAY_H} || NOT_DEFINE ${BOOT_SYSTEM_H} ; then
 	. ${LIB_DIR}/include '<architecture.h>'
 	. ${LIB_DIR}/include '<audio_display.h>'
 	. ${LIB_DIR}/include '<boot_system.h>'
-	. ${LIB_DIR}/include '<curses_dialog.h>'
 fi 
 
 if NOT_DEFINE ${HOST_IP_H} || NOT_DEFINE ${VNC_INFO_H} || NOT_DEFINE ${TRUE_TEST_H} ; then
@@ -17,7 +16,10 @@ if NOT_DEFINE ${HOST_IP_H} || NOT_DEFINE ${VNC_INFO_H} || NOT_DEFINE ${TRUE_TEST
 	. ${LIB_DIR}/include '<true_test.h>'
 fi  
 
-
+if NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${CURSES_DIALOG_H} ; then
+	. ${LIB_DIR}/include '<basic_utils.h>'
+	. ${LIB_DIR}/include '<curses_dialog.h>'
+fi 
 
 ##ARRAY CONTAINERS FOR INFO OF OSes
 declare -a ARR_MICROSOFT_WINDOWS=("Windows3.1|32M|1G" "Windows95|64M|2G" "Windows98|64M|2G" "WindowsME|128M|4G" \
@@ -58,90 +60,16 @@ declare -i HEIGHT=18
 declare -i WIDTH=50
 
 
-function isdigit(){
-	if [ -z "$1" ]; then
-		return 	$FAILURE
-	fi 
-	
-	case "$1" in 
-		[[:digit:]]|[[:digit:]]*) return $SUCCESS ;;
-		*)	return $FAILURE ;;
-	esac
-}
-
-
-function error_display(){ 
-	
-	. ${LIB_DIR}/include "<error.h>"
-	
-	local _return=${SUCCESS}
-	
-	[ $1 -eq ${SUCCESS} ] && [ $2 -eq ${SUCCESS} ] && [ $3 -eq ${SUCCESS} ] && [ $4 -eq ${SUCCESS} ] && [ $5 -eq ${SUCCESS} ] || {
-	
-			if [[ $1 -eq ${FAILURE} ]]; then
-				mac_err_str="|* Name is not unique or Name is empty"
-				_return=${FAILURE}
-			elif [[ $2 -eq ${FAILURE} ]]; then
-				vlan_err_str="|* Input not valid.Input cannot be less than one and it should be in the format [0-9][G,M] eg.10G"
-				_return=${FAILURE}
-			elif [[ $3 -eq ${FAILURE} ]]; then
-				ip_err_str="|* IP Address not in right the format [xxx.xxx.xxx.xxx]"
-				_return=${FAILURE}
-			elif [[ $4 -eq ${FAILURE} ]]; then
-				fd_err_str="|* File descriptor should be within this range [0-1000]"
-				_return=${FAILURE}
-			elif [[ $5 -eq ${FAILURE} ]]; then
-				port_err_str="|* Port Number should be with this range [1-65535]"
-				_return=${FAILURE}
-			fi 
-	
-			error_str="${mac_err_str} ${vlan_err_str} ${ip_err_str} ${fd_err_str} ${port_err_str}"
-			error_str=`echo ${error_str} | tr -s " "`
-			str_error=${error_str//|/\\n}
-	
-			${DIALOG} \
-				--colors --title "\Zb\Z1Input Error\Zn\ZB" --msgbox "${str_error}" $((HEIGHT-7)) $((WIDTH-20))
-	}
-	
-	return ${_return}
-}
-
-##unique for the vms. The name is used as the primary key for vms database
-function is_VMName_unique(){
-	local _return=${FAILURE}
-	local search="^$1\$"
-	local unique=$(gawk -F "|" -v var=$search '$1 ~ var {print $1}' ${QDB_FOLDER}/vms.qdb 2>/dev/null)
-	[ -z ${unique} ] && _return=${SUCCESS}
-	return ${_return}
-}
-
-
-function disk_size_valid(){
-#Sat 28 Jan 2017 12:18:24 AM GMT 
-	local tmp=$1
-	if [[ -z "$1" ]]; then
-		return ${FAILURE}
-	fi 
-	
-	local first_part=${tmp%%[[:alpha:]]*}
-	local second_part=${tmp##*[[:digit:]]}
-	
-	isdigit ${first_part} && [[ ${first_part} -ge 1 ]] && [[ ${second_part} =~ [[:alpha:]] ]] && [[ "${second_part}" = "G" || "${second_part}" = "M" ]] && { return ${SUCCESS}; } 
-	
-	return ${FAILURE}
-}
-
 while [ 1 ]; do 
 	
-	let "TEST_ERROR_FUNC_RETN=${FAILURE}"
-	let "test_vmname=${FAILURE}"
+	let "TEST_ERROR_OCURRED=${SUCCESS}"
 	
-	while [[ ${TEST_ERROR_FUNC_RETN} -ne ${SUCCESS} ]]; do 
+	while [[ ${TEST_ERROR_OCURRED} -eq ${SUCCESS} ]]; do 
 		
 		exec 3>&1
 		
 		value=`${DIALOG} \
-				--no-shadow --clear --ok-label "Next" --trim --colors --title "\Zb\Z0Create Virtual Machine\Zn\ZB" \
+				--no-shadow --clear --cancel-label "Back" --ok-label "Next" --trim --colors --title "\Zb\Z0Create Virtual Machine\Zn\ZB" \
 				--form "\Zb\Z0Identification\Zn\ZB\nChoose a name for the VM. The name should not contain \Zb\Z0white spaces\Zn\ZB and \"\Zb\Z0|\Zn\ZB\".\
 				If possible choose a descriptive name. The length of the name should be at most \Zb\Z018 characters\Zn\ZB \
 				long. The name choosen should be \Zb\Z0unique\Zn\ZB." ${HEIGHT} ${WIDTH} 3 "Name:" 2 2 "" 2 7 37 18 2>&1 1>&3`
@@ -155,19 +83,15 @@ while [ 1 ]; do
 		
 		value=${value// /_}
 		vm_name=${value//|/}
-		vm_name=$(echo $vm_name | awk '{print toupper($0)}')
+		vm_name=$(String_to_Upper $vm_name)
 			
-		if [[ -n $vm_name ]] && is_VMName_unique $vm_name ; then
-			test_vmname=${SUCCESS}
-		fi 
-		
-		error_display ${test_vmname} ${SUCCESS} ${SUCCESS} ${SUCCESS} ${SUCCESS}
-		TEST_ERROR_FUNC_RETN=$?
+		error_func_display $(err_str "vm_name:${STRERROR[vm_name]}:is_VMName_unique")
+		TEST_ERROR_OCURRED=$?
 			
-		if [[ ${TEST_ERROR_FUNC_RETN} -eq ${SUCCESS} ]]; then
-			let "TEST_ERROR_FUNC_RETN=${FAILURE}"
+		if [[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ]]; then
+			let "TEST_ERROR_OCURRED=${SUCCESS}"
 			
-			VM_NAME=$value # set vm name 
+			VM_NAME=$vm_name # set vm name 
 			
 			while true ; do 
 				exec 3>&1
@@ -718,7 +642,7 @@ while [ 1 ]; do
 			exec 3>&-
 			
 			if [[ ${test_return} -eq ${DIALOG_OK} ]]; then
-				RAM_SIZE=$value 
+				RAM_SIZE="-m $value" 
 				
 				while [ 1 ]; do 
 					exec 3>&1
@@ -737,12 +661,12 @@ while [ 1 ]; do
 						${DIALOG_OK}) 
 							DISK_FORMAT=$value
 							
-							let "TEST_ERROR_FUNC_RETN=${FAILURE}"
+							let "TEST_ERROR_OCURRED=${SUCCESS}"
 							
-							while [[ ${TEST_ERROR_FUNC_RETN} -ne ${SUCCESS} ]]; do
+							while [[ ${TEST_ERROR_OCURRED} -eq ${SUCCESS} ]]; do
 								exec 3>&1
 									value=`${DIALOG} \
-										--no-shadow --clear  --extra-button --extra-label "Back" --ok-label "Create" --trim --colors \
+										--no-shadow --clear --cancel-label "Back" --ok-label "Create" --trim --colors \
 										--title "\Zb\Z0Create Virtual Machine\Zn\ZB" \
 										--form "\Zb\Z0Disk Size And Creation\Zn\ZB \nEnter the amount of space in Megabytes or Gigabytes to be allocated to the virtual machine as hard disk space.It should be in this format: \n       \Zb\Z0[0-9][G,M]\Zn\ZB. \nRecommended disk size \Zb\Z0${RECOM_DISK_SIZE}\Zn\ZB. " ${HEIGHT} ${WIDTH} 3 "Disk Size:" 2 2 "${RECOM_DISK_SIZE}" 2 12 29 6 2>&1 1>&3`
 								
@@ -751,17 +675,18 @@ while [ 1 ]; do
 							
 								case ${test_return} in 
 									${DIALOG_OK}) 
-										disk_size_valid $value
-										error_display ${SUCCESS} $? ${SUCCESS} ${SUCCESS} ${SUCCESS}
-										TEST_ERROR_FUNC_RETN=$?
+										DSK_VALID_SIZE=${value}
 										
-										if [[ ${TEST_ERROR_FUNC_RETN} -eq ${SUCCESS} ]]; then
-											DISK_SIZE=$value
+										error_func_display $(err_str "DSK_VALID_SIZE:${STRERROR[DSK_VALID_SIZE]}:disk_size_valid")
+										TEST_ERROR_OCURRED=$?
+										
+										if [[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ]]; then
+											DISK_SIZE=${DSK_VALID_SIZE}
 											
 											disk_image_creation ${DISK_FORMAT} ${Disk_Name} ${DISK_SIZE}
-											TEST_ERROR_FUNC_RETN_c=$?
+											_disk_c_failed=$?
 											
-											[[ ${TEST_ERROR_FUNC_RETN_c} -eq 1 ]] && {
+											[[ ${_disk_c_failed} -eq ${FAILURE} ]] && {
 												${DIALOG} \
 													--colors --extra-button  --extra-label "Cancel" --clear --ok-label "Continue" \
 													--title "\Zb\Z1Error Occured\Zn\ZB" \
@@ -772,7 +697,7 @@ while [ 1 ]; do
 													${DIALOG_OK}) break 2 ;;
 													${DIALOG_BACK}) rm -f ${Disk_Name} 2>/dev/null 2>&1; break 4 ;;
 												esac
-											}
+											} || { HD_BI_IMG="-hda ${Disk_Name}"; }
 											break 2
 										fi 
 									;;
@@ -781,7 +706,6 @@ while [ 1 ]; do
 								esac 
 							done 
 						;;
-						${DIALOG_BACK}) break ;;
 						${DIALOG_CANCEL}) break 3;;
 					esac
 				done
@@ -791,9 +715,6 @@ while [ 1 ]; do
 				break 2
 			fi 
 			
-#			${DIALOG} \
-#				--clear --colors --title "\Zb\Z0Create Virtual Machine\Zn\ZB" \
-#				--yesno "\nDo you want to enable sound for the Virtual Machine" $((HEIGHT-7)) $((WIDTH-10)) 
 				exec 3>&1
 					
 			value=`${DIALOG} \
@@ -873,6 +794,8 @@ while [ 1 ]; do
 								${DIALOG_OK}) 
 									[[ $value -eq 1 ]] && VGA="-vga cirrus" || VGA="-vga std" 
 									
+									QEMU_GRAPH="${VGA} ${DISPLAY_}"
+									
 									while [ 1 ]; do 
 										exec 3>&1
 											
@@ -885,6 +808,8 @@ while [ 1 ]; do
 										
 										case ${test_return} in 
 											${DIALOG_OK}) 
+												CPU="-cpu host"
+												CORE="-smp $value"
 												NUM_CPU="-cpu host -smp $value"
 #												Fri 10 Feb 2017 10:42:45 PM GMT 
 												

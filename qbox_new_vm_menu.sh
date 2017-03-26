@@ -13,7 +13,7 @@ while : ; do
 	exec 3>&1
 		value=$(${DIALOG} \
 				--no-shadow --clear --extra-button --extra-label "Back" --colors --title "\Zb\Z0Create New Virtual Machine\Zn\ZB" \
-				--menu "\Zb\Z0New VM\Zn\ZB\nThis menu will help you configure the VM." ${HEIGHT} ${WIDTH} 3 1 "Basic configurations" \
+				--menu "\Zb\Z0Create New VM\Zn\ZB\nThis menu will help you configure the VM." ${HEIGHT} ${WIDTH} 3 1 "Basic configurations" \
 				2 "Network configurations" 3 "Select Boot device" 2>&1 1>&3)
 	
 		let "test_return=$?"
