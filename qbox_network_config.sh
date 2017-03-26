@@ -51,8 +51,9 @@ function set_parameters(){
 		MAC0=$3
 		MODEL0=$4
 		
-		USER0=$5
+		USER0=${5//_/ }
 		VLAN_USER0=$6	
+		REDIRECT0=
 		
 		TAP0=$7
 		VLAN_TAP0=$8
@@ -74,8 +75,9 @@ function set_parameters(){
 		MAC1=$3
 		MODEL1=$4
 		
-		USER1=$5
+		USER1=${5//_/ }
 		VLAN_USER1=$6	
+		REDIRECT1=
 		
 		TAP1=$7
 		VLAN_TAP1=$8
@@ -89,6 +91,8 @@ function set_parameters(){
 		CONNECT1=${15}	
 		FD_SOCKET1=${16} 
 		MCAST1=${17}
+		
+		
 	elif [[ $1 -eq 2 ]]; then
 		
 		NETWORK2="-net nic"
@@ -96,8 +100,9 @@ function set_parameters(){
 		MAC2=$3
 		MODEL2=$4
 		
-		USER2=$5
+		USER2=${5//_/ }
 		VLAN_USER2=$6	
+		REDIRECT2=
 		
 		TAP2=$7
 		VLAN_TAP2=$8
@@ -111,15 +116,16 @@ function set_parameters(){
 		CONNECT2=${15}	
 		FD_SOCKET2=${16}
 		MCAST2=${17}	
-	
+		
 	elif [[ $1 -eq 3 ]]; then
 		NETWORK3="-net nic"
 		VLAN3=$2
 		MAC3=$3
 		MODEL3=$4
 		
-		USER3=$5
+		USER3=${5//_/ }
 		VLAN_USER3=$6	
+		REDIRECT3=
 		
 		TAP3=$7
 		VLAN_TAP3=$8
@@ -156,11 +162,6 @@ while [ 1 ]; do
 		for ((j=0; j<${NUM_ADAPTER}; j++))
 		do 
 				#test the correctness of field values
-				let "test_mac=${FAILURE}"
-				let "test_vlan=${FAILURE}"
-				let "test_ip=${FAILURE}"
-				let "test_fd=${FAILURE}"
-				let "test_port=${FAILURE}"
 				let "test_using_user_mode=${FAILURE}"
 				let "back_key_in_for_loop=${FAILURE}"
 				
@@ -240,13 +241,13 @@ while [ 1 ]; do
 											VLANi=",vlan=${VLAN_NUM}"
 											MACi=",macaddr=${MAC_ADDR}"
 											MODELi=",model=${MODEL}"
-											USERi="-net user"
+											USERi="-net_user"
 											VLAN_USERi=",vlan=${VLAN_NUM}"
 											
 											#Enable access globally
-											global_MAC_FOR_USER_MODE=${MACi}
-											global_MODEL_FOR_USER_MODE=${MODELi}
-											global_VLAN_FOR_USER_MODE=${VLANi}
+#											global_MAC_FOR_USER_MODE=${MACi}
+#											global_MODEL_FOR_USER_MODE=${MODELi}
+#											global_VLAN_FOR_USER_MODE=${VLANi}
 											
 											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${TAPi} ${VLAN_TAPi} ${IFNAMEi} \
 											${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} ${FD_SOCKETi} ${MCASTi}
@@ -708,7 +709,7 @@ while [ 1 ]; do
 													TEST_ERROR_OCURRED=$?
 													
 													#set parameters
-													HOSTFWD="-net user,hostfwd=tcp:${HOST_IP}:${HOST_PORT_NUM}-${GUEST_IP_ADDR}:${GUEST_PORT_NUM}"
+													HOSTFWD=",hostfwd=tcp:${HOST_IP}:${HOST_PORT_NUM}-${GUEST_IP_ADDR}:${GUEST_PORT_NUM}"
 													[[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ]] && {
 														
 														set_parameters ${j} ${global_VLAN_FOR_USER_MODE} ${global_MAC_FOR_USER_MODE} \
@@ -749,7 +750,7 @@ while [ 1 ]; do
 													TEST_ERROR_OCURRED=$?
 													
 													#set parameters
-													HOSTFWD="-net user,hostfwd=udp:${HOST_IP}:${HOST_PORT_NUM}-${GUEST_IP_ADDR}:${GUEST_PORT_NUM}"
+													HOSTFWD=",hostfwd=udp:${HOST_IP}:${HOST_PORT_NUM}-${GUEST_IP_ADDR}:${GUEST_PORT_NUM}"
 													[[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ]] && {
 														
 														set_parameters ${j} ${global_VLAN_FOR_USER_MODE} ${global_MAC_FOR_USER_MODE} \
