@@ -89,7 +89,9 @@ while true; do
 							VM_CDROM="-cdrom /dev/cdrom"
 						fi 	
 						
-						boot_system 
+						if ! boot_system ; then
+							break
+						fi 
 					;;
 					${DIALOG_BACK}) ;;
 					${DIALOG_CANCEL}) break ;;

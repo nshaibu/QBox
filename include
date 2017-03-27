@@ -636,10 +636,10 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 		if [[ ${err_set} -eq 255 ]]; then
 			local TMP_CMP=${CONFIG_PARAMS[$i_var]}
 			error_func_display "$(err_str "${TMP_CMP}:${STRERROR[$TMP_CMP]}:boot_system_err_func")" 
-			exit 1			
+			return ${FAILURE}			
 		fi
 		
-		
+		return ${SUCCESS}
 	}
 
 elif [[ $1 = "<curses_dialog.h>" ]]; then
