@@ -549,19 +549,20 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 	default_install_network="-net nic,vlan=0,macaddr=${MACADDR},model=e1000 -net user,vlan=0"
 
 	#boot function
-	function boot_system(){
+	function boot_system() {
 		let err_set=0 
 		let i_var=0
-		declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "NUM_CPU" "RAM_SIZE" "QEMU_GRAPH" "QEMU_SOUND" "QEMU_USB" "Disk_Name" \
+		declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "NUM_CPU" "RAM_SIZE" "QEMU_GRAPH" "Disk_Name" \
 									"VM_CDROM" "BOOT_ORDER" )
 		
 		let i=0
 		let percentage=0
 		let let_move_boot=${FAILURE}
 		let let_move_save=${FAILURE}
+		let "issaved=${FAILURE}"
 		
 		#${DIALOG} --gauge "Please wait" 7 70 < <(
-		(
+		{
 		while : ; do 
 			#Thu 23 Mar 2017 07:13:30 PM GMT -----Checking that values are set-------
 			[ ${let_move_boot} -eq ${FAILURE} ] && [ ${let_move_save} -eq ${FAILURE} ] && {
@@ -603,17 +604,22 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				echo "Saving ${VM_NAME:6:18} ($percentage%)"
 				echo "XXX"	
 				
-				bash ${LIB_DIR}/QBox/bash_s/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-				%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${REDIRECT0} %${TAP0} \
-				%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
-				%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${REDIRECT1} %${TAP1} \
-				%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
-				%${MCAST1} %${NETWORK2} %${VLAN2} %${MAC2} %${MODEL2} %${USER2} %${VLAN_USER2} %${REDIRECT2} %${TAP2} \
-				%${VLAN_TAP2} %${FD_TAP2} %${IFNAME2} %${SCRIPT2} %${SOCKET2} %${VLAN_SOCKET2} %${FD_SOCKET2} %${LISTEN2} %${CONNECT2} \
-				%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${REDIRECT3} %${TAP3} \
-				%${VLAN_TAP3} %${FD_TAP3} %${IFNAME3} %${SCRIPT3} %${SOCKET3} %${VLAN_SOCKET3} %${FD_SOCKET3} %${LISTEN3} %${CONNECT3} \
-				%${MCAST3} %${SMB_SERVER} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} % % %${QEMU_KEYBOARD} \
-				%${QEMU_FULLSCREEN} % %${SNAP_OT} % % % #2>/dev/null
+				[ $issaved -ne ${SUCCESS} ] && {
+					
+					bash ${LIB_DIR}/QBox/bash_s/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${REDIRECT0} %${TAP0} \
+					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
+					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${REDIRECT1} %${TAP1} \
+					%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
+					%${MCAST1} %${NETWORK2} %${VLAN2} %${MAC2} %${MODEL2} %${USER2} %${VLAN_USER2} %${REDIRECT2} %${TAP2} \
+					%${VLAN_TAP2} %${FD_TAP2} %${IFNAME2} %${SCRIPT2} %${SOCKET2} %${VLAN_SOCKET2} %${FD_SOCKET2} %${LISTEN2} %${CONNECT2} \
+					%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${REDIRECT3} %${TAP3} \
+					%${VLAN_TAP3} %${FD_TAP3} %${IFNAME3} %${SCRIPT3} %${SOCKET3} %${VLAN_SOCKET3} %${FD_SOCKET3} %${LISTEN3} %${CONNECT3} \
+					%${MCAST3} %${SMB_SERVER} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} % % %${QEMU_KEYBOARD} \
+					%${QEMU_FULLSCREEN} % %${SNAP_OT} % % % #2>/dev/null
+					
+					issaved=${SUCCESS}
+				}
 				
 				sleep 0.6			
 			}
@@ -621,19 +627,19 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			(( i_var=i ))
 			(( i+=1 ))
 			
-			(( percentage=i * 100 / 14 + 8 ))
-			[ $percentage -gt 100 ] && break
+			(( percentage=i * 100 / 14 + 7 ))
+			[ $percentage -ge 100 ] && break
 			
 			sleep 0.3
-		done ) | ${DIALOG} --gauge "Please wait" 7 70 0
+		done } | ${DIALOG} --gauge "Please wait" 7 70 0
 		
-		if [[ ${err_set} -ne 255 ]]; then
+		if [[ ${err_set} -eq 255 ]]; then
 			local TMP_CMP=${CONFIG_PARAMS[$i_var]}
 			error_func_display "$(err_str "${TMP_CMP}:${STRERROR[$TMP_CMP]}:boot_system_err_func")" 
 			exit 1			
 		fi
 		
-		return 0
+		
 	}
 
 elif [[ $1 = "<curses_dialog.h>" ]]; then

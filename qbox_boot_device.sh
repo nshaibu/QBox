@@ -78,6 +78,7 @@ while true; do
 				
 				let "test_return=$?"
 				exec 3>&-
+				
 				case ${test_return} in 
 					${DIALOG_OK}) 
 						if [[ $value -eq 1 ]]; then
@@ -88,8 +89,7 @@ while true; do
 							VM_CDROM="-cdrom /dev/cdrom"
 						fi 	
 						
-						boot_system ##try
-						#break
+						boot_system 
 					;;
 					${DIALOG_BACK}) ;;
 					${DIALOG_CANCEL}) break ;;
