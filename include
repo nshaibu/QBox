@@ -1,5 +1,24 @@
 #!/bin/bash
 
+#===========================================================================================
+# Copyright (C) 2017 Nafiu Shaibu.
+# Purpose: General library including system
+#-------------------------------------------------------------------------------------------
+# This is is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your option) 
+# any later version.
+
+# This is distributed in the hopes that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+# Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#===========================================================================================
+
 ######################Thu 09 Feb 2017 08:39:59 PM GMT##########################
 #	true_test.h, host_ip.h, loggs.h, network.h, architecture.h, vnc_info.h	  #
 #	error.h, disk_details.h, audio_display.h, boot_system.h, curses_dialog.h  #
@@ -48,6 +67,106 @@ function logger_logging(){
 
 elif [[ "$1" = "<network.h>" ]]; then
 	DEFINE NETWORK_H 0
+	
+function set_parameters(){
+	if [[ $1 -eq 0 ]]; then
+		
+		NETWORK0="-net nic"
+		VLAN0=$2
+		MAC0=$3
+		MODEL0=$4
+		
+		USER0=${5//_/ }
+		VLAN_USER0=$6	
+		REDIRECT0=$7
+		
+		TAP0=${8//_/ }
+		VLAN_TAP0=$9
+		IFNAME0=${10}
+		SCRIPT0=${11}
+		FD_TAP0=${12}
+		
+		SOCKET0=${13//_/ }	
+		VLAN_SOCKET0=${14}	
+		LISTEN0=${15}
+		CONNECT0=${16}	
+		FD_SOCKET0=${17} 
+		MCAST0=${18}
+		
+	elif [[ $1 -eq 1 ]]; then
+		
+		NETWORK1="-net nic"
+		VLAN1=$2
+		MAC1=$3
+		MODEL1=$4
+		
+		USER1=${5//_/ }
+		VLAN_USER1=$6	
+		REDIRECT1=$7
+		
+		TAP1=${8//_/ }
+		VLAN_TAP1=$9
+		IFNAME1=${10}
+		SCRIPT1=${11}
+		FD_TAP1=${12}
+		
+		SOCKET1=${13//_/ }	
+		VLAN_SOCKET1=${14}	
+		LISTEN1=${15}
+		CONNECT1=${16}	
+		FD_SOCKET1=${17} 
+		MCAST1=${18}
+		
+		
+	elif [[ $1 -eq 2 ]]; then
+		
+		NETWORK2="-net nic"
+		VLAN2=$2
+		MAC2=$3
+		MODEL2=$4
+		
+		USER2=${5//_/ }
+		VLAN_USER2=$6	
+		REDIRECT2=$7
+		
+		TAP2=${8//_/ }
+		VLAN_TAP2=$9
+		IFNAME2=${10}
+		SCRIPT2=${11}
+		FD_TAP2=${12}
+		
+		SOCKET2=${13//_/ }	
+		VLAN_SOCKET2=${14}	
+		LISTEN2=${15}
+		CONNECT2=${16}	
+		FD_SOCKET2=${17}
+		MCAST2=${18}	
+		
+	elif [[ $1 -eq 3 ]]; then
+		NETWORK3="-net nic"
+		VLAN3=$2
+		MAC3=$3
+		MODEL3=$4
+		
+		USER3=${5//_/ }
+		VLAN_USER3=$6	
+		REDIRECT3=$7
+		
+		TAP3=${8//_/ }
+		VLAN_TAP3=$9
+		IFNAME3=${10}
+		SCRIPT3=${11}
+		FD_TAP3=${12}
+		
+		SOCKET3=${13//_/ }	
+		VLAN_SOCKET3=${14}	
+		LISTEN3=${15}
+		CONNECT3=${16}	
+		FD_SOCKET3=${17} 
+		MCAST3=${18}	
+	fi	
+}
+	
 	#define USER_MODE ADAPTER 0
 	NETWORK0=
 	VLAN0=
@@ -150,6 +269,7 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 	QEMU_USB=
 	CDROM=
 	QEMU_GRAPH=
+	KVM_ENABLE=
 	
 	declare -A STR_ARCH=([x86_64]="Intel-8086(64bit)" [x86]="Intel-8086(64bit)" [amd64]="Intel-8086(64bit)" [i686]="Intel-8086(64bit)" \
 						 [x86_32]="Intel-8086(32bit)" [i386]="Intel-8086(32bit)" [arm]="ARM_little_endian" [armeb]="ARM_big_endian" \
@@ -178,16 +298,38 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 	
 	function architecture_type_choice(){
         case $1 in
-            1) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-i386` ;;
-            2) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-x86_64` ;;
-            3) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-arm` ;;
-            4) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-armeb` ;;
-            5) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc` ;;
-            6) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc64` ;;
-            7) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc` ;;
-            8) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc64` ;;
-            9) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mipsel` ;;
-            10) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mips` ;;
+            1) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-i386` 
+            	BOOT_ORDER="-boot order=d"
+            	KVM_ENABLE="-enable-kvm"
+            ;;
+            2) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-x86_64` 
+            	BOOT_ORDER="-boot order=d"
+            	KVM_ENABLE="-enable-kvm"
+            ;;
+            3) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-arm` 
+            	BOOT_ORDER="-boot order=d"
+            ;;
+            4) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-armeb` 
+            	BOOT_ORDER="-boot order=d"
+            ;;
+            5) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc` 
+            	BOOT_ORDER="-boot order=d"
+            ;;
+            6) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc64` 
+            	BOOT_ORDER="-boot order=d"
+            ;;
+            7) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc` 
+            	BOOT_ORDER="-boot order=d"
+            ;;
+            8) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc64` 
+            	BOOT_ORDER="-boot order=d"
+            ;;
+            9) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mipsel` 
+            	BOOT_ORDER="-boot order=d"
+            ;;
+            10) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mips` 
+            	BOOT_ORDER="-boot order=d"
+            ;;
         esac
 	}	
 	
@@ -411,14 +553,15 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 		let err_set=0 
 		let i_var=0
 		declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "NUM_CPU" "RAM_SIZE" "QEMU_GRAPH" "QEMU_SOUND" "QEMU_USB" "Disk_Name" \
-									"VM_CDROM" "KVM_ENABLE" "BOOT_ORDER" )
+									"VM_CDROM" "BOOT_ORDER" )
 		
 		let i=0
 		let percentage=0
 		let let_move_boot=${FAILURE}
 		let let_move_save=${FAILURE}
 		
-		${DIALOG} --gauge "Please wait" 7 70 < <(
+		#${DIALOG} --gauge "Please wait" 7 70 < <(
+		(
 		while : ; do 
 			#Thu 23 Mar 2017 07:13:30 PM GMT -----Checking that values are set-------
 			[ ${let_move_boot} -eq ${FAILURE} ] && [ ${let_move_save} -eq ${FAILURE} ] && {
@@ -442,13 +585,12 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			[ ${let_move_boot} -eq ${SUCCESS} ] && [ ${let_move_save} -eq ${FAILURE} ] && {
 				echo "XXX"
 				echo $percentage
-				echo "Booting $VM_NAME ($percentage%)"
+				echo "Booting ${VM_NAME:6:18} ($percentage%)"
 				echo "XXX"	
 				
 				${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${default_install_network} ${QEMU_GRAPH} ${QEMU_SOUND} \
-				${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>/dev/null
+				${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER}
 				
-				#[[ $? -eq ${FAILURE} ]] && break
 				let_move_save=${SUCCESS}
 				
 				sleep 1
@@ -458,7 +600,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			[ ${let_move_boot} -eq ${SUCCESS} ] && [ ${let_move_save} -eq ${SUCCESS} ] && {
 				echo "XXX"
 				echo $percentage
-				echo "Saving $VM_NAME ($percentage%)"
+				echo "Saving ${VM_NAME:6:18} ($percentage%)"
 				echo "XXX"	
 				
 				bash ${LIB_DIR}/QBox/bash_s/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
@@ -479,11 +621,11 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			(( i_var=i ))
 			(( i+=1 ))
 			
-			(( percentage=i * 100 / 14 + 7 ))
+			(( percentage=i * 100 / 14 + 8 ))
 			[ $percentage -gt 100 ] && break
 			
 			sleep 0.3
-		done ) #| ${DIALOG} --gauge "Please wait" 7 70 0
+		done ) | ${DIALOG} --gauge "Please wait" 7 70 0
 		
 		if [[ ${err_set} -ne 255 ]]; then
 			local TMP_CMP=${CONFIG_PARAMS[$i_var]}
@@ -536,7 +678,7 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	
 	function check_is_set() {
 		local tmp=$1
-		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${SUCCESS}; }
+		[ -n "$tmp" ] && { tmp=""; return ${SUCCESS}; } || { tmp=""; return ${FAILURE}; }
 	}
 	
 	function String_to_Upper() {
@@ -560,7 +702,16 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 		fi 
 	}
 	
+	#function pointer for ip verification
+	function ip_func_pointer() {
+		local test_ip=${FAILURE}
 		
+		if [ -z $1 ] || is_IP_Valid $1; then
+			test_ip=${SUCCESS}
+		fi 	
+		return ${test_ip}	
+	}
+
 ##Test whether input is char 
 function isdigit(){
 	if [ -z "$1" ]; then

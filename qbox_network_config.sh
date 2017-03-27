@@ -1,9 +1,28 @@
 #!/bin/bash
 
+#===========================================================================================
+# Copyright (C) 2017 Nafiu Shaibu.
+# Purpose: Configure Networks for VM, port redirection and shares
+#-------------------------------------------------------------------------------------------
+# This is is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your option) 
+# any later version.
+
+# This is distributed in the hopes that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+# Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#===========================================================================================
+
 : ${LIB_DIR:=$HOME/my_script/QB}
 
-. ${LIB_DIR}/include '<network.h>'
 . ${LIB_DIR}/include '<true_test.h>'
+. ${LIB_DIR}/include '<network.h>'
 
 if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${ARCHITECTURE_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
@@ -27,120 +46,11 @@ declare -i WIDTH=50
 global_MAC_FOR_USER_MODE=
 global_MODEL_FOR_USER_MODE=
 global_VLAN_FOR_USER_MODE=
-		
+global_USER_FOR_USER_MODE=
+global_VLANUSER_FOR_USER_MODE=
+global_MODEL=
 
 printf -v MACADDR "52:54:%02x:%02x:%02x:%02x" $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff )) $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff ))
-
-
-#function pointer for ip verification
-function ip_func_pointer() {
-	local test_ip=${FAILURE}
-	
-	if [ -z $1 ] || is_IP_Valid $1; then
-		test_ip=${SUCCESS}
-	fi 	
-	return ${test_ip}	
-}
-
-
-function set_parameters(){
-	if [[ $1 -eq 0 ]]; then
-		
-		NETWORK0="-net nic"
-		VLAN0=$2
-		MAC0=$3
-		MODEL0=$4
-		
-		USER0=${5//_/ }
-		VLAN_USER0=$6	
-		REDIRECT0=$7
-		
-		TAP0=$8
-		VLAN_TAP0=$9
-		IFNAME0=${10}
-		SCRIPT0=${11}
-		FD_TAP0=${12}
-		
-		SOCKET0=${13}	
-		VLAN_SOCKET0=${14}	
-		LISTEN0=${15}
-		CONNECT0=${16}	
-		FD_SOCKET0=${17} 
-		MCAST0=${18}
-		
-	elif [[ $1 -eq 1 ]]; then
-		
-		NETWORK1="-net nic"
-		VLAN1=$2
-		MAC1=$3
-		MODEL1=$4
-		
-		USER1=${5//_/ }
-		VLAN_USER1=$6	
-		REDIRECT1=$7
-		
-		TAP1=$8
-		VLAN_TAP1=$9
-		IFNAME1=${10}
-		SCRIPT1=${11}
-		FD_TAP1=${12}
-		
-		SOCKET1=${13}	
-		VLAN_SOCKET1=${14}	
-		LISTEN1=${15}
-		CONNECT1=${16}	
-		FD_SOCKET1=${17} 
-		MCAST1=${18}
-		
-		
-	elif [[ $1 -eq 2 ]]; then
-		
-		NETWORK2="-net nic"
-		VLAN2=$2
-		MAC2=$3
-		MODEL2=$4
-		
-		USER2=${5//_/ }
-		VLAN_USER2=$6	
-		REDIRECT2=$7
-		
-		TAP2=$8
-		VLAN_TAP2=$9
-		IFNAME2=${10}
-		SCRIPT2=${11}
-		FD_TAP2=${12}
-		
-		SOCKET2=${13}	
-		VLAN_SOCKET2=${14}	
-		LISTEN2=${15}
-		CONNECT2=${16}	
-		FD_SOCKET2=${17}
-		MCAST2=${18}	
-		
-	elif [[ $1 -eq 3 ]]; then
-		NETWORK3="-net nic"
-		VLAN3=$2
-		MAC3=$3
-		MODEL3=$4
-		
-		USER3=${5//_/ }
-		VLAN_USER3=$6	
-		REDIRECT3=$7
-		
-		TAP3=$8
-		VLAN_TAP3=$9
-		IFNAME3=${10}
-		SCRIPT3=${11}
-		FD_TAP3=${12}
-		
-		SOCKET3=${13}	
-		VLAN_SOCKET3=${14}	
-		LISTEN3=${15}
-		CONNECT3=${16}	
-		FD_SOCKET3=${17} 
-		MCAST3=${18}	
-	fi	
-}
 
 let "back_key_in_for_loop=${FAILURE}"
 let "i=0"
@@ -161,6 +71,7 @@ while [ 1 ]; do
 		
 		for ((j=0; j<${NUM_ADAPTER}; j++))
 		do 
+				
 				#test the correctness of field values
 				let "test_using_user_mode=${FAILURE}"
 				let "back_key_in_for_loop=${FAILURE}"
@@ -202,6 +113,7 @@ while [ 1 ]; do
 						5) MODEL="ne2k_isa" ;;
 					esac
 											
+					global_MODEL=${MODEL}
 																		
 					case ${ATTACH_METHOD} in 
 						1) 
@@ -240,18 +152,21 @@ while [ 1 ]; do
 											#NETWORKi="-net nic"
 											VLANi=",vlan=${VLAN_NUM}"
 											MACi=",macaddr=${MAC_ADDR}"
-											MODELi=",model=${MODEL}"
+											MODELi=",model=${global_MODEL}"
+											
 											USERi="-net_user"
 											VLAN_USERi=",vlan=${VLAN_NUM}"
 											
 											#Enable access globally
-#											global_MAC_FOR_USER_MODE=${MACi}
-#											global_MODEL_FOR_USER_MODE=${MODELi}
-#											global_VLAN_FOR_USER_MODE=${VLANi}
+											global_MAC_FOR_USER_MODE="${MACi}"
+											global_MODEL_FOR_USER_MODE="${MODELi}"
+											global_VLAN_FOR_USER_MODE="${VLANi}"
+											global_USER_FOR_USER_MODE="${USERi}"
+											global_VLANUSER_FOR_USER_MODE="${VLAN_USERi}"
 											
-											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${REDIRECT0} ${TAPi} \
-											${VLAN_TAPi} ${IFNAMEi} ${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} \
-											${FD_SOCKETi} ${MCASTi}
+											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${REDIRECT0} " " \
+											" " " " " " " " " " " " " " " " \
+											" " " "
 											
 											#break 3
 										}
@@ -271,8 +186,8 @@ while [ 1 ]; do
 									--form "Open tun/tap interface \Zb[adapter ${j}]\ZB" ${HEIGHT} ${WIDTH} 10 \
 									"IP Address:" 2 1 "" 2 13 -18 12 "Port:" 2 32 "" 2 37 -6 6 \
 									"MAC Address:" 3 1 "${MACADDR}" 3 13 18 0 "VLAN:" 3 32 "0" 3 37 6 4 \
-									"File descriptor:" 5 1 "" 5 16 -18 0 "TUN/TAP Script:" 7 1 "" 7 16 27 58 \
-									"Interface Name:" 8 1 "" 8 16 27 58 2>&1 1>&3` # 2>$temp_file						
+									"File descriptor:" 5 1 "" 5 16 -18 0 "TUN/TAP Script:" 7 1 " " 7 16 27 58 \
+									"Interface Name:" 8 1 " " 8 16 27 58 2>&1 1>&3` # 2>$temp_file						
 							
 								RETURN_CODE=$?
 								exec 3>&- ##close file descriptor
@@ -286,7 +201,7 @@ while [ 1 ]; do
 										VLAN_NUM=`echo ${values} | cut -d "|" -f2`
 										SCRIPT_PATH=`echo ${values} | cut -d "|" -f3`
 									
-										error_func_display $(err_str "MAC_ADDR:${STRERROR[MAC_ADDR]}:is_valid_macaddr") $(err_str "VLAN_NUM:${STRERROR[VLAN_NUM]}:is_valid_VLAN")
+										error_func_display $(err_str "MAC_ADDR:${STRERROR[MAC_ADDR]}:is_valid_macaddr") $(err_str "VLAN_NUM:${STRERROR[VLAN_NUM]}:is_valid_VLAN")							
 										TEST_ERROR_OCURRED=$?
 										
 										[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ] && {
@@ -294,15 +209,15 @@ while [ 1 ]; do
 											NETWORKi="-net nic"
 											VLANi=",vlan=${VLAN_NUM}"
 											MACi=",macaddr=${MAC_ADDR}"
-											MODELi=",model=${MODEl}"
-											TAPi="-net tap"
+											MODELi=",model=${global_MODEl}"
+											
+											TAPi="-net_tap"
 											VLAN_TAPi=",vlan=${VLAN_NUM}"
 											IFNAMEi=",ifname=${IF_NAME}"
 											SCRIPTi=",script=${SCRIPT_PATH}"
 													
-											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${TAPi} ${VLAN_TAPi} \
-											${IFNAMEi} ${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} ${FD_SOCKETi} \
-											${MCASTi}											
+											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} " " " " " " ${TAPi} ${VLAN_TAPi} ${FD_TAPi} \
+											${IFNAMEi} ${SCRIPTi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} ${FD_SOCKETi} ${MCASTi}
 											
 											#break 3
 										}
@@ -349,14 +264,14 @@ while [ 1 ]; do
 											
 											VLANi=",vlan=${VLAN_NUM}"
 											MACi=",macaddr=${MAC_ADDR}"
-											MODELi=",model=${MODEL}"	
-											SOCKETi="-net socket"	
+											MODELi=",model=${global_MODEL}"	
+											
+											SOCKETi="-net_socket"	
 											VLAN_SOCKETi=",vlan=${VLAN_NUM}"	
 											LISTENi=",listen=${IP_ADDR}:${PORT_NUM}"	
 											
-											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${TAPi} ${VLAN_TAPi} \
-											${IFNAMEi} ${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} ${FD_SOCKETi} \
-											${MCASTi}												
+											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} " " " " " " " " " " " " " " " " ${SOCKETi} ${VLAN_SOCKETi} \
+											${LISTENi} ${CONNECTi} ${FD_SOCKETi} ${MCASTi}
 											#break 3							
 										}
 									;;
@@ -378,8 +293,8 @@ while [ 1 ]; do
 									--form "Use already Opened tun/tap interface \Zb[adapter ${j}]\ZB" ${HEIGHT} ${WIDTH} 10 \
 									"IP Address:" 2 1 "" 2 13 -18 15 "Port:" 2 32 "" 2 37 -6 6 \
 									"MAC Address:" 3 1 "${MACADDR}" 3 13 18 0 "VLAN:" 3 32 "0" 3 37 6 4 \
-									"File descriptor:" 5 1 "0" 5 17 6 4 "TUN/TAP Script:" 7 1 "" 7 16 -27 58 \
-									"Interface Name:" 8 1 "" 8 16 -27 58 2>&1 1>&3`						
+									"File descriptor:" 5 1 "0" 5 17 6 4 "TUN/TAP Script:" 7 1 " " 7 16 -27 58 \
+									"Interface Name:" 8 1 " " 8 16 -27 58 2>&1 1>&3`						
 								
 								RETURN_CODE=$?
 								exec 3>&- ##close file descriptor
@@ -399,14 +314,14 @@ while [ 1 ]; do
 											
 											VLANi=",vlan=${VLAN_NUM}"
 											MACi=",macaddr=${MAC_ADDR}"
-											MODELi=",model=${MODEL}"
-											TAPi="-net tap"
-											VLAN_TAPi=",vlan=${MAC_ADDR}"
+											MODELi=",model=${global_MODEL}"
+											
+											TAPi="-net_tap"
+											VLAN_TAPi=",vlan=${VLAN_NUM}"
 											FD_TAPi=",fd=${FD_N}"
 											
-											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${TAPi} ${VLAN_TAPi} \
-											${IFNAMEi} ${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} ${FD_SOCKETi} \
-											${MCASTi}		
+											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} " " " " " " ${TAPi} ${VLAN_TAPi} ${FD_TAPi} \
+											 ${IFNAMEi} ${SCRIPTi} " " " " " " "" " " " "
 																					
 											#break 3
 										}
@@ -455,13 +370,14 @@ while [ 1 ]; do
 											
 											VLANi=",vlan=${VLAN_NUM}"
 											MACi=",macaddr=${MAC_ADDR}"
-											MODEi=",model=${MODEL}"
+											MODELi=",model=${global_MODEL}"
+											
+											SOCKETi="-net_socket"	
 											VLAN_SOCKETi=",vlan=${VLAN_NUM}"
 											CONNECTi=",connect=${IP_ADDR}:${PORT_NUM}"
 											
-											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${TAPi} ${VLAN_TAPi} \
-											${IFNAMEi} ${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} ${FD_SOCKETi} \
-											${MCASTi}	
+											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} " " " " " " " " " " " " " " " " ${SOCKETi} ${VLAN_SOCKETi} \
+											" " ${CONNECTi} ${FD_SOCKETi} ${MCASTi}
 																						
 											#break 3
 										}
@@ -508,14 +424,14 @@ while [ 1 ]; do
 											
 											VLANi=",vlan=${VLAN_NUM}"
 											MACi=",macaddr=${MAC_ADDR}"
-											MODELi=",model=${MODEL}"
-											SOCKETi="-net socket"
+											MODELi=",model=${global_MODEL}"
+											
+											SOCKETi="-net_socket"
 											VLAN_SOCKETi=",vlan=${VLAN_NUM}"
 											FD_SOCKETi=",fd=${FD_N}"
 											
-											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${TAPi} ${VLAN_TAPi} \
-											${IFNAMEi} ${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} ${FD_SOCKETi} \
-											${MCASTi}	
+											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} " " " " " " " " \
+											" " " " " " " " ${SOCKETi} ${VLAN_SOCKETi} " " " " ${FD_SOCKETi} " "
 																						
 											#break 3
 										}
@@ -561,14 +477,15 @@ while [ 1 ]; do
 											
 											VLANi=",vlan=${VLAN_NUM}"
 											MACi=",macaddr=${MAC_ADDR}"
-											MODELi=",model=${MODEL}"
-											SOCKETi="-net socket"
+											MODELi=",model=${global_MODEL}"
+											
+											SOCKETi="-net_socket"
 											VLAN_SOCKETi=",vlan=${VLAN_NUM}"
 											MCASTi=",mcast=${IP_ADDR}:${PORT_NUM}"
 											
-											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${TAPi} ${VLAN_TAPi} \
-											${IFNAMEi} ${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} ${FD_SOCKETi} \
-											${MCASTi}	
+											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} " " " " " " " " \
+											" " " " " " " " ${SOCKETi} ${VLAN_SOCKETi} " " " " \
+											" " ${MCASTi}
 																						
 											#break 3
 									}									
@@ -613,13 +530,15 @@ while [ 1 ]; do
 											
 											VLANi=",vlan=${VLAN_NUM}"
 											MACi=",macaddr=${MAC_ADDR}"
-											MODELi=",model=${MODEL}"
-											SOCKETi="-net socket"
+											MODELi=",model=${global_MODEL}"
+											
+											SOCKETi="-net_socket"
+											VLAN_SOCKETi=",vlan=${VLAN_NUM}"
 											FD_SOCKETi=",fd=${FD_N}"
 											
-											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} ${USERi} ${VLAN_USERi} ${TAPi} ${VLAN_TAPi} \
-											${IFNAMEi} ${SCRIPTi} ${FD_TAPi} ${SOCKETi} ${VLAN_SOCKETi} ${LISTENi} ${CONNECTi} ${FD_SOCKETi} \
-											${MCASTi}	
+											set_parameters ${j} ${VLANi} ${MACi} ${MODELi} " " " " " " " " \
+											" " " " " " " " ${SOCKETi} ${VLAN_SOCKETi} " " " " \
+											${FD_SOCKETi} " "
 																						
 											#break 3
 										}										
@@ -711,8 +630,8 @@ while [ 1 ]; do
 													[[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ]] && {
 														
 														set_parameters ${j} ${global_VLAN_FOR_USER_MODE} ${global_MAC_FOR_USER_MODE} \
-														 ${global_MODEL_FOR_USER_MODE} ${HOSTFWD} ${global_VLAN_FOR_USER_MODE} "" "" "" \
-														 "" "" "" "" "" "" "" ""	
+														${global_MODEL_FOR_USER_MODE} ${global_USER_FOR_USER_MODE} ${global_VLANUSER_FOR_USER_MODE} \
+														${HOSTFWD}  "" "" "" "" "" "" "" "" "" "" ""
 													}
 												;;
 											esac
@@ -751,9 +670,9 @@ while [ 1 ]; do
 													HOSTFWD=",hostfwd=udp:${HOST_IP}:${HOST_PORT_NUM}-${GUEST_IP_ADDR}:${GUEST_PORT_NUM}"
 													[[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ]] && {
 														
-														set_parameters ${j} "" ${global_MAC_FOR_USER_MODE} \
-														 ${global_MODEL_FOR_USER_MODE} ${HOSTFWD} ${global_VLAN_FOR_USER_MODE} "" "" "" \
-														 "" "" "" "" "" "" "" ""	
+														set_parameters ${j} ${global_VLAN_FOR_USER_MODE} ${global_MAC_FOR_USER_MODE} \
+														${global_MODEL_FOR_USER_MODE} ${global_USER_FOR_USER_MODE} ${global_VLANUSER_FOR_USER_MODE} \
+														${HOSTFWD}  "" "" "" "" "" "" "" "" "" "" ""
 														
 													}								
 												;;

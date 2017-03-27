@@ -1,11 +1,30 @@
 #!/bin/bash
 
+#===========================================================================================
+# Copyright (C) 2017 Nafiu Shaibu.
+# Purpose: VM Info and identifications
+#-------------------------------------------------------------------------------------------
+# This is is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your option) 
+# any later version.
+
+# This is distributed in the hopes that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+# Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#===========================================================================================
+
 : ${LIB_DIR:=$HOME/my_script/QB}
 
 . ${LIB_DIR}/include '<disk_details.h>' ##include disk creation functions
+. ${LIB_DIR}/include '<architecture.h>'
 
-if  NOT_DEFINE ${ARCHITECTURE_H} || NOT_DEFINE ${AUDIO_DISPLAY_H} || NOT_DEFINE ${BOOT_SYSTEM_H} ; then
-	. ${LIB_DIR}/include '<architecture.h>'
+if NOT_DEFINE ${AUDIO_DISPLAY_H} || NOT_DEFINE ${BOOT_SYSTEM_H} ; then
 	. ${LIB_DIR}/include '<audio_display.h>'
 	. ${LIB_DIR}/include '<boot_system.h>'
 fi 
@@ -91,7 +110,7 @@ while [ 1 ]; do
 		if [[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ]]; then
 			let "TEST_ERROR_OCURRED=${SUCCESS}"
 			
-			VM_NAME=$vm_name # set vm name 
+			VM_NAME="-name ${vm_name}" # set vm name 
 			
 			while true ; do 
 				exec 3>&1
@@ -698,6 +717,7 @@ while [ 1 ]; do
 													${DIALOG_BACK}) rm -f ${Disk_Name} 2>/dev/null 2>&1; break 4 ;;
 												esac
 											} || { HD_BI_IMG="-hda ${Disk_Name}"; }
+											
 											break 2
 										fi 
 									;;
@@ -714,23 +734,26 @@ while [ 1 ]; do
 			elif [[ ${test_return} -eq ${DIALOG_CANCEL} ]]; then
 				break 2
 			fi 
-			
-				exec 3>&1
+				
+			let "value_audio=0"
+			let "value_fullscrn=0"
+				
+			exec 3>&1
 					
 			value=`${DIALOG} \
 				--no-shadow --no-tags --output-separator "|" --clear --colors --title "\Zb\Z0Create Virtual Machine\Zn\ZB" \
 				--checklist "\Zb\Z0Enable Fullscreen And Audio\Zn\ZB \nWhen you enable fullscreen for Virtual Machine you can switch back to windows mode by using the key combinations \Zb\Z0ctrl+Alt+f\Zn\ZB. \nEnable audio and selected sound hardware. \n\nPress the \Zb\Z0SPACE-KEY\Zn\ZB to make a choice" ${HEIGHT} ${WIDTH} 2 1 "Start in Fullscreen Mode" off 2 "Enable Audio" off 2>&1 1>&3`
 				
 				let "test_return=$?"
-				exec 3>&-
+			exec 3>&-
 				
-				tmp_value=${value#*|}
-				declare -i value_fullscrn=${tmp_value%%|*}
+				#tmp_value=${value#*|}
+				declare -i value_fullscrn=${value%%|*}
 				declare -i value_audio=${value##*|}
 				
 				case ${test_return} in 
 					${DIALOG_OK}) 
-						[[ "$value_fullscrn" = "2" ]] && {
+						[[ ${value_audio} -eq 2 ]] && {
 							exec 3>&1
 							value=`${DIALOG} \
 								--no-shadow --colors --nook --nocancel --title "\Zb\Z0Create Virtual Machine\Zn\ZB" \
@@ -747,7 +770,7 @@ while [ 1 ]; do
 								esac
 						}
 						
-						[[ "$value_redir" = "1" ]] && { QEMU_FULLSCREEN="-full-screen"; }
+						[[ ${value_fullscrn} -eq 1 ]] && { QEMU_FULLSCREEN="-full-screen"; }
 					;;
 					${DIALOG_CANCEL}) ;;
 				esac
