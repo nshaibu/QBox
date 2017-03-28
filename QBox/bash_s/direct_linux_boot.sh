@@ -19,22 +19,7 @@
 
 #===========================================================================================
 
-##global variables
-HD_IMG_DIR=$HOME/.img_qemubox
-TEMP_FOLDER=${HD_IMG_DIR}/.tmp_qbox
-QDB_FOLDER=${HD_IMG_DIR}/.qdb ##qbox database files location
-LOG_DIR=${HD_IMG_DIR}/logs_dir
-BOOT_DIR=${HD_IMG_DIR}/.qemuboot ## contain boot files
-TAP_DIR=${HD_IMG_DIR}/.tap_dir ## contains tap interface script to be used by the vm
-
-#Directory containing QBox
-QBOX_DIR=/usr/local/bin/QBox
-DIALOG=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% dialog`
-
-##check and creates qbox databse directory
-if ! [ -d ${QDB_FOLDER} ];then
-	mkdir ${QDB_FOLDER}
-fi
+: ${DIALOG:=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% dialog`}
 
 ##unique for the vms. The name is used as the primary key for vms database
 function unique_vm_name(){

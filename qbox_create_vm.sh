@@ -753,7 +753,7 @@ while [ 1 ]; do
 				
 				case ${test_return} in 
 					${DIALOG_OK}) 
-						[[ ${value_audio} -eq 2 ]] && {
+						[ ${value_audio} -eq 2 ] && {
 							exec 3>&1
 							value=`${DIALOG} \
 								--no-shadow --colors --nook --nocancel --title "\Zb\Z0Create Virtual Machine\Zn\ZB" \
@@ -770,7 +770,7 @@ while [ 1 ]; do
 								esac
 						}
 						
-						[[ ${value_fullscrn} -eq 1 ]] && { QEMU_FULLSCREEN="-full-screen"; }
+						[ ${value_fullscrn} -eq 1 ] && { QEMU_FULLSCREEN="-full-screen"; }
 					;;
 					${DIALOG_CANCEL}) ;;
 				esac
