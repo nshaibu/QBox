@@ -783,7 +783,7 @@ function is_valid_fd() {
 function is_VMName_unique(){
 	local _return=${FAILURE}
 	
-	if check_is_set $1 ; then
+	if check_is_set $(String_to_Upper $1) ; then
 		local search="^$1\$"
 		local unique=$(gawk -F "|" -v var=$search '$1 ~ var {print $1}' ${QDB_FOLDER}/vms.qdb 2>/dev/null)
 		[ -z ${unique} ] && _return=${SUCCESS}
@@ -824,6 +824,9 @@ elif [[ $1 = "%%IMPORT%%" ]]; then
 		. ${LIB_DIR}/include '<basic_utils.h>'
 	fi
 	
-	source $2
+	${LIB_DIR}/init.sh
+	#: ${loaded_lib:="${LIB_DIR}/$2"}
+	#echo ${loaded_lib}>${LIB_DIR}/v.txt
+	#${loaded_lib}
 	
 fi
