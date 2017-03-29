@@ -22,6 +22,7 @@
 : ${LIB_DIR:=$HOME/my_script/QB}
 
 . ${LIB_DIR}/include '<random_uid.h>'
+. ${LIB_DIR}/import '<init.h>'
 
 DEFINE DIRECT_LINUX_BOOT
 
@@ -42,12 +43,12 @@ fi
 Disk_Name=${RANDOM_UID}.img
 let "_save_=${FAILURE}"
 
-#while [ $test -eq 1 ]; do 
+while : ; do 
 	exec 3>&1
 		value=$(${DIALOG} \
-				--no-shadow --trim --ok-label "Boot" --output-separator "|" --form "Linux Direct Boot" ${HEIGHT} ${WIDTH} 11 \
-				"Machine Name:" 1 2 "" 2 2 $((WIDTH-8)) 50 "Kernel Image:" 4 2 "" 5 2 $((WIDTH-8)) 50 "Initial Ram Disk:" 7 2 "" 8 2 $((WIDTH-8)) 50 \
-				"Kernel Commad Line:" 10 2 "" 11 2 $((WIDTH-8)) 50 2>&1 1>&3)
+				--no-shadow --trim --default-button "ok" --cancel-label "back"  --ok-label "Boot" --output-separator "|" --form "Linux Direct Boot" \
+				${HEIGHT} ${WIDTH} 11 "Machine Name:" 1 2 "" 2 2 $((WIDTH-8)) 50 "Kernel Image:" 4 2 "" 5 2 $((WIDTH-8)) 50 \
+				"Initial Ram Disk:" 7 2 "" 8 2 $((WIDTH-8)) 50 "Kernel Commad Line:" 10 2 "" 11 2 $((WIDTH-8)) 50 2>&1 1>&3)
 			
 			let "test_return=$?"
 	exec 3>&-
@@ -145,7 +146,6 @@ let "_save_=${FAILURE}"
 			boot_system ${_save_}
 
 		;;
-		${DIALOG_CANCEL}) ;;
-		${DIALOG_BACK}) ;;
+		${DIALOG_CANCEL}) break ;;
 	esac
-#done
+done
