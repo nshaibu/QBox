@@ -30,7 +30,7 @@ fi
 while : ; do 
 	exec 3>&1
 		value=$(${DIALOG} \
-				--no-shadow --clear --cancel-label "Exit" --colors --title "\Zb\Z0Create New Virtual Machine\Zn\ZB" \
+				--no-shadow --clear --cancel-label "Exit" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
 				--menu "\Zb\Z0QBox Menu\Zn\ZB\nManage Virtual machine." ${HEIGHT} ${WIDTH} 8 1 "Boot Created Virtual Machine" \
 				2 "Create New Virtual Machine" 3 "Stop Running Virtual Machine" 4 "Delete Virtual Machine" 5 "Reconfigure Virtual Machine" \
 				6 "Direct Linux Boot" 7 "QBox Remote Manager" 8 "Other Options" 2>&1 1>&3)
@@ -52,7 +52,7 @@ while : ; do
 			elif [[ ${value} -eq 5 ]]; then
 				:
 			elif [[ ${value} -eq 6 ]]; then
-				:
+				. ${LIB_DIR}/QBox/bash_s/direct_linux_boot.sh 
 			elif [[ ${value} -eq 7 ]]; then
 				:
 			elif [[ ${value} -eq 8 ]]; then

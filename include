@@ -619,14 +619,14 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 					${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER}
 				
 				else 
-					${QEMU} ${VM_NAME} ${KERNEL} ${INITRD} ${KERNEL_CMD}
+					${QEMU} ${VM_NAME} ${default_install_network} ${KERNEL} ${INITRD} ${KERNEL_CMD}
 				fi 
 				
 				let_move_save=${SUCCESS}
 				
-				if DEFINE_D ${DIRECT_LINUX_BOOT}; then
-					let_move_save=$1
-				fi 
+#				if DEFINE_D ${DIRECT_LINUX_BOOT}; then
+#					let_move_save=$1
+#				fi 
 				
 				sleep 1
 			}
@@ -650,13 +650,13 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 					%${VLAN_TAP2} %${FD_TAP2} %${IFNAME2} %${SCRIPT2} %${SOCKET2} %${VLAN_SOCKET2} %${FD_SOCKET2} %${LISTEN2} %${CONNECT2} \
 					%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${REDIRECT3} %${TAP3} \
 					%${VLAN_TAP3} %${FD_TAP3} %${IFNAME3} %${SCRIPT3} %${SOCKET3} %${VLAN_SOCKET3} %${FD_SOCKET3} %${LISTEN3} %${CONNECT3} \
-					%${MCAST3} %${SMB_SERVER} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} % % %${QEMU_KEYBOARD} \
-					%${QEMU_FULLSCREEN} % %${SNAP_OT} % % % #2>/dev/null
+					%${MCAST3} %${SMB_SERVER} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} %${KERNEL} %${INITRD} %${QEMU_KEYBOARD} \
+					%${QEMU_FULLSCREEN} % %${SNAP_OT} %${KERNEL_CMD} % % #2>/dev/null
 					
 					issaved=${SUCCESS}
 				}
 				
-				sleep 0.6			
+				sleep 1			
 			}
 			
 			(( i_var=i ))

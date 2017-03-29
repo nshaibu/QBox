@@ -27,8 +27,7 @@
 DEFINE DIRECT_LINUX_BOOT
 
 
-if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${INIT_SH} || NOT_DEFINE ${BASIC_UTILS_H}; then
-	#${LIB_DIR}/include "%%IMPORT%%" 'init.sh'
+if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
 	. ${LIB_DIR}/include '<basic_utils.h>'
 fi 

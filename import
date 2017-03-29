@@ -30,4 +30,5 @@ if [[ $1 = "<init.h>" ]]; then
 		[ ! -f ${QDB_FOLDER}/pid.qdb ] && touch ${QDB_FOLDER}/pid.qdb ##check pid database vm_name|pid
 		[ ! -f ${QDB_FOLDER}/vms.qdb ] && touch ${QDB_FOLDER}/vms.qdb
 	fi 
+	
 fi
