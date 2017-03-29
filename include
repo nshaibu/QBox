@@ -37,13 +37,25 @@ function DEFINE() {
 	[[ ${#@} -eq 1 ]] && eval $1=0 || eval $1=$2
 }
 
-function NOT_DEFINE() {
-	local _return=
+function UNDEFINE() {
+	eval $1=""
+}
 
-	case "$1" in
-		0) _return=1 ;;
-		*) _return=0 ;;
-	esac
+function DEFINE_D() {
+	local _return=${FAILURE}
+	
+	[ "$1" = "0" ] && _return=${SUCCESS}
+	
+	return ${SUCCESS}
+}
+
+function NOT_DEFINE() {
+	local _return=${FAILURE}
+	[ "$1" != "0" ] && _return=${SUCCESS}
+#	case "$1" in
+#		0) _return=1 ;;
+#		*) _return=0 ;;
+#	esac
 
 	return ${_return}
 }
@@ -441,7 +453,8 @@ elif [[ "$1" = "<error.h>" ]]; then
 						[VLAN_NUM]="|*VLAN_number_should_be_within_this_range_[0-1000]\n" [FD_N]="|*File_descriptor_should_be_within_this_range_[0-1000]\n" \
 						[PORT_NUM]="|*Port_Number_should_be_with_this_range_[1-65535]\n" [MAC_ADDR]="|*Mac_Address_format_error\n" \
 						[IP_ADDR]="|*IP_format_error_[xxx.xxx.xxx.xxx]\n" [HOST_PORT_NUM]="${STRERROR[PORT_NUM]}" [GUEST_PORT_NUM]="${STRERROR[PORT_NUM]}" \
-						[vm_name]="|*Name_is_not_unique_or_Name_is_empty\n" [DSK_VALID_SIZE]="|*Input_not_valid_Input_cannot_be_less_than_one_and_it_should_be_in_the_format_[0-9][G,M]_eg.10G")
+						[vm_name]="|*Name_is_not_unique_or_Name_is_empty\n" [DSK_VALID_SIZE]="|*Input_not_valid_Input_cannot_be_less_than_one_and_it_should_be_in_the_format_[0-9][G,M]_eg.10G\n" [INITRD]="|*Not_initial_Ram_disk\n"\
+						[KERNEL]="|*Not_a_kernel_image\n")
 	
 	##input is in this format [values to test]:[error strings]:[function to test truth of values]
 	function err_str() {
@@ -488,17 +501,23 @@ elif [[ "$1" = "<error.h>" ]]; then
 		
 		return ${did_err_ocurred}
 	}
-
+	
+elif [[ $1 = "<random_uid.h>" ]]; then
+	DEFINE RANDOM_UID_H
+	
+	RANDOM_UID=`cat /dev/urandom |tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
+	
 elif [[ $1 = "<disk_details.h>" ]]; then
 	DEFINE DISK_DETAILS_H 0
 
 	. ${LIB_DIR}/include "<loggs.h>"
+	. ${LIB_DIR}/include '<random_uid.h>'
+	
 	: ${QEMU_DSKIMG_CREATOR:=`${QBOX_DIR}/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-img`}
 
 	DISK_FORMAT=
 	DISK_SIZE=
 	
-	RANDOM_UID=`cat /dev/urandom |tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
 	printf -v RAND "%04d" $RANDOM 
 	Disk_Name=${HD_IMG_DIR}/${RANDOM_UID}${RAND}.img
 
@@ -552,8 +571,13 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 	function boot_system() {
 		let err_set=0 
 		let i_var=0
-		declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "NUM_CPU" "RAM_SIZE" "QEMU_GRAPH" "Disk_Name" \
+		
+		if NOT_DEFINE ${DIRECT_LINUX_BOOT}; then
+			declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "NUM_CPU" "RAM_SIZE" "QEMU_GRAPH" "Disk_Name" \
 									"VM_CDROM" "BOOT_ORDER" )
+		else
+			declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "KERNEL" "INITRD" "Disk_Name")	
+		fi 
 		
 		let i=0
 		let percentage=0
@@ -561,7 +585,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 		let let_move_save=${FAILURE}
 		let "issaved=${FAILURE}"
 		
-		#${DIALOG} --gauge "Please wait" 7 70 < <(
+		
 		{
 		while : ; do 
 			#Thu 23 Mar 2017 07:13:30 PM GMT -----Checking that values are set-------
@@ -589,13 +613,24 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				echo "Booting ${VM_NAME:6:18} ($percentage%)"
 				echo "XXX"	
 				
-				${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${default_install_network} ${QEMU_GRAPH} ${QEMU_SOUND} \
-				${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER}
+				if NOT_DEFINE ${DIRECT_LINUX_BOOT}; then
+					
+					${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${default_install_network} ${QEMU_GRAPH} ${QEMU_SOUND} \
+					${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER}
+				
+				else 
+					${QEMU} ${VM_NAME} ${KERNEL} ${INITRD} ${KERNEL_CMD}
+				fi 
 				
 				let_move_save=${SUCCESS}
 				
+				if DEFINE_D ${DIRECT_LINUX_BOOT}; then
+					let_move_save=$1
+				fi 
+				
 				sleep 1
 			}
+			
 			
 			#---------------Saving VM----------------------
 			[ ${let_move_boot} -eq ${SUCCESS} ] && [ ${let_move_save} -eq ${SUCCESS} ] && {
@@ -627,7 +662,12 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			(( i_var=i ))
 			(( i+=1 ))
 			
-			(( percentage=i * 100 / 14 + 7 ))
+			if NOT_DEFINE ${DIRECT_LINUX_BOOT}; then
+				(( percentage=i * 100 / 14 + 7 ))
+			else
+				(( percentage=i * 100 / ${#CONFIG_PARAMS[@]} ))
+			fi 
+			
 			[ $percentage -ge 100 ] && break
 			
 			sleep 0.3
@@ -638,6 +678,10 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			error_func_display "$(err_str "${TMP_CMP}:${STRERROR[$TMP_CMP]}:boot_system_err_func")" 
 			return ${FAILURE}			
 		fi
+		
+		if DEFINE_D ${DIRECT_LINUX_BOOT}; then
+			UNDEFINE DIRECT_LINUX_BOOT
+		fi 
 		
 		return ${SUCCESS}
 	}
@@ -824,7 +868,7 @@ elif [[ $1 = "%%IMPORT%%" ]]; then
 		. ${LIB_DIR}/include '<basic_utils.h>'
 	fi
 	
-	${LIB_DIR}/init.sh
+	. ${LIB_DIR}/init.sh
 	#: ${loaded_lib:="${LIB_DIR}/$2"}
 	#echo ${loaded_lib}>${LIB_DIR}/v.txt
 	#${loaded_lib}
