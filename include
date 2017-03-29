@@ -596,7 +596,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				if check_is_set $tmp_param; then
 					echo "XXX"
 					echo $percentage
-					echo "checking ${CONFIG_PARAMS[$i]} ($percentage%)"
+					echo "checking $(String_to_Lower ${CONFIG_PARAMS[$i]}) ($percentage%)"
 					echo "XXX"
 					
 					[ $i -eq ${#CONFIG_PARAMS[@]} ] && { let_move_boot=${SUCCESS}; }
