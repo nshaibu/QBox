@@ -861,16 +861,5 @@ function is_valid_port_num() {
 	return ${test_port}
 }
 
-elif [[ $1 = "%%IMPORT%%" ]]; then
-	##Include defines from a file 
-	
-	if NOT_DEFINE ${BASIC_UTILS_H}; then
-		. ${LIB_DIR}/include '<basic_utils.h>'
-	fi
-	
-	. ${LIB_DIR}/init.sh
-	#: ${loaded_lib:="${LIB_DIR}/$2"}
-	#echo ${loaded_lib}>${LIB_DIR}/v.txt
-	#${loaded_lib}
 	
 fi
