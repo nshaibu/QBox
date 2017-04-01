@@ -45,9 +45,9 @@ if [[ $1 = "<init.h>" ]]; then
 		
 		#Installation Directory 
 		: ${QBOX_DIR:="/usr/local/bin/QBox"}
-
+		
 		export SDL_VIDEO_X11_DGAMOUSE=0 ##to prevent qemu cursor from been difficult to control
-
+		
 		[ ! -d ${HD_IMG_DIR} ] && mkdir ${HD_IMG_DIR} ##Check and creates Harddisk image folder
 		[ ! -d ${BOOT_DIR} ] && mkdir ${BOOT_DIR} ##check and create boot folder
 		[ ! -d ${QDB_FOLDER} ] && mkdir ${QDB_FOLDER} ##check for qbox database folder
@@ -55,6 +55,109 @@ if [[ $1 = "<init.h>" ]]; then
 		[ ! -d ${LOG_DIR} ] && mkdir ${LOG_DIR} && touch ${LOG_DIR}/qboxlog ##check and create log directory
 		[ ! -f ${QDB_FOLDER}/pid.qdb ] && touch ${QDB_FOLDER}/pid.qdb ##check pid database vm_name|pid
 		[ ! -f ${QDB_FOLDER}/vms.qdb ] && touch ${QDB_FOLDER}/vms.qdb
+		
+		echo -ne "\033]0;QBox Easy VM Manager \007"
 	fi 
 	
+elif [[ $1 = "<notify.h>" ]]; then
+	
+	NOT_DEFINE ${NOTIFY_H} && {
+		DEFINE NOTIFY_H
+		
+		: ${NOTICE:=`${QBOX_DIR}/bash_s/check_pkg_install.sh %CHECK_RUN% notify-send`}
+	}
+	
+elif [[ $1 = "<qdb_database.h>" ]]; then
+	
+	NOT_DEFINE ${QDB_DATABASE_H} && {
+		DEFINE QDB_DATABASE_H
+		
+		. ${LIB_DIR}/import '<init.h>'
+		
+		DEFINE ARR_IS_EMPTY -1
+		DEFINE SRCH_VAL_NOT_IN_ARR -2
+		
+		if NOT_DEFINE ${ERROR_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
+			. ${LIB_DIR}/include '<error.h>'
+			. ${LIB_DIR}/include '<basic_utils.h>'
+		fi 
+		
+		: ${VMS_DB:="${QDB_FOLDER}/vms.qdb"}
+		: ${PID_DB:="${QDB_FOLDER}/pid.qdb"}
+		declare -a QDB_NAME=()
+		
+		function return_first_field() {
+			echo "$(cut -d"|" -f1 $1)"
+		}
+		
+		function return_second_field() {
+			echo "$(cut -d"|" -f2 $1)"
+		}
+		
+		# value, input file, output file
+		function complement_of() {
+			local search="^$1\$"
+			gawk -F "|" -v var=$search '$1 !~ var {print $0 "\n"}' $1 1>$3
+		}
+		
+		#it returns the name of all vms by assigned it to an array and return SUCCESS if successful
+		#ARGU: DB_NAME
+		#RET: SIZE_OF_ARR
+		function init_database_qdb() {
+			local i=0
+			
+			check_is_file $1 && {
+				if [[ "<$1" != "" ]]; then
+					for j in $(<$1); do 
+						QDB_NAME[$i]=$j
+						
+						(( i++ ))
+					done 
+				fi 
+				
+			} || { err_code=${QDB_NOT_EXIT} }
+			
+			return $i
+		}
+		
+		#ARGU:	VALUE_TO_SEARCH_FOR, SIZE_OF_ARR
+		#RET:	ARR_INDEX
+		function search_val_qdb() {
+			[ $2 -eq 0 ] && return ${ARR_IS_EMPTY}
+			
+			for (( index=0; index<$2; index++ )); do 
+				[ "${QDB_NAME[$index]%%:*}" = "$(String_to_Upper $1)" ] && return ${index} 
+			done 
+			
+			return ${SRCH_VAL_NOT_IN_ARR}
+		}
+		
+		#argu:	search_index, size_of_arr, name_of_vm_to_del, db_name
+		function delete_val_qdb() {
+			[ $1 -eq ${ARR_IS_EMPTY} ] && return
+			[ $1 -eq ${SRCH_VAL_NOT_IN_ARR} ] && return 
+			
+			local key=$1
+			local boot_file_name=$(return_second_field ${QDB_NAME[$key]})
+			
+			while [[ "${key}" -lt "$2" ]]; do 
+				QDB_NAME[$key]=${QDB_NAME[$(( key + 1 ))]}
+				
+				(( key++ ))
+			done
+			
+			unset ${QDB_NAME[$2]}
+			
+			##-----commit changes to db files--------------
+			local TMPFILE=$(mktemp -uq qbox.XXXXXXXXXXXX || echo "qbox.$$")
+			complement_of $3 $4 "${QDB_FOLDER}/${TMPFILE}"
+			
+			mv "${QDB_FOLDER}/${TMPFILE}" $4 
+			rm -f ${boot_file_name} 2>/dev/null
+			rm -f ${HD_IMG_DIR}/$(sed 's/img/qvm/' `basename ${boot_file_name}`) 2>/dev/null
+			
+			return $(expr $2 -1 )
+		}
+		
+	}
 fi

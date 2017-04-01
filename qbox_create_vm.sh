@@ -248,7 +248,9 @@ while [ 1 ]; do
 												RECOM_DISK_SIZE=`echo ${ARR_MICROSOFT_WINDOWS[0]} | cut -d "|" -f3`
 											;;				
 										esac	
-										break 2
+										#break 2
+										NOT_DEFINE ${GUIDED_MODE_BOOT_VM} && break 2 || break 3
+										
 									elif [[ ${test_return} -eq ${DIALOG_BACK} ]]; then
 										: 
 									elif [[ ${test_return} -eq ${DIALOG_CANCEL} ]]; then
@@ -393,7 +395,9 @@ while [ 1 ]; do
 												RECOM_DISK_SIZE=`echo ${ARR_LINUX[28]} | cut -d "|" -f3`				
 											;;	
 										esac	
-										break 2	
+										#break 2	
+										NOT_DEFINE ${GUIDED_MODE_BOOT_VM} && break 2 || break 3
+										
 									elif [[ ${test_return} -eq ${DIALOG_BACK} ]]; then
 										: 
 									elif [[ ${test_return} -eq ${DIALOG_CANCEL} ]]; then
@@ -435,7 +439,9 @@ while [ 1 ]; do
 												RECOM_DISK_SIZE=`echo ${ARR_SOLARIS[0]} | cut -d "|" -f3`
 											;;				
 										esac	
-										break 2
+										#break 2
+										NOT_DEFINE ${GUIDED_MODE_BOOT_VM} && break 2 || break 3
+										
 									elif [[ ${test_return} -eq ${DIALOG_BACK} ]]; then
 										: 
 									elif [[ ${test_return} -eq ${DIALOG_CANCEL} ]]; then
@@ -481,7 +487,9 @@ while [ 1 ]; do
 												RECOM_DISK_SIZE=`echo ${ARR_BSD[0]} | cut -d "|" -f3`
 											;;
 										esac	
-										break 2			
+										#break 2	
+										NOT_DEFINE ${GUIDED_MODE_BOOT_VM} && break 2 || break 3
+												
 									elif [[ ${test_return} -eq ${DIALOG_BACK} ]]; then
 										:
 									elif [[ ${test_return} -eq ${DIALOG_CANCEL} ]]; then
@@ -526,7 +534,9 @@ while [ 1 ]; do
 												RECOM_DISK_SIZE=`echo ${ARR_IBMOS2[0]} | cut -d "|" -f3`
 											;;				
 										esac	
-										break 2
+										#break 2
+										NOT_DEFINE ${GUIDED_MODE_BOOT_VM} && break 2 || break 3
+										
 									elif [[ ${test_return} -eq ${DIALOG_BACK} ]]; then
 										:
 									elif [[ ${test_return} -eq ${DIALOG_CANCEL} ]]; then
@@ -584,7 +594,9 @@ while [ 1 ]; do
 												RECOM_DISK_SIZE=`echo ${ARR_MACOSX[0]} | cut -d "|" -f3`
 											;;				
 										esac	
-										break 2
+										#break 2
+										NOT_DEFINE ${GUIDED_MODE_BOOT_VM} && break 2 || break 3
+										
 									elif [[ ${test_return} -eq ${DIALOG_BACK} ]]; then
 										:
 									elif [[ ${test_return} -eq ${DIALOG_CANCEL} ]]; then
@@ -634,7 +646,9 @@ while [ 1 ]; do
 												RECOM_DISK_SIZE=`echo ${ARR_OTHEROS[${index}]} | cut -d "|" -f3`				
 											;;				
 										esac	
-										break 2
+										#break 2
+										NOT_DEFINE ${GUIDED_MODE_BOOT_VM} && break 2 || break 3
+										
 									elif [[ ${test_return} -eq ${DIALOG_BACK} ]]; then
 										:
 									elif [[ ${test_return} -eq ${DIALOG_CANCEL} ]]; then
@@ -642,14 +656,19 @@ while [ 1 ]; do
 									fi 		
 								;;
 							esac 
+							
 						;;
 						${DIALOG_CANCEL}) break 3 ;;
 						${DIALOG_BACK}) break ;;
 					esac
 			done
-		fi 
+			
+		fi
+		
 	done 
-	
+
+if NOT_DEFINE ${GUIDED_MODE_BOOT_VM}; then
+
 	while [ 1 ]; do 
 		exec 3>&1
 		value=`${DIALOG} \
@@ -881,4 +900,7 @@ while [ 1 ]; do
 				
 			done 
 	done
+
+fi ##Not defined guided mode boot
+
 done

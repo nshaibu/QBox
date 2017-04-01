@@ -297,15 +297,23 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 	}
 	
 	function detection_msg() {
-		${DIALOG} \
-			--colors --title "\Zb\Z0Architecture Detection\Zn\ZB" --yesno "\nDetected ${STR_ARCH[$1]} architecture...\n\n\Zb\Z1Do you want to use ${STR_ARCH[$1]} ?\Zn\ZB" $((HEIGHT-5)) $((WIDTH-5))	
+		NOT_DEFINE ${GUIDED_MODE_BOOT_VM} && {
+			${DIALOG} \
+				--colors --title "\Zb\Z0Architecture Detection\Zn\ZB" --yesno "\nDetected ${STR_ARCH[$1]} architecture...\n\n\Zb\Z1Do you want to use ${STR_ARCH[$1]} ?\Zn\ZB" $((HEIGHT-5)) $((WIDTH-5))	
 		
-		let "test_return=$?"
+			let "test_return=$?"
 		
-		case ${test_return} in 
-			${DIALOG_OK}) return ${SUCCESS} ;;
-			${DIALOG_CANCEL}) return ${FAILURE} ;;
-		esac
+			case ${test_return} in 
+				${DIALOG_OK}) return ${SUCCESS} ;;
+				${DIALOG_CANCEL}) return ${FAILURE} ;;
+			esac
+		} || {
+			if check_is_set $1; then
+				return ${SUCCESS}
+			else 
+				return ${FAILURE}
+			fi 
+		}
 	}
 	
 	function architecture_type_choice(){
@@ -444,7 +452,15 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 	
 elif [[ "$1" = "<error.h>" ]]; then
 	DEFINE ERROR_H 0
-
+	
+	let err_code=0
+	
+	#err_code set 
+	DEFINE ERR_VALUE_NOT_SET 255
+	DEFINE ERR_IN_DISK_CREATION 256
+	DEFINE ERR_OCCURRED_DURING_BOOT 257
+	DEFINE QDB_NOT_EXIT 258
+	
 	##Error strings format [name of variable]=error string //space char is not allowed in error string
 	declare -A STRERROR=([QEMU]="|*Architecture_is_NULL\n" [VM_NAME]="|*VM_Name_not_set\n" \
 						[NUM_CPU]="|*Number_of_CPU_NULL\n" [RAM_SIZE]="|*Ram_size_is_NULL\n" \
@@ -509,20 +525,26 @@ elif [[ $1 = "<random_uid.h>" ]]; then
 	
 elif [[ $1 = "<disk_details.h>" ]]; then
 	DEFINE DISK_DETAILS_H 0
-
-	. ${LIB_DIR}/include "<loggs.h>"
+	
 	. ${LIB_DIR}/include '<random_uid.h>'
 	
+	if NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${LOGGS_H}; then 
+		. ${LIB_DIR}/include '<true_test.h>'
+		. ${LIB_DIR}/include "<loggs.h>"
+	fi 
+	
 	: ${QEMU_DSKIMG_CREATOR:=`${QBOX_DIR}/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-img`}
-
+	
 	DISK_FORMAT=
 	DISK_SIZE=
+	HD_BI_IMG=
+	VM_CDROM=
 	
 	printf -v RAND "%04d" $RANDOM 
 	Disk_Name=${HD_IMG_DIR}/${RANDOM_UID}${RAND}.img
 
 	function disk_image_creation(){
-		local _return=0
+		local _return=${SUCCESS}
 
 		case $1 in
 			1) ${QEMU_DSKIMG_CREATOR} create -f qcow2 $2 $3 2>${TEMP_FOLDER}/.error.tt 1>&2 ;;
@@ -532,7 +554,8 @@ elif [[ $1 = "<disk_details.h>" ]]; then
 			5) ${QEMU_DSKIMG_CREATOR} create -f vdi -o size=$3 $2 2>${TEMP_FOLDER}/.error.tt 1>&2 ;;
 		esac
 
-		[[ $? -ne 0 ]] && _return=1
+		[ $? -ne ${SUCCESS} ] && _return=${FAILURE}
+		
 		logger_logging ${TEMP_FOLDER}/.error.tt
 
 		return ${_return}
@@ -579,8 +602,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "KERNEL" "INITRD" "Disk_Name")	
 		fi 
 		
-		let i=0
-		let percentage=0
+		let "i=0, percentage=0"
 		let let_move_boot=${FAILURE}
 		let let_move_save=${FAILURE}
 		let "issaved=${FAILURE}"
@@ -601,7 +623,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 					
 					[ $i -eq ${#CONFIG_PARAMS[@]} ] && { let_move_boot=${SUCCESS}; }
 				else
-						err_set=255
+						let "err_set = ${ERR_VALUE_NOT_SET}"
 						break
 				fi 
 			}
@@ -622,13 +644,14 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 					${QEMU} ${VM_NAME} ${default_install_network} ${KERNEL} ${INITRD} ${KERNEL_CMD}
 				fi 
 				
+				[ $? -eq ${FAILURE} ] && { let "err_code = ${ERR_OCCURRED_DURING_BOOT}"; break; }
 				let_move_save=${SUCCESS}
 				
 #				if DEFINE_D ${DIRECT_LINUX_BOOT}; then
 #					let_move_save=$1
 #				fi 
 				
-				sleep 1
+				sleep 0.6
 			}
 			
 			

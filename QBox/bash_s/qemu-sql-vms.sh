@@ -156,5 +156,3 @@ elif [ $1 = d ];then
 	done
 	
 fi
-
-exit 0
