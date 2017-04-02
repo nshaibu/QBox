@@ -84,14 +84,21 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 		
 		: ${VMS_DB:="${QDB_FOLDER}/vms.qdb"}
 		: ${PID_DB:="${QDB_FOLDER}/pid.qdb"}
-		declare -a QDB_NAME=()
 		
 		function return_first_field() {
-			echo "$(cut -d"|" -f1 $1)"
+			if check_is_file $1 ; then
+				echo "$(cut -d"|" -f1 $1)"
+			else 
+				echo "$(echo $1 | cut -d"|" -f1)"
+			fi 
 		}
 		
 		function return_second_field() {
-			echo "$(cut -d"|" -f2 $1)"
+			if check_is_file $1; then
+				echo "$(cut -d"|" -f2 $1)"
+			else 
+				echo "$(echo $1 | cut -d"|" -f2)"
+			fi 
 		}
 		
 		# value, input file, output file
@@ -102,22 +109,21 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 		
 		#it returns the name of all vms by assigned it to an array and return SUCCESS if successful
 		#ARGU: DB_NAME
-		#RET: SIZE_OF_ARR
+		#RET: ARR_
 		function init_database_qdb() {
 			local i=0
-			
+			local -a qdb_name
 			check_is_file $1 && {
 				if [[ "<$1" != "" ]]; then
-					for j in $(<$1); do 
-						QDB_NAME[$i]=$j
-						
+					for j in $(cat $1); do 
+						qdb_name[$i]="\"$j\""
 						(( i++ ))
 					done 
+					echo "${qdb_name[@]}"
 				fi 
-				
-			} || { err_code=${QDB_NOT_EXIT} }
+			} || { err_code=${QDB_NOT_EXIT}; }
 			
-			return $i
+			
 		}
 		
 		#ARGU:	VALUE_TO_SEARCH_FOR, SIZE_OF_ARR
@@ -130,6 +136,26 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 			done 
 			
 			return ${SRCH_VAL_NOT_IN_ARR}
+		}
+		
+		###generate string from arr of vms sizeof_arr, set_str
+		function names_str_qdb() {
+			local -a qdb_name=( $@ )
+			local gen_str=""
+			local str_tmp=""
+			
+			for (( index=0; index<${#qdb_name[@]}; index++ )); do 
+					str_tmp="${qdb_name[$index]//\"/}"
+					str_tmp="${str_tmp// /_}"
+					gen_str+="%$(( index+1 ))%${str_tmp%%|*}"
+			done
+			
+			echo -n ${gen_str//%/ }
+		}
+		
+		#argu: db_name, var_to_insert
+		function insert_into_qdb() {
+			echo $2>>$1
 		}
 		
 		#argu:	search_index, size_of_arr, name_of_vm_to_del, db_name
@@ -159,5 +185,39 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 			return $(expr $2 -1 )
 		}
 		
+	}
+	
+elif [[ $1 = "<boot_vm.h>" ]]; then
+	
+	NOT_DEFINE ${BOOT_VM_H} && {
+		DEFINE BOOT_VM_H
+		
+		. ${LIB_DIR}/import '<qdb_database.h>'
+		
+		if NOT_DEFINE ${TRUE_TEST_H}; then
+			. ${LIB_DIR}/include '<true_test.h>'
+		fi 
+		
+		##arrgu: bootfile, name of vm
+		function boot_vm() {
+			local boot_config=""
+			local boot_file_loc="${BOOT_DIR}/$1"
+			
+			if check_is_file ${boot_file_loc}; then
+				boot_config=$(cat ${boot_file_loc} | cut -d"|" -f2 | sed ':a;N;$!ba;s/\n/ /g')
+				
+				boot_config=`echo ${boot_config} | tr -s " "` ##Replace multiple space char with a space char
+				
+				boot_config=${boot_config// ,/,} ##Replace " ," with ","
+				
+				${boot_config} 2>/dev/null &
+				local pid_vm=$!
+				
+				insert_into_qdb ${PID_DB} "$2|${pid_vm}"
+				return ${SUCCESS}
+			else 
+				return ${FAILURE}
+			fi 
+		}
 	}
 fi

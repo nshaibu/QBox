@@ -22,6 +22,8 @@
 : ${LIB_DIR:=$HOME/my_script/QB}
 
 . ${LIB_DIR}/include
+. ${LIB_DIR}/import '<qdb_database.h>'
+. ${LIB_DIR}/import '<boot_vm.h>'
 
 if NOT_DEFINE ${CURSES_DIALOG_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
@@ -42,7 +44,35 @@ while : ; do
 		${DIALOG_OK}) 
 			
 			if [[ ${value} -eq 1 ]]; then
-				:
+				gen_str_=""
+				
+				declare -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) ) ##initialize qdb
+					
+				gen_str_=$(names_str_qdb ${QDB_ARR[@]}) #generate string to form qdb_arr 
+				
+				while true; do 
+					exec 3>&1
+						value=$(${DIALOG} \
+								--no-shadow --clear --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
+								--menu "\Zb\Z0QBox Menu\Zn\ZB\nManage Virtual machine." ${HEIGHT} ${WIDTH} \
+								8 ${gen_str_} 2>&1 1>&3)
+							
+						let "test_return=$?"
+					exec 3>&-
+					
+					case ${test_return} in 
+						${DIALOG_OK}) 
+							bootfile=${QDB_ARR[$(( value-1 ))]}
+							bootfile=${bootfile//\"/}
+							
+							boot_vm $(return_second_field ${bootfile}) $(return_first_field ${bootfile})
+							if [[ $? -eq ${SUCCESS} ]]; then
+								: #notify-send fullscn, keys shortcuts
+							fi 
+						;;
+						${DIALOG_CANCEL}) break ;;
+					esac
+				done
 			elif [[ ${value} -eq 2 ]]; then
 				. ${LIB_DIR}/qbox_new_vm_menu.sh 
 			elif [[ ${value} -eq 3 ]]; then

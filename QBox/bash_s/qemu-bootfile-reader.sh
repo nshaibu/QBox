@@ -31,10 +31,9 @@ if ! [ -d ${BOOT_DIR} ];then
 	mkdir ${BOOT_DIR}
 fi
 
-
 ##Replace newline char with space
-BOOT_TMP=`find ${BOOT_DIR} -depth -type f -a -name $1 -exec cut -d "|" -f 2 {} \; 2>/dev/null | sed ':a;N;$!ba;s/\n/ /g'` 
-	
+BOOT_TMP=`find ${BOOT_DIR} -depth -type f -a -name $1 -exec cut -d"|" -f2 {} \; 2>/dev/null | sed ':a;N;$!ba;s/\n/ /g'` 
+
 ##Replace multiple space char with a space char
 BOOT_TMP0=`echo ${BOOT_TMP} | tr -s " "`
 
