@@ -28,7 +28,9 @@ if [[ $1 = "<init.h>" ]]; then
 	
 	if NOT_DEFINE ${INIT_H}; then
 		DEFINE INIT_H
-
+		
+		. ${LIB_DIR}/import '<qdb_database.h>'
+		
 		##global variables
 		: ${HD_IMG_DIR:="$HOME/.img_qemubox"}
 		: ${TEMP_FOLDER:="${HD_IMG_DIR}/.tmp_qbox"}
@@ -42,7 +44,7 @@ if [[ $1 = "<init.h>" ]]; then
 		
 		#python directory
 		: ${PYTHON_LOC:=${QBOX_DIR}/python3}
-		
+				
 		#Installation Directory 
 		: ${QBOX_DIR:="/usr/local/bin/QBox"}
 		
@@ -57,6 +59,23 @@ if [[ $1 = "<init.h>" ]]; then
 		[ ! -f ${QDB_FOLDER}/vms.qdb ] && touch ${QDB_FOLDER}/vms.qdb
 		
 		echo -ne "\033]0;QBox Easy VM Manager \007"
+		
+		function VM_clear_pid_qdb_eventhandler() {
+			while : ; do 
+				if [ "<${PID_DB}" != "" ]; then
+					for i in `cut -d "|" -f2 ${PID_DB}`;do 
+					
+						if [ ! -d /proc/$i ]; then
+							name="^$i\$"
+							echo $(gawk -F "|" -v var=$name '$2 !~ var {print $0}' ${QDB_FOLDER}/pid.qdb) > ${TEMP_FOLDER}/vms.tt
+							##replace black or space character with newline character
+							sed -e 's/[[:blank:]]\+/\n/g' ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
+							rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null
+						fi 
+					done 
+				fi 
+			done
+		}	
 	fi 
 	
 elif [[ $1 = "<notify.h>" ]]; then
@@ -87,24 +106,37 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 		
 		function return_first_field() {
 			if check_is_file $1 ; then
-				echo "$(cut -d"|" -f1 $1)"
+				echo -n "$(cut -d"|" -f1 $1)"
 			else 
-				echo "$(echo $1 | cut -d"|" -f1)"
+				echo -n "$(echo $1 | cut -d"|" -f1)"
 			fi 
 		}
 		
 		function return_second_field() {
 			if check_is_file $1; then
-				echo "$(cut -d"|" -f2 $1)"
+				echo -n "$(cut -d"|" -f2 $1)"
 			else 
-				echo "$(echo $1 | cut -d"|" -f2)"
+				echo -n "$(echo $1 | cut -d"|" -f2)"
 			fi 
+		}
+		
+		function return_n_field() {
+			local field=$2
+			local delimiter="$3"
+			
+			if check_is_file $1; then
+				echo -n "$(cut -d"${delimiter}" -f ${field} $1)"
+			else 
+				echo -n "$(echo $1 | cut -d"${delimiter}" -f ${field})"
+			fi 		
 		}
 		
 		# value, input file, output file
 		function complement_of() {
 			local search="^$1\$"
-			gawk -F "|" -v var=$search '$1 !~ var {print $0 "\n"}' $1 1>$3
+			echo ${search} >${LIB_DIR}/v.txt
+			gawk -F "|" -v var=$search '$1 !~ var {print $0}' $2 1>$3
+			
 		}
 		
 		#it returns the name of all vms by assigned it to an array and return SUCCESS if successful
@@ -113,6 +145,7 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 		function init_database_qdb() {
 			local i=0
 			local -a qdb_name
+			
 			check_is_file $1 && {
 				if [[ "<$1" != "" ]]; then
 					for j in $(cat $1); do 
@@ -122,7 +155,6 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 					echo "${qdb_name[@]}"
 				fi 
 			} || { err_code=${QDB_NOT_EXIT}; }
-			
 			
 		}
 		
@@ -158,31 +190,53 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 			echo $2>>$1
 		}
 		
-		#argu:	search_index, size_of_arr, name_of_vm_to_del, db_name
+		function delete_msg_qdb() {
+			${DIALOG} \
+				--colors --title "\Zb\Z1INFO\Zn\ZB" --yesno "\n\nDo you really want to \Zb\Z1delete $1\Zn\ZB" $((HEIGHT-7)) $((WIDTH-20))	
+			
+			case $? in 
+				${DIALOG_OK}) return ${SUCCESS} ;;
+				${DIALOG_CANCEL}) return ${FAILURE} ;;
+			esac
+		}
+		
+		#argu:	search_index|name_of_vm_to_del|db_name|db_type
 		function delete_val_qdb() {
-			[ $1 -eq ${ARR_IS_EMPTY} ] && return
-			[ $1 -eq ${SRCH_VAL_NOT_IN_ARR} ] && return 
+			#[ $1 -eq ${ARR_IS_EMPTY} ] && return 0
+			#[ $1 -eq ${SRCH_VAL_NOT_IN_ARR} ] && return 0
+			#echo $@ >${LIB_DIR}/v.txt
 			
-			local key=$1
-			local boot_file_name=$(return_second_field ${QDB_NAME[$key]})
-			
-			while [[ "${key}" -lt "$2" ]]; do 
-				QDB_NAME[$key]=${QDB_NAME[$(( key + 1 ))]}
+			#[ $1 -gt 0 ] && {
+				local -a qdb_name=( $@ ) ##get all db values
+				declare -i sizeof_arr=${#qdb_name[@]}
 				
-				(( key++ ))
-			done
-			
-			unset ${QDB_NAME[$2]}
-			
-			##-----commit changes to db files--------------
-			local TMPFILE=$(mktemp -uq qbox.XXXXXXXXXXXX || echo "qbox.$$")
-			complement_of $3 $4 "${QDB_FOLDER}/${TMPFILE}"
-			
-			mv "${QDB_FOLDER}/${TMPFILE}" $4 
-			rm -f ${boot_file_name} 2>/dev/null
-			rm -f ${HD_IMG_DIR}/$(sed 's/img/qvm/' `basename ${boot_file_name}`) 2>/dev/null
-			
-			return $(expr $2 -1 )
+				local qdb_type=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
+				local info_vm_to_del=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
+				local key=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
+				
+				local boot_file_name=$(return_second_field ${info_vm_to_del})
+				
+				while [[ ${key} -lt ${#qdb_name[@]} ]]; do 
+					qdb_name[$key]=${qdb_name[$(( key + 1 ))]}
+					(( key++ ))
+				done
+				
+				unset 'qdb_name[$(( --key ))]' ##delete the last slot to reduce the size of arr by 1
+				
+				##-----commit changes to db files--------------
+				local TMPFILE=$(mktemp -uq qbox.XXXXXXXXXXXX || echo "qbox.$$")
+				local vm_name=$(return_first_field ${info_vm_to_del})
+				local vm_name=${vm_name//\"/}
+				
+				complement_of ${vm_name} "${qdb_type}" "${QDB_FOLDER}/${TMPFILE}"
+				local hd_img=${boot_file_name/.qvm/.img}
+				
+				mv "${QDB_FOLDER}/${TMPFILE}" ${qdb_type} 
+				rm -f "${BOOT_DIR}/${boot_file_name}" 2>/dev/null
+				rm -f "${HD_IMG_DIR}/${hd_img}" 2>/dev/null
+				
+				echo -n "${qdb_name[@]}"
+			#}
 		}
 		
 	}
