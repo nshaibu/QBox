@@ -61,21 +61,20 @@ if [[ $1 = "<init.h>" ]]; then
 		echo -ne "\033]0;QBox Easy VM Manager \007"
 		
 		function VM_clear_pid_qdb_eventhandler() {
-			while : ; do 
-				if [ "<${PID_DB}" != "" ]; then
-					for i in `cut -d "|" -f2 ${PID_DB}`;do 
+			if [ "<${PID_DB}" != "" ]; then
+				for i in `cut -d "|" -f2 ${PID_DB}`;do 
 					
-						if [ ! -d /proc/$i ]; then
-							name="^$i\$"
-							echo $(gawk -F "|" -v var=$name '$2 !~ var {print $0}' ${QDB_FOLDER}/pid.qdb) > ${TEMP_FOLDER}/vms.tt
-							##replace black or space character with newline character
-							sed -e 's/[[:blank:]]\+/\n/g' ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
-							rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null
-						fi 
-					done 
-				fi 
-			done
+					if [ ! -d /proc/$i ]; then
+						name="^$i\$"
+						echo $(gawk -F "|" -v var=$name '$2 !~ var {print $0}' ${QDB_FOLDER}/pid.qdb) > ${TEMP_FOLDER}/vms.tt
+						##replace black or space character with newline character
+						sed -e 's/[[:blank:]]\+/\n/g' ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
+						rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null
+					fi 
+				done 
+			fi 
 		}	
+		
 	fi 
 	
 elif [[ $1 = "<notify.h>" ]]; then
@@ -192,7 +191,7 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 		
 		function delete_msg_qdb() {
 			${DIALOG} \
-				--colors --title "\Zb\Z1INFO\Zn\ZB" --yesno "\n\nDo you really want to \Zb\Z1delete $1\Zn\ZB" $((HEIGHT-7)) $((WIDTH-20))	
+				--keep-window --colors --title "\Zb\Z1INFO\Zn\ZB" --yesno "\n\nDo you really want to \Zb\Z1delete $1\Zn\ZB" $((HEIGHT-7)) $((WIDTH-20))	
 			
 			case $? in 
 				${DIALOG_OK}) return ${SUCCESS} ;;
@@ -200,20 +199,19 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 			esac
 		}
 		
-		#argu:	search_index|name_of_vm_to_del|db_name|db_type
+		#argu:	are all assigned to an array "search_index|name_of_vm_to_del|db_type" and the array is passed to the function
 		function delete_val_qdb() {
-			#[ $1 -eq ${ARR_IS_EMPTY} ] && return 0
-			#[ $1 -eq ${SRCH_VAL_NOT_IN_ARR} ] && return 0
-			#echo $@ >${LIB_DIR}/v.txt
+			local -a qdb_name=( $@ ) ##get all db values
+			declare -i sizeof_arr=${#qdb_name[@]}
+				
+			local qdb_type=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
+			local info_vm_to_del=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
+			local key=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
+				
+			[ $key -eq ${ARR_IS_EMPTY} ] && return ${ARR_IS_EMPTY}
+			[ $key -eq ${SRCH_VAL_NOT_IN_ARR} ] && return ${SRCH_VAL_NOT_IN_ARR}
 			
-			#[ $1 -gt 0 ] && {
-				local -a qdb_name=( $@ ) ##get all db values
-				declare -i sizeof_arr=${#qdb_name[@]}
-				
-				local qdb_type=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
-				local info_vm_to_del=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
-				local key=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
-				
+			[ $key -gt 0 ] && {		
 				local boot_file_name=$(return_second_field ${info_vm_to_del})
 				
 				while [[ ${key} -lt ${#qdb_name[@]} ]]; do 
@@ -236,7 +234,8 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 				rm -f "${HD_IMG_DIR}/${hd_img}" 2>/dev/null
 				
 				echo -n "${qdb_name[@]}"
-			#}
+				return 0
+			}
 		}
 		
 	}
@@ -273,5 +272,38 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 				return ${FAILURE}
 			fi 
 		}
+	}
+	
+elif [[ $1 = "<http_server.h>" ]]; then
+	
+	NOT_DEFINE ${HTTP_SERVER_H} && {
+		DEFINE HTTP_SERVER_H
+		
+		: ${PHP_PARSER:=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% php`}
+		: ${DOC_ROOT:="${QBOX_DIR}/www"}
+		: ${FILE_TEST_SERV_RUNNING:="${TEMP_FOLDER}/.svrpid"}
+		
+		if NOT_DEFINE ${HOST_IP_H} || NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${LOGGS_H} || NOT_DEFINE ${TRUE_TEST_H} ; then
+			. ${LIB_DIR}/include '<host_ip.h>'
+			. ${LIB_DIR}/include '<basic_utils.h>'
+			. ${LIB_DIR}/include '<loggs.h>'
+			. ${LIB_DIR}/include '<true_test.h>'
+		fi 
+		
+		: ${PID_MAX:=$(cat /proc/sys/kernel/pid_max 2>/dev/null || echo -n 32768)}
+		
+		function httpd_start() {
+			${PHP_PARSER} -S ${HOST_IP}:4020 -t ${DOC_ROOT} 1>${LOGS_FILE} 2>&1 &
+			local pid_s=$!
+			
+			logger_logging ${LOGS_FILE}
+			[ ${pid_s} -gt 1 ] && [ ${pid_s} -le ${PID_MAX} ] && { echo -n "${pid_s}|${HOST_IP}"; } || { echo -n "-1"; }
+		}
+		
+		#test server is runing
+		function server_is_not_running() {
+			check_is_file ${FILE_TEST_SERV_RUNNING} && return ${FAILURE} || return ${SUCCESS}
+		}
+		
 	}
 fi

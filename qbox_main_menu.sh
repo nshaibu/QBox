@@ -24,13 +24,12 @@
 . ${LIB_DIR}/include
 . ${LIB_DIR}/import '<qdb_database.h>'
 . ${LIB_DIR}/import '<boot_vm.h>'
+. ${LIB_DIR}/import '<http_server.h>'
 
 if NOT_DEFINE ${CURSES_DIALOG_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
 fi 
 
-VM_clear_pid_qdb_eventhandler &
-clear_pids=$!
 
 while : ; do 
 	exec 3>&1
@@ -72,7 +71,7 @@ while : ; do
 							if [[ ${#QDB_ARR[@]} -ne 0 ]]; then
 								bootfile=${QDB_ARR[$(( value-1 ))]}
 								bootfile=${bootfile//\"/}
-							
+								
 								boot_vm $(return_second_field ${bootfile}) $(return_first_field ${bootfile})
 								if [[ $? -eq ${SUCCESS} ]]; then
 									: #notify-send fullscn, keys shortcuts
@@ -106,6 +105,8 @@ while : ; do
 					
 					case ${test_return} in 
 						${DIALOG_OK}) 
+							VM_clear_pid_qdb_eventhandler 
+							
 							[ ${#QDB_ARR[@]} -ne 0 ] && {
 								pid=$(return_second_field ${QDB_ARR[$(( value-1 ))]})
 								pid=${pid//\"/}
@@ -161,15 +162,62 @@ while : ; do
 			elif [[ ${value} -eq 6 ]]; then
 				. ${LIB_DIR}/QBox/bash_s/direct_linux_boot.sh 
 			elif [[ ${value} -eq 7 ]]; then
-				:
+				while true; do 
+					exec 3>&1
+						value=$(${DIALOG} \
+								--no-shadow --clear --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
+								--menu "\Zb\Z0QBox Menu\Zn\ZB\nManage Virtual machine." ${HEIGHT} ${WIDTH} \
+								3 1 "Start server" 2 "Stop server" 2>&1 1>&3)
+							
+						let "test_return=$?"
+					exec 3>&-		
+				
+					case ${test_return} in 
+						${DIALOG_OK}) 
+							[ ${value} -eq 1 ] && {
+								let "msg_str=" ", i=0, pid_t=-1"
+								
+								if server_is_not_running ; then
+									tm_t=$(date +%T)
+									pid_host_ip=$(httpd_start)
+									
+									pid_t=${pid_host_ip%%|*}
+									host_ip_t=${pid_host_ip##*|}
+								
+									declare -a msg_arr=("[${pid_t}]using_host_ip:${host_ip_t}\n" "[${pid_t}]starting_httpd...\n" \
+													"[${pid_t}]httpd_started_at_${tm_t}...\n" \
+													"[${pid_t}]httpd_listening_on_port_4020\n" "[${pid_t}]trying_to_open_browser...\n" \
+													"[${pid_t}]access:http://${host_ip_t}:4020" )
+								fi 
+									
+								[ ${pid_t} -ne -1 ] && {
+									while : ; do 
+										msg_str+=${msg_arr[$i]//_/ }
+						
+										${DIALOG} \
+											--no-shadow --colors --title "\Zb\Z0QBox server\Zn\ZB" --infobox "\n${msg_str}" $((HEIGHT-5)) $((WIDTH-6))
+										sleep 2
+										(( i++ ))
+										[ $i -gt 5 ] && { echo ${pid_t}>${FILE_TEST_SERV_RUNNING}; msg_str=""; break; }
+									done 
+								} || {
+									if server_is_not_running; then
+										:
+									else
+										kill -9 $(cat ${FILE_TEST_SERV_RUNNING}) 2>/dev/null
+									fi 
+								}
+								
+							}
+						;;
+						${DIALOG_CANCEL}) break ;;
+					esac
+				done 
 			elif [[ ${value} -eq 8 ]]; then
 				:
 			fi
 		;;
-		${DIALOG_CANCEL}) 
-			kill -9 ${clear_pids}
-			break 
-		;;
+		${DIALOG_CANCEL}) break ;;
 	esac
 done 
 

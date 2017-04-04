@@ -97,7 +97,7 @@ while [ 1 ]; do
 		exec 3>&-
 		
 		if [[ ${return_dialog} -eq ${DIALOG_CANCEL} ]]; then
-			break 2
+			NOT_DEFINE ${GUIDED_MODE_BOOT_VM} && break 2 || break 3
 		fi 
 		
 		value=${value// /_}

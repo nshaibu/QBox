@@ -26,7 +26,7 @@
 HD_IMG_DIR=$HOME/.img_qemubox ##contains harddisk images
 LOG_DIR=${HD_IMG_DIR}/logs_dir
 QBOX_DIR=/usr/local/bin/QBox
-TEMP_FOLDER=${HD_IMG_DIR}/.tmp_qbox
+: ${TEMP_FOLDER:="${HD_IMG_DIR}/.tmp_qbox"}
 QDB_FOLDER=${HD_IMG_DIR}/.qdb ##qbox database files location
 
 : ${PYTHON_LOC:=${QBOX_DIR}/python3}
@@ -45,24 +45,21 @@ function DEFINE_D() {
 	local _return=${FAILURE}
 	
 	[ "$1" = "0" ] && _return=${SUCCESS}
-	
-	return ${SUCCESS}
+	return ${_return}
 }
 
 function NOT_DEFINE() {
 	local _return=${FAILURE}
 	[ "$1" != "0" ] && _return=${SUCCESS}
-#	case "$1" in
-#		0) _return=1 ;;
-#		*) _return=0 ;;
-#	esac
-
+	
 	return ${_return}
 }
 
 if [[ $1 = "<loggs.h>" ]]; then
 
 DEFINE LOGGS_H
+
+: ${LOGS_FILE:="${TEMP_FOLDER}/.error.tt"}
 
 ##logger_func
 ##logger_func sed ':a;N;$!ba;s/\n/ /g'
@@ -80,104 +77,104 @@ function logger_logging(){
 elif [[ "$1" = "<network.h>" ]]; then
 	DEFINE NETWORK_H 0
 	
-function set_parameters(){
-	if [[ $1 -eq 0 ]]; then
+	function set_parameters(){
+		if [[ $1 -eq 0 ]]; then
 		
-		NETWORK0="-net nic"
-		VLAN0=$2
-		MAC0=$3
-		MODEL0=$4
+			NETWORK0="-net nic"
+			VLAN0=$2
+			MAC0=$3
+			MODEL0=$4
 		
-		USER0=${5//_/ }
-		VLAN_USER0=$6	
-		REDIRECT0=$7
+			USER0=${5//_/ }
+			VLAN_USER0=$6	
+			REDIRECT0=$7
 		
-		TAP0=${8//_/ }
-		VLAN_TAP0=$9
-		IFNAME0=${10}
-		SCRIPT0=${11}
-		FD_TAP0=${12}
+			TAP0=${8//_/ }
+			VLAN_TAP0=$9
+			IFNAME0=${10}
+			SCRIPT0=${11}
+			FD_TAP0=${12}
 		
-		SOCKET0=${13//_/ }	
-		VLAN_SOCKET0=${14}	
-		LISTEN0=${15}
-		CONNECT0=${16}	
-		FD_SOCKET0=${17} 
-		MCAST0=${18}
+			SOCKET0=${13//_/ }	
+			VLAN_SOCKET0=${14}	
+			LISTEN0=${15}
+			CONNECT0=${16}	
+			FD_SOCKET0=${17} 
+			MCAST0=${18}
 		
-	elif [[ $1 -eq 1 ]]; then
+		elif [[ $1 -eq 1 ]]; then
 		
-		NETWORK1="-net nic"
-		VLAN1=$2
-		MAC1=$3
-		MODEL1=$4
+			NETWORK1="-net nic"
+			VLAN1=$2
+			MAC1=$3
+			MODEL1=$4
 		
-		USER1=${5//_/ }
-		VLAN_USER1=$6	
-		REDIRECT1=$7
+			USER1=${5//_/ }
+			VLAN_USER1=$6	
+			REDIRECT1=$7
 		
-		TAP1=${8//_/ }
-		VLAN_TAP1=$9
-		IFNAME1=${10}
-		SCRIPT1=${11}
-		FD_TAP1=${12}
+			TAP1=${8//_/ }
+			VLAN_TAP1=$9
+			IFNAME1=${10}
+			SCRIPT1=${11}
+			FD_TAP1=${12}
 		
-		SOCKET1=${13//_/ }	
-		VLAN_SOCKET1=${14}	
-		LISTEN1=${15}
-		CONNECT1=${16}	
-		FD_SOCKET1=${17} 
-		MCAST1=${18}
+			SOCKET1=${13//_/ }	
+			VLAN_SOCKET1=${14}	
+			LISTEN1=${15}
+			CONNECT1=${16}	
+			FD_SOCKET1=${17} 
+			MCAST1=${18}
 		
 		
-	elif [[ $1 -eq 2 ]]; then
+		elif [[ $1 -eq 2 ]]; then
 		
-		NETWORK2="-net nic"
-		VLAN2=$2
-		MAC2=$3
-		MODEL2=$4
+			NETWORK2="-net nic"
+			VLAN2=$2
+			MAC2=$3
+			MODEL2=$4
 		
-		USER2=${5//_/ }
-		VLAN_USER2=$6	
-		REDIRECT2=$7
+			USER2=${5//_/ }
+			VLAN_USER2=$6	
+			REDIRECT2=$7
 		
-		TAP2=${8//_/ }
-		VLAN_TAP2=$9
-		IFNAME2=${10}
-		SCRIPT2=${11}
-		FD_TAP2=${12}
+			TAP2=${8//_/ }
+			VLAN_TAP2=$9
+			IFNAME2=${10}
+			SCRIPT2=${11}
+			FD_TAP2=${12}
 		
-		SOCKET2=${13//_/ }	
-		VLAN_SOCKET2=${14}	
-		LISTEN2=${15}
-		CONNECT2=${16}	
-		FD_SOCKET2=${17}
-		MCAST2=${18}	
+			SOCKET2=${13//_/ }	
+			VLAN_SOCKET2=${14}	
+			LISTEN2=${15}
+			CONNECT2=${16}	
+			FD_SOCKET2=${17}
+			MCAST2=${18}	
 		
-	elif [[ $1 -eq 3 ]]; then
-		NETWORK3="-net nic"
-		VLAN3=$2
-		MAC3=$3
-		MODEL3=$4
+		elif [[ $1 -eq 3 ]]; then
+			NETWORK3="-net nic"
+			VLAN3=$2
+			MAC3=$3
+			MODEL3=$4
 		
-		USER3=${5//_/ }
-		VLAN_USER3=$6	
-		REDIRECT3=$7
+			USER3=${5//_/ }
+			VLAN_USER3=$6	
+			REDIRECT3=$7
 		
-		TAP3=${8//_/ }
-		VLAN_TAP3=$9
-		IFNAME3=${10}
-		SCRIPT3=${11}
-		FD_TAP3=${12}
+			TAP3=${8//_/ }
+			VLAN_TAP3=$9
+			IFNAME3=${10}
+			SCRIPT3=${11}
+			FD_TAP3=${12}
 		
-		SOCKET3=${13//_/ }	
-		VLAN_SOCKET3=${14}	
-		LISTEN3=${15}
-		CONNECT3=${16}	
-		FD_SOCKET3=${17} 
-		MCAST3=${18}	
-	fi	
-}
+			SOCKET3=${13//_/ }	
+			VLAN_SOCKET3=${14}	
+			LISTEN3=${15}
+			CONNECT3=${16}	
+			FD_SOCKET3=${17} 
+			MCAST3=${18}	
+		fi	
+	}
 	
 	#define USER_MODE ADAPTER 0
 	NETWORK0=
