@@ -175,9 +175,10 @@ while : ; do
 					case ${test_return} in 
 						${DIALOG_OK}) 
 							[ ${value} -eq 1 ] && {
-								let "msg_str=" ", i=0, pid_t=-1"
 								
 								if server_is_not_running ; then
+									let "msg_str=" ", i=0, pid_t=-1"
+									
 									tm_t=$(date +%T)
 									pid_host_ip=$(httpd_start)
 									
@@ -188,26 +189,36 @@ while : ; do
 													"[${pid_t}]httpd_started_at_${tm_t}...\n" \
 													"[${pid_t}]httpd_listening_on_port_4020\n" "[${pid_t}]trying_to_open_browser...\n" \
 													"[${pid_t}]access:http://${host_ip_t}:4020" )
-								fi 
+								 						
+														
+									[ ${pid_t} -ne -1 ] && {
+										while : ; do 
+											msg_str+=${msg_arr[$i]//_/ }
+											
+											${DIALOG} \
+												--no-shadow --colors --title "\Zb\Z0QBox server\Zn\ZB" --infobox "\n${msg_str}" $((HEIGHT-5)) $((WIDTH-6))
+											sleep 2
+											(( i++ ))
+											[ $i -gt 5 ] && { echo ${pid_t}>${test_serv_running}; msg_str=""; break; }
+										done 
+									}
+								else 
+									pid_t="<${test_serv_running}"
 									
-								[ ${pid_t} -ne -1 ] && {
-									while : ; do 
-										msg_str+=${msg_arr[$i]//_/ }
-						
-										${DIALOG} \
-											--no-shadow --colors --title "\Zb\Z0QBox server\Zn\ZB" --infobox "\n${msg_str}" $((HEIGHT-5)) $((WIDTH-6))
-										sleep 2
-										(( i++ ))
-										[ $i -gt 5 ] && { echo ${pid_t}>${FILE_TEST_SERV_RUNNING}; msg_str=""; break; }
-									done 
-								} || {
-									if server_is_not_running; then
-										:
-									else
-										kill -9 $(cat ${FILE_TEST_SERV_RUNNING}) 2>/dev/null
-									fi 
-								}
+									${DIALOG} \
+										--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n[${pid_t}]Server already runing" \
+										$((HEIGHT-7)) $((WIDTH-10))
+								fi 
 								
+							} || {
+									
+									if server_is_not_running; then
+										${DIALOG} \
+											--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\nServer is not runing" $((HEIGHT-7)) $((WIDTH-10))
+									else
+										server_stop "<${test_serv_running}"
+										rm -f ${test_serv_running} 2>/dev/null
+									fi 
 							}
 						;;
 						${DIALOG_CANCEL}) break ;;

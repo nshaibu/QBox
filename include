@@ -34,7 +34,7 @@ QDB_FOLDER=${HD_IMG_DIR}/.qdb ##qbox database files location
 : ${LIB_DIR:=$HOME/my_script/QB}
 
 function DEFINE() {
-	[[ ${#@} -eq 1 ]] && eval $1=0 || eval $1=$2
+	[ ${#@} -eq 1 ] && eval $1=0 || eval $1=$2
 }
 
 function UNDEFINE() {

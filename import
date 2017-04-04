@@ -157,15 +157,22 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 			
 		}
 		
-		#ARGU:	VALUE_TO_SEARCH_FOR, SIZE_OF_ARR
+		#ARGU:	array of values contain the search value at the end of the array
 		#RET:	ARR_INDEX
 		function search_val_qdb() {
-			[ $2 -eq 0 ] && return ${ARR_IS_EMPTY}
+			local -a qdb_vm_info=( $@ )
+			local sizeof_arr=${#qdb_vm_info[@]}
+			local search_val=${qdb_vm_info[$(( --sizeof_arr ))]} && unset 'qdb_vm_info[$sizeof_arr]' 
 			
-			for (( index=0; index<$2; index++ )); do 
-				[ "${QDB_NAME[$index]%%:*}" = "$(String_to_Upper $1)" ] && return ${index} 
-			done 
+			[ ${sizeof_arr} -eq 1 ]  && echo ${qdb_vm_info[@]} && return ${ARR_IS_EMPTY}
 			
+			if [[ ${sizeof_arr} -gt 1 ]]; then
+				for (( index=0; index<${#qdb_vm_info[@]}; index++ )); do 
+					[ "${qdb_vm_info[$index]%%:*}" = "$(String_to_Upper ${search_val})" ] && echo ${qdb_vm_info[@]} && return ${index} 
+				done 
+			fi
+			
+			echo ${qdb_vm_info[@]}
 			return ${SRCH_VAL_NOT_IN_ARR}
 		}
 		
@@ -272,6 +279,24 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 				return ${FAILURE}
 			fi 
 		}
+		
+		#argu: name_of_vm_to_boot
+		function startvm() {
+			local -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) ) ##initialize qdb
+			local sizeof_arr=${#QDB_ARR[@]}
+			
+			if [[ ${sizeof_arr} -gt 0 ]]; then
+				QDB_ARR[$(( sizeof_arr ))]=$1
+				QDB_ARR=( $(search_val_qdb ${QDB_ARR[@]}) )
+				let vm_info_index=$?
+				
+				[ "${vm_info_index}" != "${ARR_IS_EMPTY}" ] && [ "${vm_info_index}" != "${SRCH_VAL_NOT_IN_ARR}" ] && {
+					vm_info=QDB_ARR[${vm_info_index}]
+					vm_info=$(return_second_field ${vm_info})
+					boot_vm ${vm_info} 
+				}
+			fi 
+		}
 	}
 	
 elif [[ $1 = "<http_server.h>" ]]; then
@@ -279,9 +304,18 @@ elif [[ $1 = "<http_server.h>" ]]; then
 	NOT_DEFINE ${HTTP_SERVER_H} && {
 		DEFINE HTTP_SERVER_H
 		
+		. ${LIB_DIR}/import '<qdb_database.h>'
+		
 		: ${PHP_PARSER:=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% php`}
+		: ${TCP_SERVER:=$($QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% ncat)}
+		
 		: ${DOC_ROOT:="${QBOX_DIR}/www"}
-		: ${FILE_TEST_SERV_RUNNING:="${TEMP_FOLDER}/.svrpid"}
+		: ${test_serv_running:="${TEMP_FOLDER}/.svrpid"}
+		
+		#request to tcp server
+		DEFINE BOOT_REQUEST 521
+		DEFINE STOP_VM_REQUEST 522
+		DEFINE LIST_VM_REQUET 523
 		
 		if NOT_DEFINE ${HOST_IP_H} || NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${LOGGS_H} || NOT_DEFINE ${TRUE_TEST_H} ; then
 			. ${LIB_DIR}/include '<host_ip.h>'
@@ -300,9 +334,58 @@ elif [[ $1 = "<http_server.h>" ]]; then
 			[ ${pid_s} -gt 1 ] && [ ${pid_s} -le ${PID_MAX} ] && { echo -n "${pid_s}|${HOST_IP}"; } || { echo -n "-1"; }
 		}
 		
+		function list_created_vms() {
+			local -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) ) ##initialize qdb
+			
+			if [[ ${#QDB_ARR[*]} -ne 0 ]]; then
+				local gen_str_=$(names_str_qdb ${QDB_ARR[@]})
+			else
+				local gen_str_="No_Virtual_Machine_created_yet..."
+			fi
+			
+			gen_str_=${gen_str_//\"/}
+			gen_str_=${gen_str_//[[:digit:]]/}
+			gen_str_=${gen_str_//[[:space:]]/:}
+			
+			echo -n ${gen_str_}
+		}
+		
+				#HD_IMG_DIR="$HOME/.img_qemubox"
+				#QDB_FOLDER="${HD_IMG_DIR}/.qdb"
+				#VMS_DB="${QDB_FOLDER}/vms.qdb"		
+		
+		function qbox_server_start() {
+			${TCP_SERVER} -l -p 4040 -c '
+				: ${LIB_DIR:=$HOME/my_script/QB}
+				
+				#. ${LIB_DIR}/import "<http_server.h>"
+				
+				while true ; do 
+					read request
+					
+					case ${request} in 
+						${LIST_VM_REQUET}) echo 1 ;; #list_created_vms ;;
+						${BOOT_REQUEST}) ;;
+						${STOP_VM_REQUEST}) ;;
+					esac
+				done 
+			'
+		}
+		
+		#stop service
+		function server_stop() {
+			kill -9 $@ 2>/dev/null
+			
+			[ $? -eq ${SUCCESS} ] && return ${SUCCESS} || return ${FAILURE}
+		}
+		
 		#test server is runing
 		function server_is_not_running() {
-			check_is_file ${FILE_TEST_SERV_RUNNING} && return ${FAILURE} || return ${SUCCESS}
+			if check_is_file ${test_serv_running}; then
+				return ${FAILURE} 
+			else 
+				return ${SUCCESS}
+			fi 
 		}
 		
 	}
