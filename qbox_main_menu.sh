@@ -85,6 +85,8 @@ while : ; do
 				. ${LIB_DIR}/qbox_new_vm_menu.sh 
 			elif [[ ${value} -eq 3 ]]; then
 				gen_str_=""
+				
+				_clear_pid_qdb_event 
 				declare -a QDB_ARR=( $(init_database_qdb ${PID_DB}) ) ##initialize qdb
 				
 				if [[ ${#QDB_ARR[@]} -ne 0 ]]; then
@@ -97,7 +99,7 @@ while : ; do
 					exec 3>&1
 						value=$(${DIALOG} \
 								--no-shadow --clear --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
-								--menu "\Zb\Z0QBox Menu\Zn\ZB\nManage Virtual machine." ${HEIGHT} ${WIDTH} \
+								--menu "\Zb\Z0Stop Virtual Machines\Zn\ZB\nSelect a virtual machine to stop it." ${HEIGHT} ${WIDTH} \
 								7 ${gen_str_} 2>&1 1>&3)
 							
 						let "test_return=$?"
@@ -105,7 +107,7 @@ while : ; do
 					
 					case ${test_return} in 
 						${DIALOG_OK}) 
-							VM_clear_pid_qdb_eventhandler 
+							_clear_pid_qdb_event 
 							
 							[ ${#QDB_ARR[@]} -ne 0 ] && {
 								pid=$(return_second_field ${QDB_ARR[$(( value-1 ))]})
@@ -166,8 +168,8 @@ while : ; do
 					exec 3>&1
 						value=$(${DIALOG} \
 								--no-shadow --clear --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
-								--menu "\Zb\Z0QBox Menu\Zn\ZB\nManage Virtual machine." ${HEIGHT} ${WIDTH} \
-								3 1 "Start server" 2 "Stop server" 2>&1 1>&3)
+								--menu "\Zb\Z0QBox Remote Manager\Zn\ZB\nYou can start a server which will allow you to manage the virtual Machines remotely. You will be given a URL copy it into you browser." \
+								${HEIGHT} ${WIDTH} 3 1 "Start server" 2 "Stop server" 2>&1 1>&3)
 							
 						let "test_return=$?"
 					exec 3>&-		

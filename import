@@ -60,13 +60,13 @@ if [[ $1 = "<init.h>" ]]; then
 		
 		echo -ne "\033]0;QBox Easy VM Manager \007"
 		
-		function VM_clear_pid_qdb_eventhandler() {
+		function _clear_pid_qdb_event() {
 			if [ "<${PID_DB}" != "" ]; then
 				for i in `cut -d "|" -f2 ${PID_DB}`;do 
 					
 					if [ ! -d /proc/$i ]; then
 						name="^$i\$"
-						echo $(gawk -F "|" -v var=$name '$2 !~ var {print $0}' ${QDB_FOLDER}/pid.qdb) > ${TEMP_FOLDER}/vms.tt
+						echo $(gawk -F "|" -v var=$name '$2 !~ var {print $0}' ${PID_DB}) > ${TEMP_FOLDER}/vms.tt
 						##replace black or space character with newline character
 						sed -e 's/[[:blank:]]\+/\n/g' ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
 						rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null
@@ -75,7 +75,26 @@ if [[ $1 = "<init.h>" ]]; then
 			fi 
 		}	
 		
-	fi 
+#		function _clear_pid_qdb() {
+#			local pid_t=""
+#			local TMPFILE=$(mktemp -uq qbox.XXXXXXXXXXXX || echo "qbox.$$")
+#			
+#			[ "`cat <${PID_DB}`" != "" ] && {
+#				for i in $(cut -d "|" -f2 ${PID_DB}); do 
+#					pid_t=$(ps ax | awk '{print $1}' | grep $i) 
+#				done
+#				
+#				if [[ -z ${pid_t} ]]; then
+#					complement_of ${pid_t} ${PID_DB} "${TEMP_FOLDER}/${TMPFILE}"
+#					#echo $(gawk -F "|" -v var=$name '$2 !~ var {print $0}' ${PID_DB}) > ${TEMP_FOLDER}/vms.tt
+#					##replace black or space character with newline character
+#					sed -e 's/[[:blank:]]\+/\n/g' "${TEMP_FOLDER}/${TMPFILE}" 2>/dev/null 1> ${PID_DB}
+#					rm -f "${TEMP_FOLDER}/${TMPFILE}" 2>/dev/null					
+#				fi 
+#			}
+#		}
+		
+	fi ## INIT_H
 	
 elif [[ $1 = "<notify.h>" ]]; then
 	
@@ -83,7 +102,7 @@ elif [[ $1 = "<notify.h>" ]]; then
 		DEFINE NOTIFY_H
 		
 		: ${NOTICE:=`${QBOX_DIR}/bash_s/check_pkg_install.sh %CHECK_RUN% notify-send`}
-	}
+	} # NOTIFY_H
 	
 elif [[ $1 = "<qdb_database.h>" ]]; then
 	
@@ -133,7 +152,6 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 		# value, input file, output file
 		function complement_of() {
 			local search="^$1\$"
-			echo ${search} >${LIB_DIR}/v.txt
 			gawk -F "|" -v var=$search '$1 !~ var {print $0}' $2 1>$3
 			
 		}
@@ -297,7 +315,7 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 				}
 			fi 
 		}
-	}
+	} ## BOOT_VM_H
 	
 elif [[ $1 = "<http_server.h>" ]]; then
 	
@@ -388,5 +406,5 @@ elif [[ $1 = "<http_server.h>" ]]; then
 			fi 
 		}
 		
-	}
+	} ## HTTP_SERVER_H
 fi

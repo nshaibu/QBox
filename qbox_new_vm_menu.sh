@@ -45,8 +45,9 @@ while : ; do
 				. ${LIB_DIR}/include '<disk_details.h>'
 				. ${LIB_DIR}/include '<network.h>'
 				
-				if NOT_DEFINE ${ARCHITECTURE_H}; then 
+				if NOT_DEFINE ${ARCHITECTURE_H} || NOT_DEFINE ${ERROR_H}; then 
 					. ${LIB_DIR}/include '<architecture.h>'
+					. ${LIB_DIR}/include '<error.h>'
 				fi 
 				
 				printf -v MACADDR "52:54:%02x:%02x:%02x:%02x" $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff )) $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff ))
@@ -90,9 +91,9 @@ while : ; do
 				
 				UNDEFINE GUIDED_MODE_BOOT_VM
 				
-				declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "DISK_SIZE" "NUM_CPU" "RAM_SIZE" "Disk_Name" "default_network" )
+				declare -a CONFIG_PARAMS=("rQEMU" "VM_NAME" "DISK_SIZE" "NUM_CPU" "RAM_SIZE" "Disk_Name" "default_network" )
 				
-				let "err_code=0, issaved=${FAILURE}, i=0, i_var=0, percentage=0"
+				let "issaved=${FAILURE}, i=0, i_var=0, percentage=0"
 				let "move_boot=${FAILURE}, move_save=${FAILURE}, move_creat_hd=${FAILURE}"
 				
 				{
@@ -110,7 +111,7 @@ while : ; do
 								[ $i -eq ${#CONFIG_PARAMS[@]} ] && { move_creat_hd=${SUCCESS}; }
 								(( i_var=i ))
 							else
-								let "err_code = ${ERR_VALUE_NOT_SET}"
+								let "err_code=${ERR_VALUE_NOT_SET}"
 								break
 							fi 
 						}
@@ -126,7 +127,7 @@ while : ; do
 								VM_CDROM="-cdrom ${VM_CDROM}"
 								move_boot=${SUCCESS}
 							else 
-								let "err_code = ${ERR_IN_DISK_CREATION}"
+								let "err_code=${ERR_IN_DISK_CREATION}"
 								rm -f ${Disk_Name} 2>/dev/null
 								break
 							fi
@@ -182,7 +183,10 @@ while : ; do
 						
 					done 
 				} | ${DIALOG} --gauge "Please wait" 7 70 0
-				
+				echo ${err_code}>${LIB_DIR}/v.txt
+				perror ${err_code} "__DIALOG__"
+				break
+			
 			} || {
 				
 				while : ; do 

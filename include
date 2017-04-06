@@ -450,7 +450,7 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 elif [[ "$1" = "<error.h>" ]]; then
 	DEFINE ERROR_H 0
 	
-	let err_code=0
+	err_code=
 	
 	#err_code set 
 	DEFINE ERR_VALUE_NOT_SET 255
@@ -459,15 +459,49 @@ elif [[ "$1" = "<error.h>" ]]; then
 	DEFINE QDB_NOT_EXIT 258
 	
 	##Error strings format [name of variable]=error string //space char is not allowed in error string
-	declare -A STRERROR=([QEMU]="|*Architecture_is_NULL\n" [VM_NAME]="|*VM_Name_not_set\n" \
-						[NUM_CPU]="|*Number_of_CPU_NULL\n" [RAM_SIZE]="|*Ram_size_is_NULL\n" \
-						[QEMU_GRAPH]="|*Display_is_NULL\n" [QEMU_SOUND]="|*Sound_is_NULL\n" \
-						[QEMU_USB]="|*Pointing_device_is_NULL\n" [VM_CDROM]="|*cdrom_is_NULL\n" \
-						[VLAN_NUM]="|*VLAN_number_should_be_within_this_range_[0-1000]\n" [FD_N]="|*File_descriptor_should_be_within_this_range_[0-1000]\n" \
-						[PORT_NUM]="|*Port_Number_should_be_with_this_range_[1-65535]\n" [MAC_ADDR]="|*Mac_Address_format_error\n" \
-						[IP_ADDR]="|*IP_format_error_[xxx.xxx.xxx.xxx]\n" [HOST_PORT_NUM]="${STRERROR[PORT_NUM]}" [GUEST_PORT_NUM]="${STRERROR[PORT_NUM]}" \
-						[vm_name]="|*Name_is_not_unique_or_Name_is_empty\n" [DSK_VALID_SIZE]="|*Input_not_valid_Input_cannot_be_less_than_one_and_it_should_be_in_the_format_[0-9][G,M]_eg.10G\n" [INITRD]="|*Not_initial_Ram_disk\n"\
-						[KERNEL]="|*Not_a_kernel_image\n")
+	declare -A STRERROR=([QEMU]="|*Architecture_is_NULL\n" \
+						[VM_NAME]="|*VM_Name_not_set\n" \
+						[NUM_CPU]="|*Number_of_CPU_NULL\n" \
+						[RAM_SIZE]="|*Ram_size_is_NULL\n" \
+						[QEMU_GRAPH]="|*Display_is_NULL\n" \
+						[QEMU_SOUND]="|*Sound_is_NULL\n" \
+						[QEMU_USB]="|*Pointing_device_is_NULL\n" \
+						[VM_CDROM]="|*cdrom_is_NULL\n" \
+						[VLAN_NUM]="|*VLAN_number_should_be_within_this_range_[0-1000]\n" \
+						[FD_N]="|*File_descriptor_should_be_within_this_range_[0-1000]\n" \
+						[PORT_NUM]="|*Port_Number_should_be_with_this_range_[1-65535]\n" \
+						[MAC_ADDR]="|*Mac_Address_format_error\n" \
+						[IP_ADDR]="|*IP_format_error_[xxx.xxx.xxx.xxx]\n" \
+						[HOST_PORT_NUM]="${STRERROR[PORT_NUM]}" \
+						[GUEST_PORT_NUM]="${STRERROR[PORT_NUM]}" \
+						[vm_name]="|*Name_is_not_unique_or_Name_is_empty\n" \
+						[DSK_VALID_SIZE]="|*Input_not_valid_Input_cannot_be_less_than_one_and_it_should_be_in_the_format_[0-9][G,M]_eg.10G\n" \
+						[INITRD]="|*Not_initial_Ram_disk\n"\
+						[KERNEL]="|*Not_a_kernel_image\n"\
+						[256]="Disk_was_not_created\n"\
+						[257]="Boot_error\n"\
+						[255]="value_not_set\n")
+							
+							
+	##output error string using err_code 
+	#argu err_code, display_type[__DIALOG__ | __CLI__]
+	function perror() {
+		local msg_str=${STRERROR[$1]}
+		local msg_str=${msg_str//_/ } ##remove _ char from msg_str
+		#local msg_str=${msg_str//|/\\n} ## replace "|" with "\n"
+		local lineno=${LINENO}
+		
+		if [[ $1 -ne 0 ]]; then
+			[ "$2" = "__DIALOG__" ] && {
+				${DIALOG} \
+					--colors --title "\Zb\Z1Error\Zn\ZB" --msgbox "\n[${lineno}]:${msg_str} " $((HEIGHT-7)) $((WIDTH-20))	
+			} || {
+				printf "%s" "\n[${lineno}]:${msg_str}"
+			}
+		fi 
+		
+		let err_code=0
+	}
 	
 	##input is in this format [values to test]:[error strings]:[function to test truth of values]
 	function err_str() {
@@ -553,7 +587,7 @@ elif [[ $1 = "<disk_details.h>" ]]; then
 
 		[ $? -ne ${SUCCESS} ] && _return=${FAILURE}
 		
-		logger_logging ${TEMP_FOLDER}/.error.tt
+		logger_logging ${LOGS_FILE}
 
 		return ${_return}
 	}
@@ -600,15 +634,13 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 		fi 
 		
 		let "i=0, percentage=0"
-		let let_move_boot=${FAILURE}
-		let let_move_save=${FAILURE}
+		let "_move_boot=${FAILURE}, _move_save=${FAILURE}"
 		let "issaved=${FAILURE}"
-		
 		
 		{
 		while : ; do 
 			#Thu 23 Mar 2017 07:13:30 PM GMT -----Checking that values are set-------
-			[ ${let_move_boot} -eq ${FAILURE} ] && [ ${let_move_save} -eq ${FAILURE} ] && {
+			[ ${_move_boot} -eq ${FAILURE} ] && [ ${_move_save} -eq ${FAILURE} ] && {
 				
 				eval tmp_param='$'${CONFIG_PARAMS[$i]}
 				
@@ -618,7 +650,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 					echo "checking $(String_to_Lower ${CONFIG_PARAMS[$i]}) ($percentage%)"
 					echo "XXX"
 					
-					[ $i -eq ${#CONFIG_PARAMS[@]} ] && { let_move_boot=${SUCCESS}; }
+					[ $i -eq ${#CONFIG_PARAMS[@]} ] && { _move_boot=${SUCCESS}; }
 				else
 						let "err_set = ${ERR_VALUE_NOT_SET}"
 						break
@@ -626,7 +658,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			}
 			
 			#-----------------Booting VM---------------------
-			[ ${let_move_boot} -eq ${SUCCESS} ] && [ ${let_move_save} -eq ${FAILURE} ] && {
+			[ ${_move_boot} -eq ${SUCCESS} ] && [ ${_move_save} -eq ${FAILURE} ] && {
 				echo "XXX"
 				echo $percentage
 				echo "Booting ${VM_NAME:6:18} ($percentage%)"
@@ -642,23 +674,19 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				fi 
 				
 				[ $? -eq ${FAILURE} ] && { let "err_code = ${ERR_OCCURRED_DURING_BOOT}"; break; }
-				let_move_save=${SUCCESS}
-				
-#				if DEFINE_D ${DIRECT_LINUX_BOOT}; then
-#					let_move_save=$1
-#				fi 
+				_move_save=${SUCCESS}
 				
 				sleep 0.6
 			}
 			
 			
 			#---------------Saving VM----------------------
-			[ ${let_move_boot} -eq ${SUCCESS} ] && [ ${let_move_save} -eq ${SUCCESS} ] && {
+			[ ${_move_boot} -eq ${SUCCESS} ] && [ ${_move_save} -eq ${SUCCESS} ] && {
 				echo "XXX"
 				echo $percentage
 				echo "Saving ${VM_NAME:6:18} ($percentage%)"
 				echo "XXX"	
-				
+				DEFINE_D ${DIRECT_LINUX_BOOT} && { issaved=$1; } 
 				[ $issaved -ne ${SUCCESS} ] && {
 					
 					bash ${LIB_DIR}/QBox/bash_s/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
@@ -679,13 +707,15 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				sleep 1			
 			}
 			
+			
+			
 			(( i_var=i ))
 			(( i+=1 ))
 			
 			if NOT_DEFINE ${DIRECT_LINUX_BOOT}; then
 				(( percentage=i * 100 / 14 + 7 ))
 			else
-				(( percentage=i * 100 / ${#CONFIG_PARAMS[@]} ))
+				(( percentage=i * 100 / 14 + 7 ))
 			fi 
 			
 			[ $percentage -ge 100 ] && break
@@ -698,6 +728,8 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			error_func_display "$(err_str "${TMP_CMP}:${STRERROR[$TMP_CMP]}:boot_system_err_func")" 
 			return ${FAILURE}			
 		fi
+		
+		perror ${err_code} "__DIALOG__"
 		
 		if DEFINE_D ${DIRECT_LINUX_BOOT}; then
 			UNDEFINE DIRECT_LINUX_BOOT

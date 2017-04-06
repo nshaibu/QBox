@@ -27,9 +27,10 @@
 DEFINE DIRECT_LINUX_BOOT
 
 
-if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
+if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${TRUE_TEST_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
 	. ${LIB_DIR}/include '<basic_utils.h>'
+	. ${LIB_DIR}/include '<true_test.h>'
 fi 
 
 if NOT_DEFINE ${ERROR_H} || NOT_DEFINE ${ARCHITECTURE_H} || NOT_DEFINE ${BOOT_SYSTEM_H}; then
@@ -112,7 +113,7 @@ while : ; do
 			while [[ ${TEST_ERROR_OCURRED} -eq ${SUCCESS} ]]; do 
 				exec 3>&1
 					value=`${DIALOG} \
-						--no-shadow --colors --nocancel --clear --title "\Zb\Z1Select a kernel image\Zn\ZB" \
+						--no-shadow --colors --nocancel --clear --title "\Zb\Z1Select the initial ramdisk\Zn\ZB" \
 						--fselect $HOME/ 10 50 2>&1 1>&3`
 				exec 3>&-	
 				
@@ -135,8 +136,8 @@ while : ; do
 			exec 3>&-	
 				
 			case ${value} in 
-				${DIALOG_OK}) _save_=${SUCCESS} ;;
-				${DIALOG_CANCEL}) _save_=${FAILURE} ;;
+				${DIALOG_OK}) _save_=${FAILURE} ;;
+				${DIALOG_CANCEL}) _save_=${SUCCESS} ;;
 			esac
 			
 			detect_architecture "GLOBBING"
