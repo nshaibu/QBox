@@ -59,7 +59,7 @@ while : ; do
 				while true; do 
 					exec 3>&1
 						value=$(${DIALOG} \
-								--no-shadow --clear --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
+								--no-shadow --ok-label "Boot" --clear --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
 								--menu "\Zb\Z0QBox Menu\Zn\ZB\nManage Virtual machine." ${HEIGHT} ${WIDTH} \
 								8 ${gen_str_} 2>&1 1>&3)
 							
@@ -130,8 +130,8 @@ while : ; do
 				while true; do 
 					exec 3>&1
 						value=$(${DIALOG} \
-								--no-shadow --clear --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
-								--menu "\Zb\Z0QBox Menu\Zn\ZB\nManage Virtual machine." ${HEIGHT} ${WIDTH} \
+								--no-shadow --clear --ok-label "Delete" --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
+								--menu "\Zb\Z0Delete Virtual Machines\Zn\ZB\nSelect a Virtual machine to delete." ${HEIGHT} ${WIDTH} \
 								8 ${gen_str_} 2>&1 1>&3)
 							
 						let "test_return=$?"
@@ -205,7 +205,7 @@ while : ; do
 										done 
 									}
 								else 
-									pid_t="<${test_serv_running}"
+									pid_t="`cat ${test_serv_running}`"
 									
 									${DIALOG} \
 										--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n[${pid_t}]Server already runing" \
@@ -216,10 +216,15 @@ while : ; do
 									
 									if server_is_not_running; then
 										${DIALOG} \
-											--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\nServer is not runing" $((HEIGHT-7)) $((WIDTH-10))
+											--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n  Server is not runing" $((HEIGHT-7)) $((WIDTH-10))
 									else
-										server_stop "<${test_serv_running}"
-										rm -f ${test_serv_running} 2>/dev/null
+										server_stop "$(cat ${test_serv_running})" 
+											echo $?>${LIB_DIR}/v.txt
+											rm -f ${test_serv_running} 2>/dev/null 
+											
+											${DIALOG} \
+												--colors --title "\Zb\Z1QBox Server\Zn\ZB" \
+												--msgbox "\n\nServer successfully stopped.." $((HEIGHT-7)) $((WIDTH-10))		
 									fi 
 							}
 						;;

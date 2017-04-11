@@ -392,9 +392,11 @@ elif [[ $1 = "<http_server.h>" ]]; then
 		
 		#stop service
 		function server_stop() {
-			kill -9 $@ 2>/dev/null
-			
-			[ $? -eq ${SUCCESS} ] && return ${SUCCESS} || return ${FAILURE}
+			if kill -9 $@ 2>/dev/null ; then
+				return ${SUCCESS} 
+			else 
+				return ${FAILURE}
+			fi 
 		}
 		
 		#test server is runing
