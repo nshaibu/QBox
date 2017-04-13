@@ -19,7 +19,7 @@
 
 #===========================================================================================
 
-: ${LIB_DIR:=$HOME/my_script/QB}
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
 
 . ${LIB_DIR}/include '<true_test.h>'
 . ${LIB_DIR}/include '<network.h>'

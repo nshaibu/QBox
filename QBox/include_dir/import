@@ -19,7 +19,7 @@
 
 #===========================================================================================
 
-: ${LIB_DIR:=$HOME/my_script/QB}
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
 
 . ${LIB_DIR}/include
 
@@ -38,15 +38,20 @@ if [[ $1 = "<init.h>" ]]; then
 		: ${LOG_DIR:="${HD_IMG_DIR}/logs_dir"}
 		: ${BOOT_DIR:="${HD_IMG_DIR}/.qemuboot"} ## contain boot files
 		
-		
+		#Installation Directory /usr/local/bin/QBox
+		: ${QBOX_DIR:="${HOME}/my_script/QB/QBox"}
+				
 		#librarry dir 
-		: ${LIB_DIR:=$HOME/my_script/QB}
+		: ${LIB_DIR:=${QBOX_DIR}/include_dir}
 		
 		#python directory
 		: ${PYTHON_LOC:=${QBOX_DIR}/python3}
-				
-		#Installation Directory 
-		: ${QBOX_DIR:="/usr/local/bin/QBox"}
+		
+		##dialog_ui directory
+		: ${DIALOG_DIR:="${QBOX_DIR}/dialog_ui"}
+		
+		##basic bash directory
+		: ${BASIC_BASH:=${QBOX_DIR}/bash_s}
 		
 		export SDL_VIDEO_X11_DGAMOUSE=0 ##to prevent qemu cursor from been difficult to control
 		
@@ -75,24 +80,62 @@ if [[ $1 = "<init.h>" ]]; then
 			fi 
 		}	
 		
-#		function _clear_pid_qdb() {
-#			local pid_t=""
-#			local TMPFILE=$(mktemp -uq qbox.XXXXXXXXXXXX || echo "qbox.$$")
-#			
-#			[ "`cat <${PID_DB}`" != "" ] && {
-#				for i in $(cut -d "|" -f2 ${PID_DB}); do 
-#					pid_t=$(ps ax | awk '{print $1}' | grep $i) 
-#				done
-#				
-#				if [[ -z ${pid_t} ]]; then
-#					complement_of ${pid_t} ${PID_DB} "${TEMP_FOLDER}/${TMPFILE}"
-#					#echo $(gawk -F "|" -v var=$name '$2 !~ var {print $0}' ${PID_DB}) > ${TEMP_FOLDER}/vms.tt
-#					##replace black or space character with newline character
-#					sed -e 's/[[:blank:]]\+/\n/g' "${TEMP_FOLDER}/${TMPFILE}" 2>/dev/null 1> ${PID_DB}
-#					rm -f "${TEMP_FOLDER}/${TMPFILE}" 2>/dev/null					
-#				fi 
-#			}
-#		}
+		#tty info 
+		function _tty_tigetnum() {
+			declare -a tty_info=( $(stty -a) )
+			
+			for (( index=0; index<${#tty_info[@]}; index++ )); do 
+				[ "${tty_info[$index]}" = "$1" ] && { 
+					echo -n "${tty_info[$(( index+1 ))]//;/}"
+					break
+				}
+			done 
+		}
+		
+		declare -a SCR_TTY_MSG= ##prompts msg
+		shopt -s checkwinsize ## check and update cols and lines in tty database
+		
+		function move_center() {
+			local x_tty_cord=$(_tty_tigetnum "columns") 
+			local y_tty_cord=$(_tty_tigetnum "rows")
+			
+			local y_cord=$(( (y_tty_cord-$2) / 2 ))
+			local x_cord=$(( (x_tty_cord-$1) / 2 ))
+			
+			tput cup ${y_cord} ${x_cord}
+		}
+		
+		display_center(){
+			columns="$(tput cols)"
+			
+			for line in ${SCR_TTY_MSG[@]}; do 
+				printf "%*s\n" 31 "$line"
+			done 
+		}
+		
+		_display_center() {
+			row=0
+			for text in ${SCR_TTY_MSG[@]}; do 
+				col=$(( ($(tput cols) - 31) / 2 ))
+				tput clear
+				tput cup $row $col
+				echo "$text"
+				(( row++ ))
+			done
+		}
+		#argu: array of prompts mesg to display in general screen arr[SCR_TTY_MSG]
+		function print_scr_tty() {
+			local sizeof_arr=${#SCR_TTY_MSG[@]}
+			local number_of_options=$(( sizeof_arr ))
+			local len_of_long_str=${SCR_TTY_MSG[$(( --sizeof_arr ))]} && unset 'SCR_TTY_MSG[$sizeof_arr]'
+			#move_center ${len_of_long_str} ${number_of_options}
+			[ ${sizeof_arr} -gt 0 ] && { 
+				for (( index=0; index<${sizeof_arr}; index++ )); do 
+					move_center ${len_of_long_str} $(( number_of_options-index+1 ))
+					echo -ne "${SCR_TTY_MSG[$index]}"
+				done 
+			}
+		}
 		
 	fi ## INIT_H
 	
@@ -101,7 +144,7 @@ elif [[ $1 = "<notify.h>" ]]; then
 	NOT_DEFINE ${NOTIFY_H} && {
 		DEFINE NOTIFY_H
 		
-		: ${NOTICE:=`${QBOX_DIR}/bash_s/check_pkg_install.sh %CHECK_RUN% notify-send`}
+		: ${NOTICE:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% notify-send`}
 	} # NOTIFY_H
 	
 elif [[ $1 = "<qdb_database.h>" ]]; then
@@ -175,23 +218,77 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 			
 		}
 		
+		##argu :db_name
+		##return the name of vms without qvm file or hd img 
+		function check_qdb_consistency() {
+			local -a db_name=( $1 )
+			
+			local -a no_bootfile_arr=(), no_hd_arr=(), result_arr=()
+			let "i=0"
+			
+			if [[ ${#qdb_name[@]} -gt 0 ]]; then
+				
+				for (( index=0; index<${#qdb_name[@]}; index++)); do 
+					#----check bootfile-------
+						local vm_info=${qdb_name[$index]//\"/}
+						local boot_file_name=$(return_second_field ${vm_info})
+						
+						check_is_file "${BOOT_DIR}/${boot_file_name}" || {
+							no_bootfile_arr[$i]=$(return_first_field ${vm_info})
+							(( i++ ))
+						}
+					#----check hd img---------
+						boot_file_name=${boot_file_name//.qvm/.img}
+						
+						check_is_file "${HD_IMG_DIR}/${boot_file_name}" || {
+							no_hd_arr[$i]=$(return_first_field ${vm_info})
+							(( i++ ))
+						}
+				done 
+				
+				if [ ${#no_bootfile_arr[@]} -ne 0 ] || [ ${#no_hd_arr[@]} -ne 0 ] ; then
+					result_arr=( ${no_bootfile_arr[@]} ${no_hd_arr[@]} )
+					echo -n ${result_arr[@]}
+				fi 
+			fi 
+		}
+		
+		#argu: arr_of vms with no hd img or qvm file
+		function resolve_qdb_inconsistencies() {
+			local -a arr_vms=( $1 )
+			
+			if [[ ${#arr_vms[*]} -ne 0 ]]; then
+				local TMPFILE=$(mktemp -uq qbox.XXXXXXXXXXXX || echo "qbox.$$")
+				
+				for (( index=0; index<${#arr_vms[*]}; index++ )); do 
+					complement_of ${arr_vms[$index]} "${VMS_DB}" "${QDB_FOLDER}/${TMPFILE}"
+					mv "${QDB_FOLDER}/${TMPFILE}" ${VMS_DB}
+				done 
+			fi 
+		}
+		
 		#ARGU:	array of values contain the search value at the end of the array
-		#RET:	ARR_INDEX
+		#RET:	append the index of the search value to the back of the array
 		function search_val_qdb() {
 			local -a qdb_vm_info=( $@ )
 			local sizeof_arr=${#qdb_vm_info[@]}
 			local search_val=${qdb_vm_info[$(( --sizeof_arr ))]} && unset 'qdb_vm_info[$sizeof_arr]' 
 			
-			[ ${sizeof_arr} -eq 1 ]  && echo ${qdb_vm_info[@]} && return ${ARR_IS_EMPTY}
+			[ ${sizeof_arr} -eq 0 ]  && echo "${qdb_vm_info[@]} ${ARR_IS_EMPTY}"
 			
-			if [[ ${sizeof_arr} -gt 1 ]]; then
-				for (( index=0; index<${#qdb_vm_info[@]}; index++ )); do 
-					[ "${qdb_vm_info[$index]%%:*}" = "$(String_to_Upper ${search_val})" ] && echo ${qdb_vm_info[@]} && return ${index} 
+			if [[ ${sizeof_arr} -gt 0 ]]; then
+				for (( index=0; index<${sizeof_arr}; index++ )); do 
+					local vm_info=${qdb_vm_info[$index]//\"/}
+					#local vm_info={vm_info[$index]%%|*}
+					[ "${vm_info%%|*}" = "$(String_to_Upper ${search_val})" ] && {
+						echo -n "${qdb_vm_info[@]} ${index}"
+						return 0
+					}
 				done 
 			fi
 			
-			echo ${qdb_vm_info[@]}
-			return ${SRCH_VAL_NOT_IN_ARR}
+			echo "${qdb_vm_info[@]} ${SRCH_VAL_NOT_IN_ARR}"
+			return 0
 		}
 		
 		###generate string from arr of vms sizeof_arr, set_str
@@ -304,14 +401,19 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 			local sizeof_arr=${#QDB_ARR[@]}
 			
 			if [[ ${sizeof_arr} -gt 0 ]]; then
-				QDB_ARR[$(( sizeof_arr ))]=$1
+				QDB_ARR[$(( sizeof_arr ))]=$(String_to_Upper $1)
 				QDB_ARR=( $(search_val_qdb ${QDB_ARR[@]}) )
-				let vm_info_index=$?
+				sizeof_arr=${#QDB_ARR[@]}
 				
-				[ "${vm_info_index}" != "${ARR_IS_EMPTY}" ] && [ "${vm_info_index}" != "${SRCH_VAL_NOT_IN_ARR}" ] && {
-					vm_info=QDB_ARR[${vm_info_index}]
+				local vm_info_index=${QDB_ARR[$(( --sizeof_arr ))]} && unset 'QDB_ARR[$sizeof_arr]'
+				echo ${vm_info_index}>${HOME}/my_script/QB/v.txt
+				[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && {
+					vm_info=${QDB_ARR[${vm_info_index}]}
+					vm_info=${vm_info//\"/}
+					
 					vm_info=$(return_second_field ${vm_info})
-					boot_vm ${vm_info} 
+					
+					boot_vm ${vm_info} $(String_to_Upper $1)
 				}
 			fi 
 		}
@@ -324,8 +426,8 @@ elif [[ $1 = "<http_server.h>" ]]; then
 		
 		. ${LIB_DIR}/import '<qdb_database.h>'
 		
-		: ${PHP_PARSER:=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% php`}
-		: ${TCP_SERVER:=$($QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% ncat)}
+		: ${PHP_PARSER:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% php`}
+		: ${TCP_SERVER:=$(${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% ncat)}
 		
 		: ${DOC_ROOT:="${QBOX_DIR}/www"}
 		: ${test_serv_running:="${TEMP_FOLDER}/.svrpid"}

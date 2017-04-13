@@ -23,15 +23,17 @@
 #	true_test.h, host_ip.h, loggs.h, network.h, architecture.h, vnc_info.h	  #
 #	error.h, disk_details.h, audio_display.h, boot_system.h, curses_dialog.h  #
 
-HD_IMG_DIR=$HOME/.img_qemubox ##contains harddisk images
-LOG_DIR=${HD_IMG_DIR}/logs_dir
-QBOX_DIR=/usr/local/bin/QBox
+: ${HD_IMG_DIR:=$HOME/.img_qemubox} ##contains harddisk images
+: ${LOG_DIR:=${HD_IMG_DIR}/logs_dir}
+: ${QBOX_DIR:="${HOME}/my_script/QB/QBox"}
 : ${TEMP_FOLDER:="${HD_IMG_DIR}/.tmp_qbox"}
-QDB_FOLDER=${HD_IMG_DIR}/.qdb ##qbox database files location
+: ${QDB_FOLDER:=${HD_IMG_DIR}/.qdb} ##qbox database files location
 
 : ${PYTHON_LOC:=${QBOX_DIR}/python3}
+: ${BASIC_BASH:=${QBOX_DIR}/bash_s}
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
 
-: ${LIB_DIR:=$HOME/my_script/QB}
+#-----------------------define---------------------
 
 function DEFINE() {
 	[ ${#@} -eq 1 ] && eval $1=0 || eval $1=$2
@@ -54,6 +56,8 @@ function NOT_DEFINE() {
 	
 	return ${_return}
 }
+
+#--------------------Define------------------------------------
 
 if [[ $1 = "<loggs.h>" ]]; then
 
@@ -689,7 +693,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				DEFINE_D ${DIRECT_LINUX_BOOT} && { issaved=$1; } 
 				[ $issaved -ne ${SUCCESS} ] && {
 					
-					bash ${LIB_DIR}/QBox/bash_s/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+					bash ${BASIC_BASH}/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
 					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${REDIRECT0} %${TAP0} \
 					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
 					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${REDIRECT1} %${TAP1} \

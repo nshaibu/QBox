@@ -19,9 +19,10 @@
 
 #===========================================================================================
 
-: ${LIB_DIR:=$HOME/my_script/QB}
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
 
 . ${LIB_DIR}/include
+. ${LIB_DIR}/import '<init.h>'
 
 if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
@@ -53,7 +54,7 @@ while : ; do
 				printf -v MACADDR "52:54:%02x:%02x:%02x:%02x" $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff )) $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff ))
 				
 				DEFINE GUIDED_MODE_BOOT_VM
-				. ${LIB_DIR}/qbox_create_vm.sh
+				. ${DIALOG_DIR}/qbox_create_vm.sh
 				
 				UNDEFINE GUIDED_MODE_BOOT_VM
 				
@@ -91,7 +92,7 @@ while : ; do
 				
 				UNDEFINE GUIDED_MODE_BOOT_VM
 				
-				declare -a CONFIG_PARAMS=("rQEMU" "VM_NAME" "DISK_SIZE" "NUM_CPU" "RAM_SIZE" "Disk_Name" "default_network" )
+				declare -a CONFIG_PARAMS=("QEMU" "VM_NAME" "DISK_SIZE" "NUM_CPU" "RAM_SIZE" "Disk_Name" "default_network" )
 				
 				let "issaved=${FAILURE}, i=0, i_var=0, percentage=0"
 				let "move_boot=${FAILURE}, move_save=${FAILURE}, move_creat_hd=${FAILURE}"
@@ -157,7 +158,7 @@ while : ; do
 				
 							[ $issaved -ne ${SUCCESS} ] && {
 								
-								bash ${LIB_DIR}/QBox/bash_s/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+								bash ${BASIC_BASH}/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
 								%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${REDIRECT0} %${TAP0} \
 								%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
 								%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${REDIRECT1} %${TAP1} \
@@ -183,7 +184,7 @@ while : ; do
 						
 					done 
 				} | ${DIALOG} --gauge "Please wait" 7 70 0
-				echo ${err_code}>${LIB_DIR}/v.txt
+				
 				perror ${err_code} "__DIALOG__"
 				break
 			
@@ -202,11 +203,11 @@ while : ; do
 					case ${test_return} in 
 						${DIALOG_OK}) 
 							if [[ $value -eq 1 ]]; then
-								. ${LIB_DIR}/qbox_create_vm.sh 
+								. ${DIALOG_DIR}/qbox_create_vm.sh 
 							elif [[ $value -eq 2 ]]; then
-								. ${LIB_DIR}/qbox_network_config.sh 
+								. ${DIALOG_DIR}/qbox_network_config.sh 
 							elif [[ $value -eq 3 ]]; then
-								. ${LIB_DIR}/qbox_boot_device.sh 
+								. ${DIALOG_DIR}/qbox_boot_device.sh 
 							fi 
 						;;
 						${DIALOG_BACK}) break ;;

@@ -19,9 +19,11 @@
 
 #===========================================================================================
 
-: ${LIB_DIR:=$HOME/my_script/QB}
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
 
 . ${LIB_DIR}/include
+
+. ${LIB_DIR}/import '<init.h>'
 . ${LIB_DIR}/import '<qdb_database.h>'
 . ${LIB_DIR}/import '<boot_vm.h>'
 . ${LIB_DIR}/import '<http_server.h>'
@@ -82,7 +84,7 @@ while : ; do
 					esac
 				done
 			elif [[ ${value} -eq 2 ]]; then
-				. ${LIB_DIR}/qbox_new_vm_menu.sh 
+				. ${DIALOG_DIR}/qbox_new_vm_menu.sh 
 			elif [[ ${value} -eq 3 ]]; then
 				gen_str_=""
 				
@@ -162,7 +164,7 @@ while : ; do
 			elif [[ ${value} -eq 5 ]]; then
 				:
 			elif [[ ${value} -eq 6 ]]; then
-				. ${LIB_DIR}/QBox/bash_s/direct_linux_boot.sh 
+				. ${BASIC_BASH}/direct_linux_boot.sh 
 			elif [[ ${value} -eq 7 ]]; then
 				while true; do 
 					exec 3>&1
@@ -219,12 +221,11 @@ while : ; do
 											--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n  Server is not runing" $((HEIGHT-7)) $((WIDTH-10))
 									else
 										server_stop "$(cat ${test_serv_running})" 
-											echo $?>${LIB_DIR}/v.txt
-											rm -f ${test_serv_running} 2>/dev/null 
+										rm -f ${test_serv_running} 2>/dev/null 
 											
-											${DIALOG} \
-												--colors --title "\Zb\Z1QBox Server\Zn\ZB" \
-												--msgbox "\n\nServer successfully stopped.." $((HEIGHT-7)) $((WIDTH-10))		
+										${DIALOG} \
+											--colors --title "\Zb\Z1QBox Server\Zn\ZB" \
+											--msgbox "\n\nServer successfully stopped.." $((HEIGHT-7)) $((WIDTH-10))		
 									fi 
 							}
 						;;
