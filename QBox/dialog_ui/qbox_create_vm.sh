@@ -19,10 +19,12 @@
 
 #===========================================================================================
 
-: ${LIB_DIR:=$HOME/my_script/QB}
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
 
 . ${LIB_DIR}/include '<disk_details.h>' ##include disk creation functions
 . ${LIB_DIR}/include '<architecture.h>'
+
+. ${LIB_DIR}/import '<init.h>'
 
 if NOT_DEFINE ${AUDIO_DISPLAY_H} || NOT_DEFINE ${BOOT_SYSTEM_H} ; then
 	. ${LIB_DIR}/include '<audio_display.h>'
@@ -72,8 +74,6 @@ declare -a ARR_MACOSX=("Mac_OSX[32bit]|2048M|20G" "Mac_OSX[64bit]|4048M|20G" "Ma
 
 declare -a ARR_OTHEROS=("DOS|32M|500M" "NetWare|512M|4G" "L4|64M|2G" "QNX|512M|4G" "JRockitVE|1024M|8G" "Unknown|64M|2G" "Unknown[64bit]|64M|2G" )
 declare -a ARR_OS_TYPE=("Microsoft Windows" "Linux" "Solaris" "BSD" "IBM OS/2" "Mac OS X" "Other")
-
-export SDL_VIDEO_X11_DGAMOUSE=0 ##to prevent qemu cursor from been difficult to control
 
 declare -i HEIGHT=18
 declare -i WIDTH=50
@@ -482,7 +482,6 @@ while [ 1 ]; do
 												RECOM_DISK_SIZE=`echo ${ARR_BSD[5]} | cut -d "|" -f3`				
 											;;
 											1) 
-												OS_VERSION=`echo ${ARR_BSD[0]} | cut -d "|" -f1`
 												RECOM_RAM_SIZE=`echo ${ARR_BSD[0]} | cut -d "|" -f2`
 												RECOM_DISK_SIZE=`echo ${ARR_BSD[0]} | cut -d "|" -f3`
 											;;

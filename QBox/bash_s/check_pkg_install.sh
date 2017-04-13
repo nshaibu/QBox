@@ -21,8 +21,10 @@
 
 trap 'exit 0' INT
 
-HD_IMG_DIR=$HOME/.img_qemubox
-TEMP_FOLDER=${HD_IMG_DIR}/.tmp_qbox
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
+
+. ${LIB_DIR}/import '<init.h>'
+
 _return_=""
 
 function yes_no()
@@ -133,7 +135,7 @@ function show_if(){
 
 if [[ $1 = "%CHECK_START%" ]]; then
 								
-				
+	move_center 4 25
 ##qemu(qemu-img),bridge-utils(brctl),uml-utilities(tunctl),check mark(U+2713), cross mark(U+274C)
 	echo -e "\tQemu-utilities		$(show_if $(pkg_installed qemu-img))" && sleep 1
 	echo -e "\tBridge-utilities	$(show_if $(pkg_installed brctl))" && sleep 1

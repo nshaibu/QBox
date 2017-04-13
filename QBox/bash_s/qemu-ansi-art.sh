@@ -4,18 +4,30 @@
 # 			Purpose: ASCII Drawings				  #
 ###################################################
 
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
+
+. ${LIB_DIR}/import '<init.h>'
+
 QDATA[0]="                 _/_/_/      _/_/_/                          "
 QDATA[1]="               _/     _/   _/     _/     _/_/     _/   _/    "
 QDATA[2]="              _/      _/  _/ _/_/_/    _/    _/   _/  _/     "
 QDATA[3]="             _/      _/  _/       _/  _/     _/    _/  _/    "
 QDATA[4]="              _/_/_/\_\ _/_/_/_/_/     _/_/_/     _/   _/    "
 QDATA[5]="                      loading QBox...                        "
-QDATA[6]="                 Copyleft (C) 2016 Nafiu Shaibu.             "
+QDATA[6]="                 Copyleft (C) 2017 Nafiu Shaibu.             "
 QDATA[7]="                                                             "
 # virtual coordinate system is X*Y ${#QDATA} * 5
 
-REAL_OFFSET_X=0
-REAL_OFFSET_Y=0
+let x_tty_cord=$(_tty_tigetnum "columns") 
+let y_tty_cord=$(_tty_tigetnum "rows")
+
+let x_cord_art=${#QDATA[0]}
+
+x_cord=$(( (x_tty_cord-x_cord_art) / 2 ))
+y_cord=$(( (y_tty_cord-8) / 2 ))
+
+REAL_OFFSET_X=${x_cord}
+REAL_OFFSET_Y=${y_cord}
 
 ##Draws the characters in the arrays declared above
 draw_characters() {
@@ -44,8 +56,7 @@ do
   	    tput setaf $c
   		for ((x=0; x<${#QDATA[0]}; x++))
   		do
-    			for ((y=0; y<=7; y++))
-    			do
+    			for ((y=0; y<=7; y++)); do 
     				draw_characters $x $y
     			done
 		done
@@ -54,5 +65,3 @@ do
 done
 
 tput sgr0 ## reset everything
-
-exit 0
