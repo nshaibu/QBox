@@ -19,55 +19,27 @@
 
 #===========================================================================================
 
-HD_IMG_DIR=$HOME/.img_qemubox ##contains harddisk images
-TEMP_FOLDER=${HD_IMG_DIR}/.tmp_qbox
-PID_FILE=${TEMP_FOLDER}/.pid
-QDB_FOLDER=${HD_IMG_DIR}/.qdb
-BOOT_DIR=${HD_IMG_DIR}/.qemuboot ## contain boot files
-LOG_DIR=${HD_IMG_DIR}/logs_dir
-TEMP_FOLDER=${HD_IMG_DIR}/.tmp_qbox
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
 
-QBOX_DIR=/usr/local/bin/QBox
-NOTICE=`${QBOX_DIR}/bash_s/check_pkg_install.sh %CHECK_RUN% notify-send`
+. ${LIB_DIR}/include
 
-[ ! -d ${HD_IMG_DIR} ] && mkdir ${HD_IMG_DIR} ##Check and creates Harddisk image folder
-[ ! -d ${BOOT_DIR} ] && mkdir ${BOOT_DIR} ##check and create boot folder
-[ ! -d ${QDB_FOLDER} ] && mkdir ${QDB_FOLDER} ##check for qbox database folder
-[ ! -d ${TEMP_FOLDER} ] && mkdir ${TEMP_FOLDER} ##check and creates tmp folder
-[ ! -d ${LOG_DIR} ] && mkdir ${LOG_DIR} && touch ${LOG_DIR}/qboxlog ##check and create log directory
-[ ! -f ${PID_FILE} ] && touch ${PID_FILE}
-[ ! -f ${QDB_FOLDER}/pid.qdb ] && touch ${QDB_FOLDER}/pid.qdb ##check pid database vm_name|pid
-[ ! -f ${QDB_FOLDER}/vms.qdb ] && touch ${QDB_FOLDER}/vms.qdb
+. ${LIB_DIR}/import '<init.h>'
+. ${LIB_DIR}/import '<qdb_database.h>'
+. ${LIB_DIR}/import '<boot_vm.h>'
+. ${LIB_DIR}/import '<notify.h>'
 
-echo -ne "\033]0;QBox Easy VM Manager \007"
-
+if NOT_DEFINE ${LOGGS_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
+	. ${LIB_DIR}/include '<loggs.h>'
+	. ${LIB_DIR}/include '<basic_utils.h>'
+fi 
 
 ##Setting up colors
 BOLD="tput bold"
 RESET="tput sgr0"
-
-##SDL 
-export SDL_VIDEO_X11_DGAMOUSE=0 ##to prevent qemu cursor from been difficult to control
-
-function vm_kill_term_eventhandler(){
-	if [ "`cat ${QDB_FOLDER}/pid.qdb`" != "" ]; then
-		for i in `cut -d "|" -f2 ${QDB_FOLDER}/pid.qdb`;do 
-				
-			if [ ! -d /proc/$i ]; then
-				name="^$i\$"
-				echo $(gawk -F "|" -v var=$name '$2 !~ var {print $0}' ${QDB_FOLDER}/pid.qdb) > ${TEMP_FOLDER}/vms.tt
-				##replace black or space character with newline character
-				sed -e 's/[[:blank:]]\+/\n/g' ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
-				rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null
-			fi 
-		done 
-	fi
-}
-
-
-#trap vm_kill_term_eventhandler 1 2 3 9 15
-export SDL_VIDEO_X11_DGAMOUSE=0 ##to prevent qemu cursor from been difficult to control
-
+#clear
+#SCR_TTY_MSG=("\t\t`${BOLD}`_QBox_Menu_`${RESET}`" "1._Boot_Created_Virtual_Machine" "3._Delete_Virtual_Machine" "4._Other_Options")
+#_display_center
+#exit 0
 case $1 in
 	-[Cc]|[Cc]|--[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt]|[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt])
 		echo -e "QBox Easy VM Manager Copyleft (\u0254) 2016 nafiu shaibu\nQEMU is a trademark of fabrice bellard\n"
@@ -78,13 +50,13 @@ case $1 in
 	;;
 	
 	-s|--[Ss][Tt][Aa][Rr][Tt][Vv][Mm]) 
-	NAME=`echo $2 | awk '{print toupper($0)}'`
-	search="^${NAME}$"
+		NAME=`echo $2 | awk '{print toupper($0)}'`
+		search="^${NAME}$"
 	
-	set `gawk -F "|" -v var=$search '$1 ~ var {print $2 " " $3}' ${QDB_FOLDER}/vms.qdb`
-	if [[ $2 = "F" ]]; then
-		bash ${QBOX_DIR}/bash_s/qemu-bootfile-reader.sh $1 ${NAME}
-	fi 
+		set `gawk -F "|" -v var=$search '$1 ~ var {print $2 " " $3}' ${QDB_FOLDER}/vms.qdb`
+		if [[ $2 = "F" ]]; then
+			bash ${QBOX_DIR}/bash_s/qemu-bootfile-reader.sh $1 ${NAME}
+		fi 
 	;;
 	
 	-[Hh]|--[Hh][Ee][Ll][Pp])
@@ -94,7 +66,7 @@ case $1 in
 				"    -c,-C		--copyright, --COPYRIGHT" \
 				"    -h,-H		--help,--HELP" \
 				"     nocheck 		Do not check for packages" && echo
-		printf "%s\n" "Contact me @ <github.com/nafiuShaibu>" && echo 
+		printf "%s\n" "Contact me @ <github.com/nshaibu>" && echo 
 		printf "%s\n" "QBox help users create and manage virtual machines locally and remotely" \
 			"by just knowing how to press keys like [ENTER] and answering yes or " \
 			"no questions" && echo
@@ -104,198 +76,241 @@ case $1 in
 			"sh/bash shell" && echo
 	;;
 	
-	*)
+	--[Cc][Ll][Ii]|-[Ii])
 	
-	##check for paclages 
-	if [[ "$1" != "nocheck" ]]; then
-		bash ${QBOX_DIR}/bash_s/check_pkg_install.sh %CHECK_START%
-	fi 
+		##check for paclages 
+		if [[ "$2" != "nocheck" ]]; then
+			bash ${QBOX_DIR}/bash_s/check_pkg_install.sh %CHECK_START%
+		fi 
 	
-	type $NOTICE >/dev/null 2>&1 && $NOTICE -u low -t 3 -i ${QBOX_DIR}/icon/QBox.png QBox "The Easy VM Manager" 
-	bash ${QBOX_DIR}/bash_s/qemu-ansi-art.sh
+		type $NOTICE >/dev/null 2>&1 && $NOTICE -u low -t 3 -i ${QBOX_DIR}/icon/QBox.png QBox "The Easy VM Manager" 
+		. ${BASIC_BASH}/qemu-ansi-art.sh
 	
-	##logger_func sed ':a;N;$!ba;s/\n/ /g'
-	#1. :a create a label 'a'
-	#2. N append the next line to the pattern space
-	#3. $! if not the last line, ba branch (go to) label 'a'
-	#4. s substitute, /\n/ regex for new line, / / by a space, /g global match (as many times as it can)
-	function logger_logging(){
-		if [ "`cat ${TEMP_FOLDER}/.error.tt`" != "" ]; then 
-			${QBOX_DIR}/bin/qemubox_logger "`sed ':a;N;$!ba;s/\n/ /g' ${TEMP_FOLDER}/.error.tt`" ${LOG_DIR}/qboxlog
+		function other_options_menu(){
+			clear
+			#move_center 38 10
+			#echo
+			tput bold
+			echo -e "\t\t\tOther Options\n"
+			tput sgr0
+			echo -e "\t1. Information On Virtual Machines"
+			echo -e "\t2. Create Shortcut"
+			echo -e "\t3. QBox Logs"
+			echo -e "\t0. Back \u2b05 \n\n"
+	
+			echo -en "\t\tEnter Option: "
+			read -n 1 opt
+		}	
+	
+	
+		function qemu_menu_func(){
+			clear
+			#move_center 40 10
+			echo
+			echo -e "\t\t\t\t `${BOLD}` QBox Menu `${RESET}`\n"
+			echo -e "\t1. Boot Created Virtual Machine"
+			echo -e "\t2. Create New Virtual Machine"
+			echo -e "\t3. Delete Virtual Machine"
+			echo -e "\t4. Other Options"
+			echo -e "\t5. Reconfigure Virtual Machine"
+			echo -e "\t6. Stop Running Virtual Machine"
+			echo -e "\t7. QBox Remote Manager"
+			echo -e "\t8. Direct Linux Boot"
+			echo -e "\t0. Exit `tput setaf 9` \U274C \n\n"
+			tput sgr0
 		
-			rm -f ${TEMP_FOLDER}/.error.tt
-		fi
-		return 0
-	}
-	
-	function other_options_menu(){
-		clear
-		tput bold
-		echo -e "\t\t\tOther Options\n"
-		tput sgr0
-		echo -e "\t1. Information On Virtual Machines"
-		echo -e "\t2. Create Shortcut"
-		echo -e "\t3. QBox Logs"
-		echo -e "\t0. Back \u2b05 \n\n"
-	
-		echo -en "\t\tEnter Option: "
-		read -n 1 opt
-	}	
-	
-	
-	function qemu_menu_func(){
-		clear
-		echo -e "\t\t\t\t `${BOLD}` QBox Menu `${RESET}`\n"
-		echo -e "\t1. Boot Created Virtual Machine"
-		echo -e "\t2. Create New Virtual Machine"
-		echo -e "\t3. Delete Virtual Machine"
-		echo -e "\t4. Other Options"
-		echo -e "\t5. Reconfigure Virtual Machine"
-		echo -e "\t6. Stop Running Virtual Machine"
-		echo -e "\t7. QBox Remote Manager"
-		echo -e "\t8. Direct Linux Boot"
-		echo -e "\t0. Exit `tput setaf 9` \U274C \n\n"
-		tput sgr0
-		
-		echo -en "\t\tEnter Option: "
-		read -n 1 option
-	}
+			echo -en "\t\tEnter Option: "
+			read -n 1 option
+		}
 
 
-	while true
-	do
-		clear
-		qemu_menu_func
+		while true
+		do
+			clear
+			qemu_menu_func
 	
-		case $option in
-			0) break;;
-			1) 
-				bash ${QBOX_DIR}/bash_s/qemu-sql-vms.sh l 2>/dev/null
-		
-				echo
-				printf "%s" "Enter the name of the VM to boot[ENTER] "
-				read name
-				name=$(echo $name | awk '{print toupper($0)}') ##capitalise name
-				
-				
-				if [[ -n $name ]]; then
-					##bootvm=$(basename $(bash ${QBOX_DIR}/bash_s/qemu-sql-vms.sh s $name) 2>/dev/null)
-					bootvm=$(bash ${QBOX_DIR}/bash_s/qemu-sql-vms.sh s $name)
-					bash ${QBOX_DIR}/bash_s/qemu-bootfile-reader.sh $bootvm $name
-				fi
-		;;
-			2) bash ${QBOX_DIR}/bash_s/qemu-im-box.sh ;;
-			3) 
-				bash ${QBOX_DIR}/bash_s/qemu-sql-vms.sh l 2>/dev/null
-		
-				echo
-				printf "%s" "Enter the name of the VM to delete[ENTER] "
-				read name
-				name=$(echo $name | awk '{print toupper($0)}') ##capitalise name
-				
-				[ "$name" != "" ] && bash ${QBOX_DIR}/bash_s/qemu-sql-vms.sh d $name
-		;;
-			4) 
-				
-				while true
-				do 
-					clear 
-					other_options_menu
+			case $option in
+				0) break;;
+				1) 
+					declare -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) )
 					
-					case $opt in
-					0) break ;;
-					1) 
-						bash ${QBOX_DIR}/bash_s/qemu-sql-vms.sh l 2>/dev/null
+					if [[ ${#QDB_ARR[*]} -eq 0 ]]; then 
+						tput setaf 9
+						printf "\n\t%s\n" "No Virtual Machine created yet..."
+						tput sgr0
+					else 
+						echo -e "\n\nselect a vm"
+						
+						for (( index=0; index<${#QDB_ARR[*]}; index++)); do
+							vm_info=${QDB_ARR[$index]//\"/}
+							echo "  $(( index+1 )).       $(return_first_field ${vm_info})"
+						done 
+						
+						printf "\n%s" "Enter the name of the VM to boot[ENTER] "
+						read name
+						
+						if [[ -n ${name} ]]; then
+							name=$(String_to_Upper ${name}) 
+							startvm ${name}
+						fi
+					fi 
+			;;
+				2) bash ${QBOX_DIR}/bash_s/qemu-im-box.sh ;;
+				3) 
+					#bash ${QBOX_DIR}/bash_s/qemu-sql-vms.sh l 2>/dev/null
+					declare -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) )
+							
+					if [[ ${#QDB_ARR[*]} -eq 0 ]]; then 
+						tput setaf 9
+						printf "\n\t%s\n" "No Virtual Machine created yet..."
+						tput sgr0
+					else 
+						echo -e "\n\nselect a vm"
+							
+						for (( index=0; index<${#QDB_ARR[*]}; index++)); do
+							vm_info=${QDB_ARR[$index]//\"/}
+							echo "  $(( index+1 )).       $(return_first_field ${vm_info})"
+						done 					
 						
 						echo
-						read -p "Choose a VM[ENTER] " name
-						
-						name=$(echo $name | awk '{print toupper($0)}') ##capitalise name
-						
-						if [[ -n $name ]]; then
-							
-							bootvm=$(bash ${QBOX_DIR}/bash_s/qemu-sql-vms.sh s $name)
-							clear
-							bash ${QBOX_DIR}/bash_s/qbox_display_vm_info.sh ${BOOT_DIR}/$bootvm
-							
-						fi 						
-					;;
-					2) bash ${QBOX_DIR}/bash_s/create_desktop_file.sh ;;
-					3) bash ${QBOX_DIR}/bash_s/qboxlogs.sh ;;
-					*) 
-						clear
-						echo "wrong Option"		
-					 ;;
-					esac
-						
-					echo -en "\n\n\t\t\tHit any key to continue"
-					read -n 1 line
-						
-				done
+						printf "%s" "Enter the name of the VM to delete[ENTER] "
+						read name
 				
+						[ "$name" != "" ] && { 
+							name=$(String_to_Upper $name)
+							let sizeof_arr=${#QDB_ARR[@]}
+							QDB_ARR[$sizeof_arr]=${name}
+							
+							QDB_ARR=( $(search_val_qdb ${QDB_ARR[@]}) )
+							let sizeof_arr=${#QDB_ARR[@]}
+							vm_info_index=${QDB_ARR[$(( --sizeof_arr ))]}
+							
+							[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && {
+								(( sizeof_arr++ ))
+								QDB_ARR[$(( sizeof_arr++ ))]=${vm_info}
+								QDB_ARR[$sizeof_arr]=${VMS_DB}
+								
+								QDB_ARR=( $(delete_val_qdb ${QDB_ARR[@]}) )
+							}
+						}
+					fi 
 			;;
-			5) bash ${QBOX_DIR}/bash_s/qemu-reconfigure.sh ;;
-			6) 
-				vm_kill_term_eventhandler
+				4) 
 				
-				if [ ! -s ${QDB_FOLDER}/pid.qdb ]; then
-					tput setaf 9
-					echo -e "\n\n\t No VM is running.."
-					tput sgr0
-				else
-					echo -e "\n\nRunning VMs..."
-					declare -a TMP_PID_QDB=("`cat ${QDB_FOLDER}/pid.qdb`")
+					while true ; do 
+						clear 
+						other_options_menu
 					
-					let x=0
-					for i in ${TMP_PID_QDB[@]}; do 
+						case $opt in
+						0) break ;;
+						1) 
+							declare -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) )
+							
+							if [[ ${#QDB_ARR[*]} -eq 0 ]]; then 
+								tput setaf 9
+								printf "\n\t%s\n" "No Virtual Machine created yet..."
+								tput sgr0
+							else 
+								echo -e "\n\nselect a vm"
+							
+								for (( index=0; index<${#QDB_ARR[*]}; index++)); do
+									vm_info=${QDB_ARR[$index]//\"/}
+									echo "  $(( index+1 )).       $(return_first_field ${vm_info})"
+								done 						
+								
+								echo
+								read -p "Choose a VM[ENTER] " name
+								
+								[ "$name" != "" ] && {
+									let sizeof_arr=${#QDB_ARR[@]}
+									name=$(String_to_Upper $name)
+									QDB_ARR[sizeof_arr]=${name}
+									
+									QDB_ARR=( $(search_val_qdb ${QDB_ARR[@]}) )
+									let sizeof_arr=${#QDB_ARR[@]}
+									let vm_info_index=${QDB_ARR[$(( --sizeof_arr ))]} && unset 'QDB_ARR[$sizeof_arr]'
+									
+									[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && {
+										boot_file_name=${QDB_ARR[$vm_info_index]//\"/}
+										boot_file_name=$(return_second_field ${boot_file_name})
+										
+										clear
+										bash ${BASIC_BASH}/qbox_display_vm_info.sh "${BOOT_DIR}/${boot_file_name}"
+									}
+								} 						
+							fi 
+						;;
+						2) bash ${BASIC_BASH}/create_desktop_file.sh ;;
+						3) bash ${BASIC_BASH}/bash_s/qboxlogs.sh ;;
+						*) 
+							clear
+							echo "wrong Option"		
+						 ;;
+						esac
 						
-						(( x+=1 ))
-						printf "%d) %s\n" $x `echo $i | cut -d "|" -f1`
+						echo -en "\n\n\t\t\tHit any key to continue"
+						read -n 1 line
+						
 					done
 				
-					read -p "Enter the name of VM to stop[ENTER] " vmn
+				;;
+				5) bash ${QBOX_DIR}/bash_s/qemu-reconfigure.sh ;;
+				6) 
+					_clear_pid_qdb_event
+					echo
 					
-					let x=0
-					if [[ -n "$vmn" ]]; then
-						name=$(echo $vmn | awk '{print toupper($0)}') ##capitalise name
-					
-						for i in `cut --delimiter "|" -f1 ${QDB_FOLDER}/pid.qdb`
-						do 
-							if [[ "$name" = $i ]];then
-								x=`expr $x + 1`
+					declare -a QDB_ARR=( $(init_database_qdb ${PID_DB}) )
 							
-								search="^$name\$"
-								pid_vm=$(gawk -F "|" -v var=$search '$1 ~ var {print $2}' ${QDB_FOLDER}/pid.qdb) 
-								
-								kill -9 $pid_vm 2>/dev/null ##kill vm
-								##This make sure that the name entered is deleted from the vms database
-								echo $(gawk -F "|" -v var=$search '$1 !~ var {print $0}' ${QDB_FOLDER}/pid.qdb) > ${TEMP_FOLDER}/vms.tt
-								##replace black or space character with newline character
-								sed -e 's/[[:blank:]]\+/\n/g' ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
-								
-								rm -f ${TEMP_FOLDER}/vms.tt ${TEMP_FOLDER}/.searchdel.tt 2>/dev/null
-								break
-							fi
-						done
-						
+					if [[ ${#QDB_ARR[*]} -eq 0 ]]; then 
 						tput setaf 9
-						[ $x -eq 0 ] && echo -e "\n\tVM not running.."
+						printf "\n\t%s\n" "No Virtual is running..."
 						tput sgr0
+					else 
+						echo -e "\n\nRunning Virtual Machines..."
+							
+						for (( index=0; index<${#QDB_ARR[*]}; index++)); do
+								vm_info=${QDB_ARR[$index]//\"/}
+								echo "  $(( index+1 )).       $(return_first_field ${vm_info})"
+						done 						
+								
+						echo
+						read -p "Enter the name of VM to stop[ENTER] " vmn
+					
+						#let x=0
+						[[ "$vmn" != "" ]] && {
+							name=$(String_to_Upper ${vmn}) 
+							let sizeof_arr=${#QDB_ARR[@]}
+							
+							QDB_ARR[$sizeof_arr]=${name}
+							QDB_ARR=( $(search_val_qdb ${QDB_ARR[@]}) )
+							let sizeof_arr=${#QDB_ARR[@]}
+							vm_info_index=${QDB_ARR[$(( --sizeof_arr ))]} && unset 'QDB_ARR[$sizeof_arr]'
+							
+							[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && {
+								pid_t=$(return_second_field ${QDB_ARR[$vm_info_index]})
+								
+								pid_t=${pid_t//\"/}
+								kill -9 ${pid_t}
+							}
+						}
 					fi
-				fi
-		;;
-			7) bash ${QBOX_DIR}/bash_s/qboxhttpd.sh ;;
-			8) bash ${QBOX_DIR}/bash_s/direct_linux_boot.sh ;;
-			*)
-				clear
-				echo "wrong Option";;
-		esac
+			;;
+				7) bash ${QBOX_DIR}/bash_s/qboxhttpd.sh ;;
+				8) bash ${QBOX_DIR}/bash_s/direct_linux_boot.sh ;;
+				*)
+					clear
+					echo "wrong Option";;
+			esac
 		
-		echo -en "\n\n\t\t\tHit any key to continue"
-		read -n 1 line
-	done
-
-	clear
+			echo -en "\n\n\t\t\tHit any key to continue"
+			read -n 1 line
+		done
+		clear
+	;;
+	*) 
+		. ${QBOX_DIR}/dialog_ui/qbox_main_menu.sh
+		clear
+	;;
 esac
 
 exit 0
