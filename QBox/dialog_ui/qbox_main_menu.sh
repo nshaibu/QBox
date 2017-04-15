@@ -32,8 +32,8 @@ if NOT_DEFINE ${CURSES_DIALOG_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
 fi 
 
-
 while : ; do 
+	#exit 0
 	exec 3>&1
 		value=$(${DIALOG} \
 				--no-shadow --clear --cancel-label "Exit" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
@@ -167,10 +167,16 @@ while : ; do
 				. ${BASIC_BASH}/direct_linux_boot.sh 
 			elif [[ ${value} -eq 7 ]]; then
 				while true; do 
+					server_is_not_running && { status="OFF"; stm_t=""; url=""; } || { 
+						status="ON"
+						stm_t="`return_second_field $(cat ${test_serv_running})`"
+						url="`return_n_field ${test_serv_running} 3 "|"`"
+					}
+					
 					exec 3>&1
 						value=$(${DIALOG} \
 								--no-shadow --clear --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
-								--menu "\Zb\Z0QBox Remote Manager\Zn\ZB\nYou can start a server which will allow you to manage the virtual Machines remotely. You will be given a URL copy it into you browser." \
+								--menu "\Zb\Z0QBox Remote Manager\Zn\ZB\nYou can start a server which will allow you to manage the virtual Machines remotely. You will be given a URL copy it into you browser. \n\nStatus:\Zb\Z0${status}\Zn\ZB\nStarted at:\Zb\Z0${stm_t}\Zn\ZB\nURL:\Zb\Z0${url}\Zn\ZB\n" \
 								${HEIGHT} ${WIDTH} 3 1 "Start server" 2 "Stop server" 2>&1 1>&3)
 							
 						let "test_return=$?"
@@ -179,9 +185,9 @@ while : ; do
 					case ${test_return} in 
 						${DIALOG_OK}) 
 							[ ${value} -eq 1 ] && {
-								
+								msg_str=""
 								if server_is_not_running ; then
-									let "msg_str=" ", i=0, pid_t=-1"
+									let "i=0, pid_t=-1"
 									
 									tm_t=$(date +%T)
 									pid_host_ip=$(httpd_start)
@@ -192,7 +198,7 @@ while : ; do
 									declare -a msg_arr=("[${pid_t}]using_host_ip:${host_ip_t}\n" "[${pid_t}]starting_httpd...\n" \
 													"[${pid_t}]httpd_started_at_${tm_t}...\n" \
 													"[${pid_t}]httpd_listening_on_port_4020\n" "[${pid_t}]trying_to_open_browser...\n" \
-													"[${pid_t}]access:http://${host_ip_t}:4020" )
+													"[${pid_t}]Access:http://${host_ip_t}:4020" )
 								 						
 														
 									[ ${pid_t} -ne -1 ] && {
@@ -203,14 +209,26 @@ while : ; do
 												--no-shadow --colors --title "\Zb\Z0QBox server\Zn\ZB" --infobox "\n${msg_str}" $((HEIGHT-5)) $((WIDTH-6))
 											sleep 2
 											(( i++ ))
-											[ $i -gt 5 ] && { echo ${pid_t}>${test_serv_running}; msg_str=""; break; }
+											
+											[ $i -eq 4 ] && { 
+												if [ "${host_ip_t}" = "127.0.0.1" ] || [ "${host_ip_t}" = "localhost" ]; then
+													browser=$(which xdg-open || which gnome-open ) && {
+														${browser} "http://localhost:4020/www" 2>&1 1>/dev/null
+													}
+												fi 
+											}
+											
+											[ $i -gt 5 ] && { 
+												echo "${pid_t}|${tm_t}|http://${host_ip_t}:4020">${test_serv_running}
+												msg_str="" && break
+											}
 										done 
 									}
 								else 
-									pid_t="`cat ${test_serv_running}`"
+									pid_t="`return_first_field $(cat ${test_serv_running})`"
 									
 									${DIALOG} \
-										--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n[${pid_t}]Server already runing" \
+										--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n[${pid_t}]Server already running" \
 										$((HEIGHT-7)) $((WIDTH-10))
 								fi 
 								
@@ -220,7 +238,7 @@ while : ; do
 										${DIALOG} \
 											--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n  Server is not runing" $((HEIGHT-7)) $((WIDTH-10))
 									else
-										server_stop "$(cat ${test_serv_running})" 
+										server_stop "`return_first_field $(cat ${test_serv_running})`" 
 										rm -f ${test_serv_running} 2>/dev/null 
 											
 										${DIALOG} \
@@ -228,6 +246,7 @@ while : ; do
 											--msgbox "\n\nServer successfully stopped.." $((HEIGHT-7)) $((WIDTH-10))		
 									fi 
 							}
+							break
 						;;
 						${DIALOG_CANCEL}) break ;;
 					esac

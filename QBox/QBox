@@ -21,6 +21,8 @@
 
 : ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
 
+echo -ne "\033]0;QBox Easy VM Manager \007"
+
 . ${LIB_DIR}/include
 
 . ${LIB_DIR}/import '<init.h>'
@@ -33,13 +35,13 @@ if NOT_DEFINE ${LOGGS_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
 	. ${LIB_DIR}/include '<basic_utils.h>'
 fi 
 
+
 ##Setting up colors
 BOLD="tput bold"
 RESET="tput sgr0"
-#clear
-#SCR_TTY_MSG=("\t\t`${BOLD}`_QBox_Menu_`${RESET}`" "1._Boot_Created_Virtual_Machine" "3._Delete_Virtual_Machine" "4._Other_Options")
-#_display_center
-#exit 0
+
+_resolving_inconsistencises_qdb
+
 case $1 in
 	-[Cc]|[Cc]|--[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt]|[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt])
 		echo -e "QBox Easy VM Manager Copyleft (\u0254) 2016 nafiu shaibu\nQEMU is a trademark of fabrice bellard\n"
@@ -85,7 +87,7 @@ case $1 in
 	
 		type $NOTICE >/dev/null 2>&1 && $NOTICE -u low -t 3 -i ${QBOX_DIR}/icon/QBox.png QBox "The Easy VM Manager" 
 		. ${BASIC_BASH}/qemu-ansi-art.sh
-	
+		
 		function other_options_menu(){
 			clear
 			#move_center 38 10
@@ -149,7 +151,7 @@ case $1 in
 						printf "\n%s" "Enter the name of the VM to boot[ENTER] "
 						read name
 						
-						if [[ -n ${name} ]]; then
+						if [[ ${name} = "" ]]; then
 							name=$(String_to_Upper ${name}) 
 							startvm ${name}
 						fi

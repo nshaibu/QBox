@@ -461,6 +461,7 @@ elif [[ "$1" = "<error.h>" ]]; then
 	DEFINE ERR_IN_DISK_CREATION 256
 	DEFINE ERR_OCCURRED_DURING_BOOT 257
 	DEFINE QDB_NOT_EXIT 258
+	DEFINE NO_ISO_FILES 259
 	
 	##Error strings format [name of variable]=error string //space char is not allowed in error string
 	declare -A STRERROR=([QEMU]="|*Architecture_is_NULL\n" \
@@ -484,7 +485,8 @@ elif [[ "$1" = "<error.h>" ]]; then
 						[KERNEL]="|*Not_a_kernel_image\n"\
 						[256]="Disk_was_not_created\n"\
 						[257]="Boot_error\n"\
-						[255]="value_not_set\n")
+						[255]="value_not_set\n"\
+						[259]="No_iso_files_in_your_home_directory\n")
 							
 							
 	##output error string using err_code 
@@ -546,8 +548,14 @@ elif [[ "$1" = "<error.h>" ]]; then
 			msg_str=${msg_str//_/ } ##remove _ char from msg_str
 			msg_str=${msg_str//|/\\n} ## replace "|" with "\n"
 			
-			${DIALOG} \
-				--colors --title "\Zb\Z1Error\Zn\ZB" --msgbox "${msg_str}" $((HEIGHT-7)) $((WIDTH-20))		
+			if NOT_DEFINE ${__CMDLINE__}; then
+				${DIALOG} \
+					--colors --title "\Zb\Z1Error\Zn\ZB" --msgbox "${msg_str}" $((HEIGHT-7)) $((WIDTH-20))		
+			else 
+				tput setaf 9
+				echo -e "\n\t${msg_str//\\n/}"
+				tput sgr0
+			fi 
 		}
 		
 		return ${did_err_ocurred}
@@ -748,7 +756,7 @@ elif [[ $1 = "<curses_dialog.h>" ]]; then
 	declare -i HEIGHT=18
 	declare -i WIDTH=50
 	
-	: ${DIALOG:=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% dialog`}
+	: ${DIALOG=$(${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% dialog)}
 
 	: ${DIALOG_OK:=0}
 	: ${DIALOG_BACK:=3}
@@ -892,6 +900,17 @@ function is_VMName_unique(){
 	return ${_return}
 }
 
+#ret: array of path to iso files
+function check_for_iso_files() {
+	local -a iso_files=
+	local index=0
+	for iso in $(find ${HOME} -depth -type f -a -name "*.iso" -print 2>>/dev/null); do 
+		iso_files[$index]=$iso
+		(( index++ ))
+	done
+	
+	echo -n ${iso_files[@]}
+}
 
 function disk_size_valid(){
 #Sat 28 Jan 2017 12:18:24 AM GMT 

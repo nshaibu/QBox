@@ -135,7 +135,7 @@ function show_if(){
 
 if [[ $1 = "%CHECK_START%" ]]; then
 								
-	move_center 4 25
+	#move_center 4 25
 ##qemu(qemu-img),bridge-utils(brctl),uml-utilities(tunctl),check mark(U+2713), cross mark(U+274C)
 	echo -e "\tQemu-utilities		$(show_if $(pkg_installed qemu-img))" && sleep 1
 	echo -e "\tBridge-utilities	$(show_if $(pkg_installed brctl))" && sleep 1
@@ -160,7 +160,7 @@ if [[ $1 = "%CHECK_START%" ]]; then
 elif [[ $1 = "%CHECK_RUN%" ]]; then
 								
 	if type $2 >/dev/null 2>&1 ; then
-		_return_="`which $2`" 
+		_return_="$(which $2)" 
 	else
 		pkg_display_download $2
 	fi

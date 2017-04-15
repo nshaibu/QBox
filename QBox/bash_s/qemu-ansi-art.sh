@@ -5,7 +5,7 @@
 ###################################################
 
 : ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
-
+. ${LIB_DIR}/include 
 . ${LIB_DIR}/import '<init.h>'
 
 QDATA[0]="                 _/_/_/      _/_/_/                          "
@@ -46,8 +46,6 @@ trap 'tput sgr0; tput cvvis; clear' EXIT
 
 tput civis
 clear
-
-let x=0
 
 while true 
 do
