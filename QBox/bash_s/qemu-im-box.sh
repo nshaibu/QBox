@@ -19,298 +19,47 @@
 
 #===========================================================================================
 
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
 
-trap 'rm -f ${TEMP_FOLDER}/.tmp.tt ${TEMP_FOLDER}/.find.tt ${TEMP_FOLDER}/.arhfind.tt rm -f ${TEMP_FOLDER}/.test_tap_exit.tt 2>/dev/null && export SDL_VIDEO_X11_DGAMOUSE=" " ' EXIT
+. ${LIB_DIR}/include '<network.h>'
+. ${LIB_DIR}/include '<architecture.h>'
+. ${LIB_DIR}/include '<disk_details.h>'
 
+. ${LIB_DIR}/import '<init.h>'
+. ${LIB_DIR}/import '<qdb_database.h>'
+. ${LIB_DIR}/import '<boot_vm.h>'
+. ${LIB_DIR}/import '<var_definitions.h>'
 
-##global variables
-BOOT_ORDER=""
-HD_IMG=""
-HD_BI_IMG="" ##booting disk images
-HD_IMG_DIR=$HOME/.img_qemubox ##contains harddisk images
-VM_PID=$$
-VM_NAME=""
-NET_CON="" ##for networking
-RAM_SIZE=""
-QEMU=""
-QEMU_PATH=""
-QEMU_SOUND=""
-QEMU_GRAPH=""
-QEMU_USB="-usb"
-QDB_FOLDER=${HD_IMG_DIR}/.qdb ##qbox database files location
-TEMP_FOLDER=${HD_IMG_DIR}/.tmp_qbox
-VM_CDROM=""
-NUM_CPU="-cpu host -smp 1"
-KVM_ENABLE=""
-BOOT_DIR=${HD_IMG_DIR}/.qemuboot ## contain boot files
-LOG_DIR=${HD_IMG_DIR}/logs_dir
-PID_FILE=${TEMP_FOLDER}/.pid
+if NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${ERROR_H} ; then
+	. ${LIB_DIR}/include '<basic_utils.h>'
+	. ${LIB_DIR}/include '<true_test.h>'
+	. ${LIB_DIR}/include '<error.h>'
+fi 
 
-QBOX_DIR=/usr/local/bin/QBox
-QEMU_DSKIMG_CREATOR=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-img`
+declare -a _hd_formats=("QCOW2(QEMU Copy-On-Write)" "RAW(Raw disk image format)" "QED(QEMU Enhanced Disk)" "VMDK(Virtual Machine Disk)" \
+						"VDI(Virtual Disk Image)")
 
-#Isdigit return
-declare -r SUCCESS=0
-declare -r FAILURE=1
-
-export SDL_VIDEO_X11_DGAMOUSE=0 ##to prevent qemu cursor from been difficult to control
-
-#Generate random values
-rand=`${QBOX_DIR}/bin/qemubox_random 100`
-ra=`expr $$ % 60`
-
-
-##Test whether input is char 
-function isalpha(){
-	if [ -z "$1" ]; then
-		return 	$FAILURE
-	fi 
-	
-	case "$1" in 
-		[a-zA-Z]|[a-zA-Z]*) return $SUCCESS ;;
-		*)	return $FAILURE ;;
-	esac
-}
-
-
-function check_description_qdb_consistancy(){
-	
-	declare -a ARR_DESCRIPTION=(`cut -d "|" -f1 ${QDB_FOLDER}/description.qdb`)
-	
-	if [[ -n $ARR_DESCRIPTION ]]; then
-		
-		for i in ${ARR_DESCRIPTION[@]}
-		do 
-			Empty=`gawk -F "|" -v var="^$i\$" '$1 ~ var {print $1}' ${QDB_FOLDER}/vms.qdb`
+function get_vm_name() {
+			let TEST_ERROR_OCURRED=${SUCCESS}
 			
-			if [[ -n $Empty ]]; then
-				name="^$i\$"
-				gawk -F "|" -v var=$name '$1 !~ var {print $0}' ${QDB_FOLDER}/description.qdb 1>${TEMP_FOLDER}/vms.tt
-				##replace black or space character with newline character
-				sed -e 's/[[:blank:]]\+/\n/g' ${TEMP_FOLDER}/vms.tt 2>/dev/null 1>${QDB_FOLDER}/description.qdb
-				rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null				
-				break
-			fi 
-		done
-	fi 
-}
-
-
-function yes_no()
-{
-	read -n 1 resp
-	case "$resp" in 
-		[Yy]|[Yy][Ee][Ss]) echo 0;;
-		*) echo 1 ;;
-	esac
-}
-
-##logger_func
-##logger_func sed ':a;N;$!ba;s/\n/ /g'
-#1. :a create a label 'a'
-#2. N append the next line to the pattern space
-#3. $! if not the last line, ba branch (go to) label 'a'
-#4. s substitute, /\n/ regex for new line, / / by a space, /g global match (as many times as it can)
-function logger_logging(){
-	if [ "`cat ${TEMP_FOLDER}/.error.tt`" != "" ]; then 
-		${QBOX_DIR}/bin/qemubox_logger "`sed ':a;N;$!ba;s/\n/ /g' ${TEMP_FOLDER}/.error.tt`" ${LOG_DIR}/qboxlog
-	
-		rm -f ${TEMP_FOLDER}/.error.tt
-	fi
-	return 0
-}
-
-
-##unique for the vms. The name is used as the primary key for vms database
-function unique_vmname(){
-	local search="^$1\$"
-	local unique=$(gawk -F "|" -v var=$search '$1 ~ var {print $1}' ${QDB_FOLDER}/vms.qdb 2>/dev/null)
-	echo $unique
-}
-
-##tap interface destructor
-stop_tap_if()
-{
-	sudo tunctl -d ${TAP_NAME} 2>${TEMP_FOLDER}/.error.tt
-		logger_logging
-	
-	sudo ifconfig br0 down 2>${TEMP_FOLDER}/.error.tt
-		logger_logging
-	sudo brctl delbr br0 2>${TEMP_FOLDER}/.error.tt
-		logger_logging
-	echo "stopping bridging interface">${TEMP_FOLDER}/.error.tt
-	logger_logging
-}
-
-
-#############################################
-#				BOOT DEVICE					#
-#############################################
-function boot_device_used()
-{
-	printf "%s\n" "[1]Choose the boot media to used"
-	printf "%s\n" "   ->Options:[CDROM        ---> use OS CD ROM]" \
-	              "             [iso[DEFAULT] ---> use OS iso file]"
-	read device
-	
-	case $device in 
-		[Cc][Dd][Rr][Oo][Mm]|[Cc][Dd]) 
-			VM_CDROM="-cdrom /dev/cdrom" 
-			echo -e "\t\n[2]Insert the disk in the host computer and press any key"
-			read ent
-			arch_type_use ;;
-		*) VM_CDROM="";; ##This is for just making sure that as long as VM_CDROM is empty it means the user is using an iso file
-	esac
-}
-
-
-#########################################
-#				Boot VM 				#
-########################################
-function boot_func(){
-
-	if [ -z "$VM_CDROM" ];then
-	
-		isotmp=$1
-		
-		OLDIFS=$IFS
-		IFS="-"
-		set $1
-		
-		##Generates random name and location for the virtual harddisk
-		HD_IMG=${HOME}/.img_qemubox/qbox$3box_$rand${ra}.img
-		HD_BI_IMG="-hda ${HD_IMG}"
+			while [[ ${TEST_ERROR_OCURRED} -eq ${SUCCESS} ]]; do 
+				echo 
+				read -p "[$$]Enter a name for your Virtual Machine " vm_name
+				vm_name=$(String_to_Upper ${vm_name})
 			
-			
-			IFS=$OLDIFS
-			printf "%s\n" "[1]Creating new disk image..." && sleep 1 & echo
-			
-			if [[ ${DSKIMG} != "raw" ]]; then
-				${QEMU_DSKIMG_CREATOR} create -f ${DSKIMG} ${HD_IMG} ${DSKSIZE} 2>${TEMP_FOLDER}/.error.tt 
-			else 
-				${QEMU_DSKIMG_CREATOR} create -f ${DSKIMG} -o size=${DSKSIZE} ${HD_IMG} 2>${TEMP_FOLDER}/.error.tt 
-			fi 
-			
-			##system errror logger
-			logger_logging
-			
-			printf "%s\n" "[2]Installing..." && sleep 1
-			
-			${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${NET_CON} ${QEMU_GRAPH} ${QEMU_SOUND} ${QEMU_USB} \
-			${HD_BI_IMG} -cdrom $isotmp ${KVM_ENABLE} ${BOOT_ORDER} 2>${TEMP_FOLDER}/.error.tt
-			
-			##system Error logger
-			logger_logging
+				DEFINE __CMDLINE__
+				error_func_display $(err_str "vm_name:${STRERROR[vm_name]}:is_VMName_unique") 
+				TEST_ERROR_OCURRED=$?
 				
+				UNDEFINE __CMDLINE__
 				
-			printf "%s" "[3]Do you want to save this VM[yes/no]? "
-			rezult=$(yes_no)
-			if [ $rezult -eq 0 ]; then
-				##Generates boot files containing all the configurations
-				if [ -f ${TEMP_FOLDER}/.test_tap_exit.tt ]; then ##if file exist then remove ${NET_CON}
-					if ! [ -d ${TAP_DIR} ]; then
-						mkdir ${TAP_DIR}
-					fi
-					
-					##Stop bridging and tap interface
-					stop_tap_if
-					NET_CON=""
-					
-					##Generates boot file naming it with the name of the virtual hard disk already created
-					bash ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
-					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
-					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${HOSTNAME1} %${TAP1} \
-					%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
-					%${MCAST1} %${NETWORK2} %${VLAN2} %${MAC2} %${MODEL2} %${USER2} %${VLAN_USER2} %${HOSTNAME2} %${TAP2} \
-					%${VLAN_TAP2} %${FD_TAP2} %${IFNAME2} %${SCRIPT2} %${SOCKET2} %${VLAN_SOCKET2} %${FD_SOCKET2} %${LISTEN2} %${CONNECT2} \
-					%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${HOSTNAME3} %${TAP3} \
-					%${VLAN_TAP3} %${FD_TAP3} %${IFNAME3} %${SCRIPT3} %${SOCKET3} %${VLAN_SOCKET3} %${FD_SOCKET3} %${LISTEN3} %${CONNECT3} \
-					%${MCAST3} %${SMB_SERVER} %${REDIRECT} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} % % %${QEMU_KEYBOARD} \
-					%${QEMU_FULLSCREEN} % %${SNAP_OT} % % %
-					
-					rm -f ${TEMP_FOLDER}/.test_tap_exit.tt 2>/dev/null
-					
-				else
-					##generate boot file
-					bash ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
-					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
-					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${HOSTNAME1} %${TAP1} \
-					%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
-					%${MCAST1} %${NETWORK2} %${VLAN2} %${MAC2} %${MODEL2} %${USER2} %${VLAN_USER2} %${HOSTNAME2} %${TAP2} \
-					%${VLAN_TAP2} %${FD_TAP2} %${IFNAME2} %${SCRIPT2} %${SOCKET2} %${VLAN_SOCKET2} %${FD_SOCKET2} %${LISTEN2} %${CONNECT2} \
-					%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${HOSTNAME3} %${TAP3} \
-					%${VLAN_TAP3} %${FD_TAP3} %${IFNAME3} %${SCRIPT3} %${SOCKET3} %${VLAN_SOCKET3} %${FD_SOCKET3} %${LISTEN3} %${CONNECT3} \
-					%${MCAST3} %${SMB_SERVER} %${REDIRECT} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} % % %${QEMU_KEYBOARD} \
-					%${QEMU_FULLSCREEN} % %${SNAP_OT} % % %
-				fi
-			else
-				rm -f ${HD_IMG}
-			fi
-		else
-			##Generate random names for the virtual harddisk
-			HD_IMG=$HOME/.img_qemubox/qemubox_$rand${ra}.img
-			HD_BI_IMG="-hda ${HD_IMG}"
-			printf "%s\n" "[1]Creating new harddisk image..." && echo
-				
-				if [[ ${DSKIMG} != "raw" ]]; then
-					${QEMU_DSKIMG_CREATOR} create -f ${DSKIMG} ${HD_IMG} ${DSKSIZE} 2>${TEMP_FOLDER}/.error.tt 
-				else 
-					${QEMU_DSKIMG_CREATOR} create -f ${DSKIMG} -o size=${DSKSIZE} ${HD_IMG} 2>${TEMP_FOLDER}/.error.tt 
-				fi 
-				  ##System error logger
-				  logger_logging
-				  echo && printf "%s\n" "[2]Booting for installation..." && sleep 1
-				  
-				  ${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${NET_CON} ${QEMU_GRAPH} ${QEMU_SOUND} \
-				  ${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>${TEMP_FOLDER}/.error.tt
-				  
-				  logger_logging
-				  
-			printf "%s" "[3]Do you want to save this VM[yes/no]? "
-			rezult=$(yes_no)
-			if [ $rezult -eq 0 ]; then
-				##Generates boot files containing all the configurations
-				if [ -f ${TEMP_FOLDER}/.test_tap_exit.tt ]; then ##if file exist then remove ${NET_CON}
-					[ ! -d ${TAP_DIR} ] && mkdir ${TAP_DIR}
-					
-					##Stop bridging and tap interface
-					stop_tap_if
-					NET_CON=""
-					
-					bash ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
-					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
-					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${HOSTNAME1} %${TAP1} \
-					%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
-					%${MCAST1} %${NETWORK2} %${VLAN2} %${MAC2} %${MODEL2} %${USER2} %${VLAN_USER2} %${HOSTNAME2} %${TAP2} \
-					%${VLAN_TAP2} %${FD_TAP2} %${IFNAME2} %${SCRIPT2} %${SOCKET2} %${VLAN_SOCKET2} %${FD_SOCKET2} %${LISTEN2} %${CONNECT2} \
-					%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${HOSTNAME3} %${TAP3} \
-					%${VLAN_TAP3} %${FD_TAP3} %${IFNAME3} %${SCRIPT3} %${SOCKET3} %${VLAN_SOCKET3} %${FD_SOCKET3} %${LISTEN3} %${CONNECT3} \
-					%${MCAST3} %${SMB_SERVER} %${REDIRECT} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} % % %${QEMU_KEYBOARD} \
-					%${QEMU_FULLSCREEN} % %${SNAP_OT} % % %
-					
-					rm -f ${TEMP_FOLDER}/.test_tap_exit.tt
-					
-				else
-					bash ${QBOX_DIR}/bash_s/qemu-bootfile-generator.sh ${HD_IMG} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
-					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${HOSTNAME0} %${TAP0} \
-					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
-					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${HOSTNAME1} %${TAP1} \
-					%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
-					%${MCAST1} %${NETWORK2} %${VLAN2} %${MAC2} %${MODEL2} %${USER2} %${VLAN_USER2} %${HOSTNAME2} %${TAP2} \
-					%${VLAN_TAP2} %${FD_TAP2} %${IFNAME2} %${SCRIPT2} %${SOCKET2} %${VLAN_SOCKET2} %${FD_SOCKET2} %${LISTEN2} %${CONNECT2} \
-					%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${HOSTNAME3} %${TAP3} \
-					%${VLAN_TAP3} %${FD_TAP3} %${IFNAME3} %${SCRIPT3} %${SOCKET3} %${VLAN_SOCKET3} %${FD_SOCKET3} %${LISTEN3} %${CONNECT3} \
-					%${MCAST3} %${SMB_SERVER} %${REDIRECT} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} % % %${QEMU_KEYBOARD} \
-					%${QEMU_FULLSCREEN} % %${SNAP_OT} % % %
-				fi
-			else
-				rm -f ${HD_IMG}
-			fi
-		fi
-	return 0
+				[ ${TEST_ERROR_OCURRED} -ne ${SUCCESS} ] && {
+					let "TEST_ERROR_OCURRED=${SUCCESS}"
+								
+					VM_NAME="-name ${vm_name}" # set vm name 
+					break
+				}
+			done
 }
 
 
@@ -319,261 +68,483 @@ function func_install(){
 	tput bold
 	echo -e "\t\t\tQBox VM Creation Menu\n"
 	tput sgr0
-	
-	echo -e "\t1. General Configurations"
-	echo -e "\t2  System Configurations"
-	echo -e "\t3. Audio Configurations"
-	echo -e "\t4. Display Configurations"
-	echo -e "\t5. Network Configurations"
-	echo -e "\t0. Back \u2b05"
-	echo -e "\n\t6. Choose the boot media to use"
-	echo -e "\t7. Boot VM \n\n"
+	echo -e "\t1. Guided Mode"
+	echo -e "\t2. Expert Mode"
+	echo -e "\t0. Back \u2b05 \n\n"
 	
 	echo -en "\t\tEnter Option: "
 	read -n 1 opt
 }
 
+function _install_expert_mode() {
+	clear
+	tput bold
+	echo -e "\t\t\tQBox VM Creation (Expert Mode)\n"
+	tput sgr0
+	
+	echo -e "\t1. Basic configurations"
+	echo -e "\t2  Network configurations"
+	echo -e "\t3. Select Boot device"
+	echo -e "\t0. Back \u2b05 \n\n"	
+	
+	echo -en "\t\tEnter Option: "
+	read -n 1 opt	
+}
+
 printf -v MACADDR "52:54:%02x:%02x:%02x:%02x" $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff )) $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff ))
 		
 		
-while true;
-do 
+while true; do 
 	clear 
 	
 	func_install 
-	check_description_qdb_consistancy
 	
-	case $opt in 
-		0) break ;;
-		1)
-			echo
-			read -p "[1]Enter a name for your VM[ENTER] " VM_NAME
-			VM_NAME=$(echo $VM_NAME | awk '{print toupper($0)}') ##capitalise name
+	case ${opt} in 
+		1) 
+			get_vm_name
 			
-			DES_NAME=$VM_NAME
-			##making sure that each vm has a unique name 
-			if [ -z "${VM_NAME}" ]; then
-				VM_NAME="-name MY_VM$$" 
-			else
+			printf -v MACADDR "52:54:%02x:%02x:%02x:%02x" $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff )) $(( $RANDOM & 0xff)) $(( $RANDOM & 0xff ))
+			
+			. ${BASIC_BASH}/qbox_ostype_info.sh 
+			
+			DISK_SIZE=${RECOM_DISK_SIZE}
+			RAM_SIZE="-m ${RECOM_RAM_SIZE}"
+			
+			#-----network-------
+			set_parameters 0 ",vlan=0" ",macaddr=${MACADDR}" ",model=e1000" "-net_user" ",vlan=0"
+			default_network="${NETWORK0}${VLAN0}${MAC}${MODEL0} ${USER0}${VLAN_USER0}"
+			
+			#----display--------
+			VGA="-vga cirrus" && DISPLAY_="-display sdl"
+			QEMU_GRAPH="${VGA} ${DISPLAY_}"
 				
-				while [ "$(unique_vmname ${VM_NAME})" != "" ]; do 
-					echo -n "Name already in use "
-					read VM_NAME
-					VM_NAME=$(echo $VM_NAME | awk '{print toupper($0)}')
-				done
-				VM_NAME="-name $VM_NAME"
-			fi 
+			#----number of cpu--
+			CPU="-cpu host" && CORE="-smp 1"
+			NUM_CPU="${CPU} ${CORE}"			
 			
-			echo
+			let value=1
+			until check_is_file $value && check_is_iso_file $value ; do
+				echo -e $(get_string_by_name PROMPT_CHECKING_FOR_ISO)
+				declare -a iso_files=( $(check_for_iso_files) )
+				
+				[ ${#iso_files[@]} -eq 0 ] && { perror ${NO_ISO_FILES} __CLI__; } || {
+					echo -e "\tFound:"
+					tput bold
+					for (( index=0; index<${#iso_files[@]}; index++ )); do 
+						echo -e "\t\t  $(( index+1 )).  ${iso_files[$index]}" && sleep 0.2
+					done 
+					tput sgr0
+					
+					echo -e $(get_string_by_name PROMPT_SPECIFY_PATH_TO_ISO)
+					echo -e ""
+					
+					read -p "[$$]Choose an iso file " value
+				}
+			done 
 			
-			source ${QBOX_DIR}/bash_s/qbox_ostype_info.sh 
-			echo "${DES_NAME}|${OS_VERSION}">>${QDB_FOLDER}/description.qdb
+			DEFINE __CMDLINE__
+			DEFINE GUIDED_MODE_BOOT_VM
+			
+			VM_CDROM=$value
+			detect_architecture ${VM_CDROM}
+			architecture_type_choice $?		
+			
+			UNDEFINE GUIDED_MODE_BOOT_VM
+			UNDEFINE __CMDLINE__
+			
+			echo -e "[$$]creating harddisk image..." && sleep 0.5
+			if disk_image_creation 1 ${Disk_Name} ${DISK_SIZE}; then
+				HD_BI_IMG="-hda ${Disk_Name}"
+				VM_CDROM="-cdrom ${VM_CDROM}"
+				move_boot=${SUCCESS}
+			else 
+				perror ${ERR_IN_DISK_CREATION}  __CLI__
+				rm -f ${Disk_Name} 2>/dev/null
+				exit ${FAILURE}
+			fi	 
+				
+			echo -e "[$$]Booting Virtual Machine..."
+			${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${default_network} ${QEMU_GRAPH} ${QEMU_SOUND} \
+			${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>/dev/null
+			
+			[ $? -eq ${FAILURE} ] && { perror ${ERR_OCCURRED_DURING_BOOT} __CLI__; exit ${FAILURE}; }
+			
+			
+			echo -e "[$$]Saving Virtual Machine..."
+			bash ${BASIC_BASH}/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+			%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${REDIRECT0} %${TAP0} \
+			%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
+			%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${REDIRECT1} %${TAP1} \
+			%${VLAN_TAP1} %${FD_TAP1} %${IFNAME1} %${SCRIPT1} %${SOCKET1} %${VLAN_SOCKET1} %${FD_SOCKET1} %${LISTEN1} %${CONNECT1} \
+			%${MCAST1} %${NETWORK2} %${VLAN2} %${MAC2} %${MODEL2} %${USER2} %${VLAN_USER2} %${REDIRECT2} %${TAP2} \
+			%${VLAN_TAP2} %${FD_TAP2} %${IFNAME2} %${SCRIPT2} %${SOCKET2} %${VLAN_SOCKET2} %${FD_SOCKET2} %${LISTEN2} %${CONNECT2} \
+			%${MCAST2} %${NETWORK3} %${VLAN3} %${MAC3} %${MODEL3} %${USER3} %${VLAN_USER3} %${REDIRECT3} %${TAP3} \
+			%${VLAN_TAP3} %${FD_TAP3} %${IFNAME3} %${SCRIPT3} %${SOCKET3} %${VLAN_SOCKET3} %${FD_SOCKET3} %${LISTEN3} %${CONNECT3} \
+			%${MCAST3} %${SMB_SERVER} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} %${KERNEL} %${INITRD} %${QEMU_KEYBOARD} \
+			%${QEMU_FULLSCREEN} % %${SNAP_OT} %${KERNEL_CMD} % % #2>/dev/null			
+			sleep 1.2
 		;;
 		2) 
-			echo
-			printf "%s\n" "[1]Enter the type of disk image to create for the VM[Enter] "
-			printf "%s\n" "   Options:[1 ---------------> qcow2 ]" \
-						  "           [2 ---------------> raw   ] "
-			read -n 1 xvar
-			echo
+			_install_expert_mode
 			
-			case "$xvar" in 
-				1) DSKIMG="qcow2";;
-				2)	DSKIMG="raw" ;;
-				*)
-					echo "   ->using qcow2 as default"
-					DSKIMG="qcow2"
-				;;
-			esac
-	
-			read -p "[2]Enter size for the disk image[Recommended:${RECOM_DISK_SIZE}] " DSKSIZE
-			echo
-			
-			[ -z "${DSKSIZE}" ] && DSKSIZE=${RECOM_DISK_SIZE} && echo "   ->Disk size of ${RECOM_DISK_SIZE} was used"
-	
-			read -p "[3]Enter the ram size[Recommended:${RECOM_RAM_SIZE}] " RAMSIZE
-			echo
-				
-			if [ -z "${RAMSIZE}" ]
-			then
-				RAM_SIZE="-m ${RECOM_RAM_SIZE}"
-				echo "   ->Ram size of ${RECOM_RAM_SIZE} was used"
-			else
-				POS_OF_LAST_CHR=$(( ${#RAMSIZE} - 1 ))
-				
-				if isalpha ${RAMSIZE:$POS_OF_LAST_CHR} ; then
-					RAM_SIZE="-m ${RAMSIZE}"
-				else 
-					RAM_SIZE="-m ${RAMSIZE}M"
-				fi 
-			fi
-			
-			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%SNAPSHOT%"
-			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%CPU%"
-			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%USB%"
-			
-		;;
-		3) source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%SOUND%" ;;
-		4)
-			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%DISPLAY%"
-			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%KEYBOARD%"
-			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%FULLSCREEN%"
-		;;
-		5) source ${QBOX_DIR}/bash_s/qemu-net-box.sh ;;
-		6)
-			echo
-			boot_device_used
-			
-			if [ -z "$VM_CDROM" ];then
-				printf "%s\n" "[2]Enter the name of the iso file you want to install" 
-					echo "or [Enter] to search for iso files"
-					read QEMU_PATH
-					while [ -z ${QEMU_PATH} ]
-					do
-						echo "   ->The system will check for iso files in [${HOME}]"
-						echo "   ->checking ... " && echo
-						for i in $(find ${HOME} -depth -type f -a -name "*.iso" -print 2>>/dev/null)
-						do 
+			case ${opt} in 
+				0) break ;;
+				1) 
+					get_vm_name
+					. ${BASIC_BASH}/qbox_ostype_info.sh 
+					
+					let TEST_ERROR_OCURRED=${SUCCESS}
+					until [[ ${TEST_ERROR_OCURRED} -eq ${FAILURE} ]]; do 
+						echo -en $(get_string_by_name PROMPT_SIZE_OF_MEM "[Recommended:${RECOM_RAM_SIZE}]")
+						read RAM_SIZE
+						[ "${RAM_SIZE}" = "" ] && RAM_SIZE=${RECOM_RAM_SIZE}
+						
+						DEFINE __CMDLINE__
+						error_func_display $(err_str "RAM_SIZE:${STRERROR[RAM_SIZE]}:disk_size_valid")
+						TEST_ERROR_OCURRED=$?
+						
+						[ ${TEST_ERROR_OCURRED} -eq ${FAILURE} ] && {
+							RAM_SIZE="-m $RAM_SIZE"
 							
-							echo "     ->Found $(basename $i)" && sleep 1
-						done
-						echo
-						[ "$i" = "" ] && break 
-						printf "%s" "[3]Choose an iso from above "
-						read QEMU_PATH
+							UNDEFINE __CMDLINE__
+						}
+					done 
+					
+					echo
+					let TEST_ERROR_OCURRED=${SUCCESS}
+					
+					until [[ ${TEST_ERROR_OCURRED} -eq ${FAILURE} ]]; do 
+						echo -en $(get_string_by_name PROMPT_SIZE_OF_DISK "[Recommended:${RECOM_DISK_SIZE}]")
+						read DISK_SIZE
+						[ "${DISK_SIZE}" = "" ] && DISK_SIZE=${RECOM_DISK_SIZE}
+						
+						DEFINE __CMDLINE__
+						
+						error_func_display $(err_str "DISK_SIZE:${STRERROR[DSK_VALID_SIZE]}:disk_size_valid")
+						TEST_ERROR_OCURRED=$?
+						
+						if [[ ${TEST_ERROR_OCURRED} -eq ${FAILURE} ]]; then
+							tput bold
+							echo -e $(get_string_by_name PROMPT_DISK_FORMATS)
+							PS3="Choose type: "
+							tput sgr0
+							
+							select option in "${_hd_formats[@]}"; do 
+								case $option in 
+									"QCOW2(QEMU Copy-On-Write)") 
+										disk_image_creation 1 ${Disk_Name} ${DISK_SIZE} || {
+											perror ${ERR_IN_DISK_CREATION} __CLI__
+											rm ${Disk_Name} 2>/dev/null
+										}
+										
+										break
+									;;
+									"RAW(Raw disk image format)") 
+										disk_image_creation 2 ${Disk_Name} ${DISK_SIZE} || {
+											perror ${ERR_IN_DISK_CREATION} __CLI__
+											rm ${Disk_Name} 2>/dev/null
+										}
+										
+										break					
+									;;
+									"QED(QEMU Enhanced Disk)") 
+										disk_image_creation 3 ${Disk_Name} ${DISK_SIZE} || {
+											perror ${ERR_IN_DISK_CREATION} __CLI__
+											rm ${Disk_Name} 2>/dev/null
+										}
+										
+										break				
+									;;
+									"VMDK(Virtual Machine Disk)") 
+										disk_image_creation 4 ${Disk_Name} ${DISK_SIZE} || {
+											perror ${ERR_IN_DISK_CREATION} __CLI__
+											rm ${Disk_Name} 2>/dev/null
+										}
+										
+										break
+									;;
+									"VDI(Virtual Disk Image)") 
+										disk_image_creation 5 ${Disk_Name} ${DISK_SIZE} || {
+											perror ${ERR_IN_DISK_CREATION} __CLI__
+											rm ${Disk_Name} 2>/dev/null
+										}
+										
+										break					
+									;;
+								esac
+							done 
+							
+							UNDEFINE __CMDLINE__
+						fi 
 					done
 					
-					find ${HOME} -depth -name ${QEMU_PATH} -print 1>${TEMP_FOLDER}/.find.tt 2>/dev/null
-					temp=$(cat ${TEMP_FOLDER}/.find.tt 2>/dev/null)
-					if [ "$temp" != "" ]
-					then
-						echo "   ->Searching [${HOME}] for ${QEMU_PATH}..." && sleep 1
-						echo "   ->FOUND @ [$(cat ${TEMP_FOLDER}/.find.tt)] " && sleep 1
-						echo "   ->Setting path to [$(cat ${TEMP_FOLDER}/.find.tt)]" && sleep 1
-						QEMU_PATH=$(cat ${TEMP_FOLDER}/.find.tt)
-					else
-						echo "  ->iso file not found in the [${HOME}] "
-						echo "  ->Copy the iso file to [${HOME}] or It's sub-directory "
-						exit 1
-					fi
-							
-							
-				if [ -z ${QEMU} ]; then
-					ARCH_FOR_ISO=`basename $(cat ${TEMP_FOLDER}/.find.tt)` #> ${TEMP_FOLDER}/.arhfind.tt
+					echo -en $(get_string_by_name PROMPT_NUM_CPU_CORES)
+					read -p " " -n 1 numcore
+					echo 
 					
-					##awk script to help determine the architecture to use for the iso file
-					ARCH=`echo ${ARCH_FOR_ISO} | gawk -f ${QBOX_DIR}/awk/qemu-s-arch.awk` # ${TEMP_FOLDER}/.arhfind.tt)
-										
-					if [ -n ${ARCH} ]; then
-							
-						case ${ARCH} in 
-							x86_64|x86|amd64|i686) 
-								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-x86_64`
-								BOOT_ORDER="-boot order=d"
-								KVM_ENABLE="-enable-kvm"
-								printf "%s\n" "   ->System determined x86_64 architecture. Continue with x86_64?[yes/No]"
-								result=$(yes_no)
-								
-								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
-							;;
-							i386|x86_32)
-								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-i386`
-								BOOT_ORDER="-boot order=d"
-								KVM_ENABLE="-enable-kvm"
-								printf "%s" "   ->System determined x86_32 architecture. Continue with x86_32[yes/No]? "
-								result=$(yes_no)
-								
-								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
-							;;
-							arm)
-								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-arm`
-								BOOT_ORDER="-boot order=d"
-								printf "%s\n" "   ->System determined arm architecture. Continue with arm?[yes/No] "
-								result=$(yes_no)
-								
-								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
-							;;
-							ppc)
-								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc`
-								BOOT_ORDER="-boot order=d"
-								printf "%s\n" "   ->System determined ppc architecture. Continue with ppc?[yes/No]? "
-								result=$(yes_no)
-								
-								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
-							;;
-							ppc64)
-								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc64`
-								BOOT_ORDER="-boot order=d"
-								printf "%s\n" "   ->System determined ppc64. Continue with ppc64?[yes/No] "
-								result=$(yes_no)
-								
-								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
-							;;
-							sparc)
-								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc`
-								BOOT_ORDER="-boot order=d"
-								printf "%s\n" "   ->System determined sparc32. Continue with sparc32?[yes/No] "
-								result=$(yes_no)
-								
-								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
-							;;
-							sparc64)
-								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc64`
-								BOOT_ORDER="-boot order=d"
-								printf "%s\n" "   ->System determined sparc64. Continue with sparc64?[yes/No] "
-								result=$(yes_no)
-								
-								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
-							;;
-							mips)
-								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mips`
-								BOOT_ORDER="-boot order=d"
-								printf "%s\n" "   ->System determined mips32. Continue with mips32?[yes/No] "
-								result=$(yes_no)
-								
-								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
-							;;
-							mipsel)
-								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mipsel`
-								BOOT_ORDER="-boot order=d"
-								printf "%s\n" "   ->System determined mips64. Continue with mips64?[yes/No] "
-								result=$(yes_no)
-								
-								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
-							;;
-							*) 
-								echo -e "\n   ->Architecture type detection for [$QEMU_PATH] failed\n" 
-								source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE% 
-							;;
-						esac
-					else
-						echo -e "\n   ->Architecture type detection for [$QEMU_PATH] failed\n" 
-						source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
-					fi
-				else
-					source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE% 
-				fi
-			fi ##for con	1dition the conditon VM_CDROM != /dev/cdrom]
-				rm -f ${TEMP_FOLDER}/.find.tt ${TEMP_FOLDER}/.arhfind.tt 2>/dev/null
+					case $numcore in 
+						4|3|2) CORE="-smp $numcore" ;;
+						*) CORE="-smp 1" ;;
+					esac
+					NUM_CPU="-cpu host ${CORE}"
+					
+					#-----disply------
+					echo
+					echo -e $(get_string_by_name PROMPT_DISPLAY)
+					read -n 1 sd
+				
+					case "$sd" in 
+						3)
+							DISPLAY_="-display vnc=:${VNC_DISPLAY}"
+							printf "%s\n" "To view your vm.Enter vncviewer ${IF_ADDR}:${VNC_PORT}"
+						;;
+						1) DISPLAY_="-display curses" ;;
+						*) DISPLAY_="-display sdl" ;;
+					esac
+	
+					echo -e $(get_string_by_name PROMPT_VIDEO_CARD)
+					read -n 1 vcard
+	
+					case "$vcard" in 
+						2) VGA="-vga std" ;;
+						*) VGA="-vga cirrus" ;;
+					esac
+					QEMU_GRAPH="${VGA} ${DISPLAY_}"
+				;;
+				2) ;;
+				3) ;;
+			esac
 		;;
-		7) 
-			tput setaf 9
-			if [ -z "${QEMU_PATH}" ]; then
-				echo -e "\n\n\t No boot media selected" 
-			else
-				tput sgr0
-				boot_func $QEMU_PATH
-			fi 
-			tput sgr0
-		;;
-		*)
-				clear
-				echo "wrong Option";;
-		esac
-		
-		echo -en "\n\n\t\t\tHit any key to continue"
-		read -n 1 line
+		0) break ;;
+	esac
+#	case $opt in 
+#		0) break ;;
+#		1)
+#			echo
+#			read -p "[1]Enter a name for your VM[ENTER] " VM_NAME
+#			VM_NAME=$(echo $VM_NAME | awk '{print toupper($0)}') ##capitalise name
+#			
+#			DES_NAME=$VM_NAME
+#			##making sure that each vm has a unique name 
+#			if [ -z "${VM_NAME}" ]; then
+#				VM_NAME="-name MY_VM$$" 
+#			else
+#				
+#				while [ "$(unique_vmname ${VM_NAME})" != "" ]; do 
+#					echo -n "Name already in use "
+#					read VM_NAME
+#					VM_NAME=$(echo $VM_NAME | awk '{print toupper($0)}')
+#				done
+#				VM_NAME="-name $VM_NAME"
+#			fi 
+#			
+#			echo
+#			
+#			source ${QBOX_DIR}/bash_s/qbox_ostype_info.sh 
+#			echo "${DES_NAME}|${OS_VERSION}">>${QDB_FOLDER}/description.qdb
+#		;;
+#		2) 
+#			echo
+#			printf "%s\n" "[1]Enter the type of disk image to create for the VM[Enter] "
+#			printf "%s\n" "   Options:[1 ---------------> qcow2 ]" \
+#						  "           [2 ---------------> raw   ] "
+#			read -n 1 xvar
+#			echo
+#			
+#			case "$xvar" in 
+#				1) DSKIMG="qcow2";;
+#				2)	DSKIMG="raw" ;;
+#				*)
+#					echo "   ->using qcow2 as default"
+#					DSKIMG="qcow2"
+#				;;
+#			esac
+#	
+#			read -p "[2]Enter size for the disk image[Recommended:${RECOM_DISK_SIZE}] " DSKSIZE
+#			echo
+#			
+#			[ -z "${DSKSIZE}" ] && DSKSIZE=${RECOM_DISK_SIZE} && echo "   ->Disk size of ${RECOM_DISK_SIZE} was used"
+#	
+#			read -p "[3]Enter the ram size[Recommended:${RECOM_RAM_SIZE}] " RAMSIZE
+#			echo
+#				
+#			if [ -z "${RAMSIZE}" ]
+#			then
+#				RAM_SIZE="-m ${RECOM_RAM_SIZE}"
+#				echo "   ->Ram size of ${RECOM_RAM_SIZE} was used"
+#			else
+#				POS_OF_LAST_CHR=$(( ${#RAMSIZE} - 1 ))
+#				
+#				if isalpha ${RAMSIZE:$POS_OF_LAST_CHR} ; then
+#					RAM_SIZE="-m ${RAMSIZE}"
+#				else 
+#					RAM_SIZE="-m ${RAMSIZE}M"
+#				fi 
+#			fi
+#			
+#			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%SNAPSHOT%"
+#			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%CPU%"
+#			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%USB%"
+#			
+#		;;
+#		3) source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%SOUND%" ;;
+#		4)
+#			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%DISPLAY%"
+#			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%KEYBOARD%"
+#			source ${QBOX_DIR}/bash_s/qemu-ph-box.sh "%FULLSCREEN%"
+#		;;
+#		5) source ${QBOX_DIR}/bash_s/qemu-net-box.sh ;;
+#		6)
+#			echo
+#			boot_device_used
+#			
+#			if [ -z "$VM_CDROM" ];then
+#				printf "%s\n" "[2]Enter the name of the iso file you want to install" 
+#					echo "or [Enter] to search for iso files"
+#					read QEMU_PATH
+#					while [ -z ${QEMU_PATH} ]
+#					do
+#						echo "   ->The system will check for iso files in [${HOME}]"
+#						echo "   ->checking ... " && echo
+#						for i in $(find ${HOME} -depth -type f -a -name "*.iso" -print 2>>/dev/null)
+#						do 
+#							
+#							echo "     ->Found $(basename $i)" && sleep 1
+#						done
+#						echo
+#						[ "$i" = "" ] && break 
+#						printf "%s" "[3]Choose an iso from above "
+#						read QEMU_PATH
+#					done
+#					
+#					find ${HOME} -depth -name ${QEMU_PATH} -print 1>${TEMP_FOLDER}/.find.tt 2>/dev/null
+#					temp=$(cat ${TEMP_FOLDER}/.find.tt 2>/dev/null)
+#					if [ "$temp" != "" ]
+#					then
+#						echo "   ->Searching [${HOME}] for ${QEMU_PATH}..." && sleep 1
+#						echo "   ->FOUND @ [$(cat ${TEMP_FOLDER}/.find.tt)] " && sleep 1
+#						echo "   ->Setting path to [$(cat ${TEMP_FOLDER}/.find.tt)]" && sleep 1
+#						QEMU_PATH=$(cat ${TEMP_FOLDER}/.find.tt)
+#					else
+#						echo "  ->iso file not found in the [${HOME}] "
+#						echo "  ->Copy the iso file to [${HOME}] or It's sub-directory "
+#						exit 1
+#					fi
+#							
+#							
+#				if [ -z ${QEMU} ]; then
+#					ARCH_FOR_ISO=`basename $(cat ${TEMP_FOLDER}/.find.tt)` #> ${TEMP_FOLDER}/.arhfind.tt
+#					
+#					##awk script to help determine the architecture to use for the iso file
+#					ARCH=`echo ${ARCH_FOR_ISO} | gawk -f ${QBOX_DIR}/awk/qemu-s-arch.awk` # ${TEMP_FOLDER}/.arhfind.tt)
+#										
+#					if [ -n ${ARCH} ]; then
+#							
+#						case ${ARCH} in 
+#							x86_64|x86|amd64|i686) 
+#								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-x86_64`
+#								BOOT_ORDER="-boot order=d"
+#								KVM_ENABLE="-enable-kvm"
+#								printf "%s\n" "   ->System determined x86_64 architecture. Continue with x86_64?[yes/No]"
+#								result=$(yes_no)
+#								
+#								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
+#							;;
+#							i386|x86_32)
+#								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-i386`
+#								BOOT_ORDER="-boot order=d"
+#								KVM_ENABLE="-enable-kvm"
+#								printf "%s" "   ->System determined x86_32 architecture. Continue with x86_32[yes/No]? "
+#								result=$(yes_no)
+#								
+#								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
+#							;;
+#							arm)
+#								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-arm`
+#								BOOT_ORDER="-boot order=d"
+#								printf "%s\n" "   ->System determined arm architecture. Continue with arm?[yes/No] "
+#								result=$(yes_no)
+#								
+#								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
+#							;;
+#							ppc)
+#								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc`
+#								BOOT_ORDER="-boot order=d"
+#								printf "%s\n" "   ->System determined ppc architecture. Continue with ppc?[yes/No]? "
+#								result=$(yes_no)
+#								
+#								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
+#							;;
+#							ppc64)
+#								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc64`
+#								BOOT_ORDER="-boot order=d"
+#								printf "%s\n" "   ->System determined ppc64. Continue with ppc64?[yes/No] "
+#								result=$(yes_no)
+#								
+#								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
+#							;;
+#							sparc)
+#								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc`
+#								BOOT_ORDER="-boot order=d"
+#								printf "%s\n" "   ->System determined sparc32. Continue with sparc32?[yes/No] "
+#								result=$(yes_no)
+#								
+#								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
+#							;;
+#							sparc64)
+#								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc64`
+#								BOOT_ORDER="-boot order=d"
+#								printf "%s\n" "   ->System determined sparc64. Continue with sparc64?[yes/No] "
+#								result=$(yes_no)
+#								
+#								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
+#							;;
+#							mips)
+#								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mips`
+#								BOOT_ORDER="-boot order=d"
+#								printf "%s\n" "   ->System determined mips32. Continue with mips32?[yes/No] "
+#								result=$(yes_no)
+#								
+#								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
+#							;;
+#							mipsel)
+#								QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mipsel`
+#								BOOT_ORDER="-boot order=d"
+#								printf "%s\n" "   ->System determined mips64. Continue with mips64?[yes/No] "
+#								result=$(yes_no)
+#								
+#								[ $result -eq 1 ] && source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
+#							;;
+#							*) 
+#								echo -e "\n   ->Architecture type detection for [$QEMU_PATH] failed\n" 
+#								source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE% 
+#							;;
+#						esac
+#					else
+#						echo -e "\n   ->Architecture type detection for [$QEMU_PATH] failed\n" 
+#						source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE%
+#					fi
+#				else
+#					source ${QBOX_DIR}/bash_s/qemu-ph-box.sh %ARCHITECTURE% 
+#				fi
+#			fi ##for con	1dition the conditon VM_CDROM != /dev/cdrom]
+#				rm -f ${TEMP_FOLDER}/.find.tt ${TEMP_FOLDER}/.arhfind.tt 2>/dev/null
+#		;;
+#		7) 
+#			tput setaf 9
+#			if [ -z "${QEMU_PATH}" ]; then
+#				echo -e "\n\n\t No boot media selected" 
+#			else
+#				tput sgr0
+#				boot_func $QEMU_PATH
+#			fi 
+#			tput sgr0
+#		;;
+#		*)
+#				clear
+#				echo "wrong Option";;
+#		esac
+#		
+#		echo -en "\n\n\t\t\tHit any key to continue"
+#		read -n 1 line
 done
-
-export SDL_VIDEO_X11_DGAMOUSE=" "
-exit 0

@@ -55,6 +55,7 @@ do
   		for ((x=0; x<${#QDATA[0]}; x++))
   		do
     			for ((y=0; y<=7; y++)); do 
+    				tput bold
     				draw_characters $x $y
     			done
 		done

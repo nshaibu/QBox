@@ -105,37 +105,37 @@ if [[ $1 = "<init.h>" ]]; then
 			tput cup ${y_cord} ${x_cord}
 		}
 		
-#		display_center(){
-#			columns="$(tput cols)"
-#			
-#			for line in ${SCR_TTY_MSG[@]}; do 
-#				printf "%*s\n" 31 "$line"
-#			done 
-#		}
-#		
-#		_display_center() {
-#			row=0
-#			for text in ${SCR_TTY_MSG[@]}; do 
-#				col=$(( ($(tput cols) - 31) / 2 ))
-#				tput clear
-#				tput cup $row $col
-#				echo "$text"
-#				(( row++ ))
-#			done
-#		}
-#		#argu: array of prompts mesg to display in general screen arr[SCR_TTY_MSG]
-#		function print_scr_tty() {
-#			local sizeof_arr=${#SCR_TTY_MSG[@]}
-#			local number_of_options=$(( sizeof_arr ))
-#			local len_of_long_str=${SCR_TTY_MSG[$(( --sizeof_arr ))]} && unset 'SCR_TTY_MSG[$sizeof_arr]'
-#			#move_center ${len_of_long_str} ${number_of_options}
-#			[ ${sizeof_arr} -gt 0 ] && { 
-#				for (( index=0; index<${sizeof_arr}; index++ )); do 
-#					move_center ${len_of_long_str} $(( number_of_options-index+1 ))
-#					echo -ne "${SCR_TTY_MSG[$index]}"
-#				done 
-#			}
-#		}
+		display_center(){
+			columns="$(tput cols)"
+			
+			for line in ${SCR_TTY_MSG[@]}; do 
+				printf "%*s\n" 31 "$line"
+			done 
+		}
+		
+		_display_center() {
+			row=0
+			for text in ${SCR_TTY_MSG[@]}; do 
+				col=$(( ($(tput cols) - 31) / 2 ))
+				tput clear
+				tput cup $row $col
+				echo "$text"
+				(( row++ ))
+			done
+		}
+		#argu: array of prompts mesg to display in general screen arr[SCR_TTY_MSG]
+		function print_scr_tty() {
+			local sizeof_arr=${#SCR_TTY_MSG[@]}
+			local number_of_options=$(( sizeof_arr ))
+			local len_of_long_str=${SCR_TTY_MSG[$(( --sizeof_arr ))]} && unset 'SCR_TTY_MSG[$sizeof_arr]'
+			#move_center ${len_of_long_str} ${number_of_options}
+			[ ${sizeof_arr} -gt 0 ] && { 
+				for (( index=0; index<${sizeof_arr}; index++ )); do 
+					move_center ${len_of_long_str} $(( number_of_options-index+1 ))
+					echo -ne "${SCR_TTY_MSG[$index]}"
+				done 
+			}
+		}
 		
 	fi ## INIT_H
 	
@@ -521,4 +521,32 @@ elif [[ $1 = "<http_server.h>" ]]; then
 		}
 		
 	} ## HTTP_SERVER_H
+elif [[ $1 = "<var_definitions.h>" ]]; then
+
+	NOT_DEFINE ${VAR_DEFINITIONS_H} && {
+		DEFINE VAR_DEFINITIONS_H
+		
+		declare -A STRINGS=(
+			[PROMPT_SIZE_OF_MEM]="[$$]Enter_the_RAM_size_" \
+			[PROMPT_CHECKING_FOR_ISO]="Checking_for_iso_files_in_[$HOME]..._" \
+			[PROMPT_SPECIFY_PATH_TO_ISO]="[$$]Select_one_of_the_iso_files_above_by_copying_the_path_here.\n[$$]Specify_path_to_any_iso_file_on_your_filesystem._" \
+			[PROMPT_SIZE_OF_DISK]="[$$]Enter_size_for_the_disk_image_" \
+			[PROMPT_DISK_FORMATS]="\n\t\tChoose_a_file_format_for_the_hard_disk_image" \
+			[PROMPT_NUM_CPU_CORES]="[$$]Enter_the_number_of_cpu_cores_to_emulate_ " \
+			[PROMPT_DISPLAY]="[$$]Choose_a_display_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Display_video_output_via_curses\n\t\t2._Display_video_output_via_SDL\n\t\t3._Display_video_output_via_VNC" \
+			[PROMPT_VIDEO_CARD]="[$$]Choose_a_Video_Card_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Cirrus_Logic_GD5446_Video_card\n\t\t2._Standard_VGA_card_with_Bochs_VBE_extensions"
+		)
+		
+		function get_string_by_name(){
+			local string_=""
+			
+			if [[ ${#@} -gt 0 ]]; then
+				local string_=${STRINGS[$1]//_/ }
+				
+				echo -n "${string_} $2"
+			fi 
+		}
+		
+		
+	}
 fi
