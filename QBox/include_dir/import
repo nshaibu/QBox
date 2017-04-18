@@ -199,6 +199,23 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 			
 		}
 		
+		#argu dir_name, regex
+		#ret :array of files
+		function get_all_file_from_dir() {
+			local -a arr_file=
+			local index=0
+			
+			local dir_=$1
+			local regex=$2
+			
+			for arr_file in $(find ${dir_} -type f -a -name "${regex}" -print 2>>/dev/null ); do 
+				arr_file[$index]="${arr_file}"
+				(( index++ ))
+			done 
+		
+			echo -n ${arr_file[@]}
+		}
+		
 		#it returns the name of all vms by assigned it to an array and return SUCCESS if successful
 		#ARGU: DB_NAME
 		#RET: ARR_
@@ -221,7 +238,7 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 		##argu :db_name
 		##return the name of vms without qvm file or hd img 
 		function check_qdb_consistency() {
-			local -a qdb_name=( $1 )
+			local -a qdb_name=( $@ )
 			
 			local -a no_bootfile_arr=
 			local -a no_hd_arr= 
@@ -230,22 +247,24 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 			
 			if [[ ${#qdb_name[@]} -gt 0 ]]; then
 				
-				for (( index=0; index<${#qdb_name[@]}; index++)); do 
+				for (( index=0; index<${#qdb_name[@]}; index++ )); do 
 					#----check bootfile-------
 						local vm_info=${qdb_name[$index]//\"/}
 						local boot_file_name=$(return_second_field ${vm_info})
 						
-						check_is_file "${BOOT_DIR}/${boot_file_name}" || {
+						if ! [ -f "${BOOT_DIR}/${boot_file_name}" ]; then
 							no_bootfile_arr[$i]=$(return_first_field ${vm_info})
 							(( i++ ))
-						}
+						fi 
 					#----check hd img---------
 						boot_file_name=${boot_file_name//.qvm/.img}
 						
-						check_is_file "${HD_IMG_DIR}/${boot_file_name}" || {
-							no_hd_arr[$i]=$(return_first_field ${vm_info})
-							(( i++ ))
-						}
+						if ! [ -f "${HD_IMG_DIR}/${boot_file_name}" ]; then
+							check_is_file "${BOOT_DIR}/${boot_file_name//.img/.qvm}" || {
+								no_hd_arr[$i]=$(return_first_field ${vm_info})
+								(( i++ ))
+							}
+						fi 			
 				done 
 				
 				if [ ${#no_bootfile_arr[@]} -ne 0 ] || [ ${#no_hd_arr[@]} -ne 0 ] ; then
@@ -257,7 +276,7 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 		
 		#argu: arr_of vms with no hd img or qvm file
 		function resolve_qdb_inconsistencies() {
-			local -a arr_vms=( $1 )
+			local -a arr_vms=( $@ )
 			
 			if [[ ${#arr_vms[*]} -ne 0 ]]; then
 				local TMPFILE=$(mktemp -uq qbox.XXXXXXXXXXXX || echo "qbox.$$")
@@ -269,12 +288,28 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 			fi 
 		}
 		
+		function hd_a_qvm_no_qdb_entry() {
+			local -a arr_hd_=( $(get_all_file_from_dir "${HD_IMG_DIR}" "*.img") )
+			#local -a arr_qvm_=( $(get_all_file_from_dir "${BOOT_DIR}" "*.qvm") )
+			
+			#local -a qdb_name=( $(init_database_qdb ${VMS_DB}) )
+			
+			for (( index=0; index<${#arr_hd_[@]}; index++ )); do 
+				local qvm_file=$(basename ${arr_hd_[$index]})
+				local qvm_file=${qvm_file//.img/.qvm}
+				
+				check_is_file "${BOOT_DIR}/${qvm_file}" || { rm -f "${HD_IMG_DIR}/${qvm_file//.qvm/.img}" 2>/dev/null; }
+			done 
+		}
+		
 		#argu: db_name
 		function _resolving_inconsistencises_qdb() {
 			local -a qdb_name=( $(init_database_qdb ${VMS_DB}) )
 			
-			qdb_name=$(check_qdb_consistency ${qdb_name[@]})
+			qdb_name=( $(check_qdb_consistency ${qdb_name[@]}) )
 			resolve_qdb_inconsistencies ${qdb_name[@]}
+			
+			hd_a_qvm_no_qdb_entry
 		}
 		
 		#ARGU:	array of values contain the search value at the end of the array
@@ -416,7 +451,7 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 				sizeof_arr=${#QDB_ARR[@]}
 				
 				local vm_info_index=${QDB_ARR[$(( --sizeof_arr ))]} && unset 'QDB_ARR[$sizeof_arr]'
-				echo ${vm_info_index}>${HOME}/my_script/QB/v.txt
+				
 				[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && {
 					vm_info=${QDB_ARR[${vm_info_index}]}
 					vm_info=${vm_info//\"/}

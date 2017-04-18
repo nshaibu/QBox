@@ -44,7 +44,7 @@ _resolving_inconsistencises_qdb
 
 case $1 in
 	-[Cc]|[Cc]|--[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt]|[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt])
-		echo -e "QBox Easy VM Manager Copyleft (\u0254) 2016 nafiu shaibu\nQEMU is a trademark of fabrice bellard\n"
+		echo -e "QBox Easy VM Manager Copyleft (\u0254) 2017 nafiu shaibu\nQEMU is a trademark of fabrice bellard\n"
 		printf "%s\n" "QBox comes with ABSOLUTELY NO WARRANTY." \
 			"You may redistribute copies of this program" \
 			"under the terms of the GNU General Public License." \
@@ -126,8 +126,7 @@ case $1 in
 		}
 
 
-		while true
-		do
+		while true; do
 			clear
 			qemu_menu_func
 	
@@ -157,7 +156,7 @@ case $1 in
 						fi
 					fi 
 			;;
-				2) bash ${QBOX_DIR}/bash_s/qemu-im-box.sh ;;
+				2) . ${BASIC_BASH}/qemu-im-box.sh ;;
 				3) 
 					#bash ${QBOX_DIR}/bash_s/qemu-sql-vms.sh l 2>/dev/null
 					declare -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) )

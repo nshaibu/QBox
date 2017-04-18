@@ -319,36 +319,36 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 	
 	function architecture_type_choice(){
         case $1 in
-            1) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-i386` 
+            1) QEMU=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-system-i386` 
             	BOOT_ORDER="-boot order=d"
             	KVM_ENABLE="-enable-kvm"
             ;;
-            2) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-x86_64` 
+            2) QEMU=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-system-x86_64` 
             	BOOT_ORDER="-boot order=d"
             	KVM_ENABLE="-enable-kvm"
             ;;
-            3) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-arm` 
+            3) QEMU=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-system-arm` 
             	BOOT_ORDER="-boot order=d"
             ;;
-            4) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-armeb` 
+            4) QEMU=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-system-armeb` 
             	BOOT_ORDER="-boot order=d"
             ;;
-            5) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc` 
+            5) QEMU=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc` 
             	BOOT_ORDER="-boot order=d"
             ;;
-            6) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc64` 
+            6) QEMU=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-system-ppc64` 
             	BOOT_ORDER="-boot order=d"
             ;;
-            7) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc` 
+            7) QEMU=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc` 
             	BOOT_ORDER="-boot order=d"
             ;;
-            8) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc64` 
+            8) QEMU=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-system-sparc64` 
             	BOOT_ORDER="-boot order=d"
             ;;
-            9) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mipsel` 
+            9) QEMU=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-system-mipsel` 
             	BOOT_ORDER="-boot order=d"
             ;;
-            10) QEMU=`$QBOX_DIR/bash_s/check_pkg_install.sh %CHECK_RUN% qemu-system-mips` 
+            10) QEMU=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-system-mips` 
             	BOOT_ORDER="-boot order=d"
             ;;
         esac
