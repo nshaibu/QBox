@@ -279,7 +279,7 @@ while true; do
 					done
 					
 					echo -en $(get_string_by_name PROMPT_NUM_CPU_CORES)
-					read -p " " -n 1 numcore
+					read -p "[${LINENO}:$$]~>" -n 1 numcore
 					echo 
 					
 					case $numcore in 
@@ -291,8 +291,9 @@ while true; do
 					#-----disply------
 					echo
 					echo -e $(get_string_by_name PROMPT_DISPLAY)
-					read -n 1 sd
-				
+					read -p "[${LINENO}:$$]~>" -n 1 sd
+					echo 
+					
 					case "$sd" in 
 						3)
 							DISPLAY_="-display vnc=:${VNC_DISPLAY}"
@@ -301,15 +302,33 @@ while true; do
 						1) DISPLAY_="-display curses" ;;
 						*) DISPLAY_="-display sdl" ;;
 					esac
-	
+					
+					echo
 					echo -e $(get_string_by_name PROMPT_VIDEO_CARD)
-					read -n 1 vcard
-	
+					read -p "[${LINENO}:$$]~>" -n 1 vcard
+					echo 
+					
 					case "$vcard" in 
 						2) VGA="-vga std" ;;
 						*) VGA="-vga cirrus" ;;
 					esac
+					
 					QEMU_GRAPH="${VGA} ${DISPLAY_}"
+					#-------usb-------------
+					echo
+					echo -e $(get_string_by_name PROMPT_USB_DEVICE)
+					read -p "[${LINENO}:$$]~>" -n 1 usb
+					echo 
+					[ -z $usb ] && usb=1
+					pointing_dev_choice $usb
+					
+					echo 
+					echo -e $(get_string_by_name PROMPT_SOUND_MODULE)
+					read -p "[${LINENO}:$$]~>" -n 1 snd
+					
+					echo 
+					[ -z $snd ] && snd=1
+					sound_drivers $snd
 				;;
 				2) ;;
 				3) ;;

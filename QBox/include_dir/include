@@ -297,6 +297,14 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 		esac
 	}
 	
+	function sound_drivers() {
+		case "$1" in 
+			1) QEMU_SOUND="-soundhw sb16" ;;
+			2) QEMU_SOUND="-soundhw es1370" ;;
+			3) QEMU_SOUND="-soundhw hda" ;;
+		esac
+	}
+	
 	function detection_msg() {
 		NOT_DEFINE ${GUIDED_MODE_BOOT_VM} && {
 			${DIALOG} \

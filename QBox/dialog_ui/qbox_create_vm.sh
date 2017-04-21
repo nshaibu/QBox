@@ -781,11 +781,7 @@ if NOT_DEFINE ${GUIDED_MODE_BOOT_VM}; then
 						
 							exec 3>&-
 					
-								case "$value" in 
-									1) QEMU_SOUND="-soundhw sb16" ;;
-									2) QEMU_SOUND="-soundhw es1370" ;;
-									3) QEMU_SOUND="-soundhw hda" ;;
-								esac
+							sound_drivers $value 
 						}
 						
 						[ ${value_fullscrn} -eq 1 ] && { QEMU_FULLSCREEN="-full-screen"; }
