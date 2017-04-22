@@ -810,6 +810,8 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	DEFINE BASIC_UTILS_H
 	#basic system utilities
 	
+	. ${LIB_DIR}/import '<strings_definitions.h>'
+	
 	if NOT_DEFINE ${TRUE_TEST_H}; then
 		. ${LIB_DIR}/include '<true_test.h>'
 	fi

@@ -556,10 +556,10 @@ elif [[ $1 = "<http_server.h>" ]]; then
 		}
 		
 	} ## HTTP_SERVER_H
-elif [[ $1 = "<var_definitions.h>" ]]; then
+elif [[ $1 = "<strings_definitions.h>" ]]; then
 
-	NOT_DEFINE ${VAR_DEFINITIONS_H} && {
-		DEFINE VAR_DEFINITIONS_H
+	NOT_DEFINE ${STRINGS_DEFINITIONS_H} && {
+		DEFINE STRINGS_DEFINITIONS_H
 		
 		declare -A STRINGS=(
 			[PROMPT_SIZE_OF_MEM]="[$$]Enter_the_RAM_size_" \
@@ -586,5 +586,5 @@ elif [[ $1 = "<var_definitions.h>" ]]; then
 		}
 		
 		
-	}
+	} ##STRINGS_DEFINITIONS_H
 fi
