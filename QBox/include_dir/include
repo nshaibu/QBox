@@ -811,6 +811,7 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	#basic system utilities
 	
 	. ${LIB_DIR}/import '<strings_definitions.h>'
+	. ${LIB_DIR}/import '<init.h>'
 	
 	if NOT_DEFINE ${TRUE_TEST_H}; then
 		. ${LIB_DIR}/include '<true_test.h>'
@@ -988,12 +989,56 @@ function _test_already_configured() {
 			
 			case "$ans" in 
 				Y|y) _ret=${SUCCESS} ;;
-				N|n) _ret=${FAILURE} ;;
+				*) _ret=${FAILURE} ;;
 			esac 
 		}
 	fi 
 	
 	return $_ret
 }
+
+#argu: test_condition:display_text
+function _check_configured() {
+	local -a _argu_arr=( $@ )
+	local _configured=${FAILURE}
+	local msg_str=""
 	
+	for (( index=0; index<${#_argu_arr[@]}; index++ )); do 
+		if [[ ${_argu_arr[$index]%%:*} -eq ${FAILURE} ]]; then
+			msg_str+=${_argu_arr[$index]##*:}
+			_configured=${SUCCESS}
+		fi 
+	done 
+	
+	[ ${_configured} -eq ${SUCCESS} ] && {
+		msg_str=${msg_str//_/ }
+		msg_str=${msg_str//|/\\n}
+		
+		NOT_DEFINE ${__CMDLINE__} && { 
+			${DIALOG} \
+				--colors --title "\Zb\Z1 Not Configured Yet\Zn\ZB" --msgbox "You have not configured.\n \Zb\Z1${msg_str}\Zn\ZB." \
+				$((HEIGHT-7)) $((WIDTH-20))		
+		} || { 
+			tput setaf 9
+			echo -en "\nYou have not configured.\n$msg_str"
+			tput sgr0
+		}
+	}
+	
+	return ${_configured}
+}
+	
+##create desktop files
+#argu name of vm
+function create_desktop_icon(){
+	local _filename=$(String_to_Lower $1)
+	local _filename="${HOME}/Desktop/${_filename}.desktop"
+	touch ${_filename}
+	
+	echo -e "[Desktop Entry]\nTerminal=true">${_filename}
+	echo -e "Encoding=UTF-8\nType=Application\nIcon=/usr/local/bin/QBox/icon/qbox_shortcut.png\nName=$1\nGenericName=Virtual Machine Manager">>${_filename}
+	echo -e "Exec=sh -c '${QBOX_DIR}/QBox --startvm $1 ;$SHELL'\nComment=QBox for easy management of VMs locally or remotely">>${_filename}
+	
+	chmod 751 ${_filename}
+}
 fi

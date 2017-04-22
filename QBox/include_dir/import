@@ -587,4 +587,44 @@ elif [[ $1 = "<strings_definitions.h>" ]]; then
 		
 		
 	} ##STRINGS_DEFINITIONS_H
+
+elif [[ $1 = "<sh_thread.h>" ]]; then
+	
+	NOT_DEFINE ${SH_THREAD_H} && {
+		DEFINE SH_THREAD_H
+		
+		DEFINE THREAD_MAX 20
+		
+		#ret pid of threads started
+		#argu function_name:number_of_threads_to_create:arguments_pipe
+		function sh_thread_create() {
+			local function_name=${1%%:*}
+			local number_of_threads=$(echo $1 | cut -d : -f2)
+			local arguments=${1##*:}
+			local -a pid_t=""
+			
+			[ ${number_of_threads} -gt THREAD_MAX ] && number_of_threads=${THREAD_MAX}
+			
+			for (( index=0; index<${number_of_threads}; index++ )); do 
+				${function_name} &
+				pid_t[$index]=$!
+			done 
+			
+			echo -n ${pid_t[@]}
+		}
+		
+		##argu: pid_ts to wait for
+		function sh_thread_join() {
+			for pids in $@; do 
+				wait $pids
+			done
+		}
+		
+		function sh_kill_thread() {
+			for pids in $@; do 
+				kill $pids
+			done 
+		}
+		
+	} ##SH_THREAD_H
 fi

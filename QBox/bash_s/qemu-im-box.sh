@@ -353,9 +353,14 @@ while true; do
 					network_conf_completed=${SUCCESS}
 				;;
 				3) 
-					
-					
-					
+					echo
+					DEFINE __CMDLINE__
+					_check_configured ${basic_conf_completed}:"1._Basic_Configurations_|" ${network_conf_completed}:"2._Network_Configurations_|"
+					let _return=$?
+					UNDEFINE __CMDLINE__
+					read
+					[ $_return -ne ${SUCCESS} ] && {
+					echo
 					let value=1
 					until check_is_file $value && check_is_iso_file $value ; do
 						echo -e $(get_string_by_name PROMPT_CHECKING_FOR_ISO)
@@ -411,7 +416,11 @@ while true; do
 					%${MCAST3} %${SMB_SERVER} %${QEMU_SOUND} %${QEMU_USB} %${HD_BI_IMG} %${KVM_ENABLE} %${KERNEL} %${INITRD} %${QEMU_KEYBOARD} \
 					%${QEMU_FULLSCREEN} % %${SNAP_OT} %${KERNEL_CMD} % % #2>/dev/null			
 					sleep 1.2
+					}
 				;;
+				*)
+					clear
+					echo "wrong Option" ;;
 			esac
 		;;
 		0) break ;;

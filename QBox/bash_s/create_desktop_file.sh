@@ -18,36 +18,45 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #===========================================================================================
-HD_IMG_DIR=$HOME/.img_qemubox ##contains harddisk images
-QDB_DESKTOP=${HOME}/Desktop
-QBOX_DIR=/usr/local/bin/QBox
-QDB_FOLDER=${HD_IMG_DIR}/.qdb
 
-function create_desktop_icon(){
-	
-	_filename="${QDB_DESKTOP}/`echo $1 | awk '{print tolower($0)}'`.desktop"
-	touch ${_filename}
-	
-	echo -e "[Desktop Entry]\nTerminal=true">${_filename}
-	echo -e "Encoding=UTF-8\nType=Application\nIcon=/usr/local/bin/QBox/icon/qbox_shortcut.png\nName=$1\nGenericName=Virtual Machine Manager">>${_filename}
-	echo -e "Exec=sh -c '${QBOX_DIR}/QBox --startvm $1 ;$SHELL'\nComment=QBox for easy management of VMs locally or remotely">>${_filename}
-	
-	chmod 751 ${_filename}
-}
+: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
 
-${QBOX_DIR}/bash_s/qemu-sql-vms.sh l 2>/dev/null
+. ${LIB_DIR}/include
+
+. ${LIB_DIR}/import '<init.h>'
+. ${LIB_DIR}/import '<qdb_database.h>'
+
+if NOT_DEFINE ${BASIC_UTILS_H}; then
+	. ${LIB_DIR}/include '<basic_utils.h>'
+fi 
+	
+	
+declare -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) )
+					
+if [[ ${#QDB_ARR[*]} -eq 0 ]]; then 
+	tput setaf 9
+	printf "\n\t%s\n" "No Virtual Machine created yet..."
+	tput sgr0
+else 
+	echo -e "\n\nselect a vm"
+			
+	for (( index=0; index<${#QDB_ARR[*]}; index++)); do
+		vm_info=${QDB_ARR[$index]//\"/}
+		echo "  $(( index+1 )).       $(return_first_field ${vm_info})"
+	done 
+						
+	printf "\n%s" "Choose a VM to creat desktop shortcut[ENTER] "
+	read name
+						
+	[ "${name}" != "" ] && {
+		name=$(String_to_Upper ${name}) 
+		let sizeof_arr=${#QDB_ARR[@]}
+		QDB_ARR[$sizeof_arr]=${name}
 		
-echo
-printf "%s" "Choose a VM to creat desktop shortcut[ENTER] "
-read name
-
-name=$(echo $name | awk '{print toupper($0)}') ##capitalise name
-
-if [[ -n ${name} ]]; then
-	search="^$name$"
-	vm_file=$(gawk -F "|" -v var=$search '$1 ~ var {print $2}' ${QDB_FOLDER}/vms.qdb)
-	
-	if [[ "${vm_file}" != "" ]]; then
-		create_desktop_icon ${name}
-	fi 
+		QDB_ARR=( $(search_val_qdb ${QDB_ARR[@]}) )
+		let sizeof_arr=${#QDB_ARR[@]}
+		vm_info_index=${QDB_ARR[$(( --sizeof_arr ))]}
+		
+		[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && { create_desktop_icon ${name}; }
+	}
 fi 
