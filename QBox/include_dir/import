@@ -572,6 +572,7 @@ elif [[ $1 = "<var_definitions.h>" ]]; then
 			[PROMPT_VIDEO_CARD]="[$$]Choose_a_Video_Card_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Cirrus_Logic_GD5446_Video_card\n\t\t2._Standard_VGA_card_with_Bochs_VBE_extensions"
 			[PROMPT_USB_DEVICE]="[$$]Choose_a_Pointing_device_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Virtual_Mouse\n\t\t2._Pointer_device_like_a_touchscreen\n\t\t3._Default"
 			[PROMPT_SOUND_MODULE]="[$$]choose_the_sound_card_to_emulate.\n\tOptions:\n\t\t1._Creative_SoundBlaster_16_sound_card\n\t\t2._ENSONIQ_AudioPCI_ES1370_sound_card\n\t\t3._Intel_HD_Audio_Controller_and_HDA_codec"
+			[COND_ALREADY_CONFIGURED]="Already configured.\nDo you want to reconfigure"
 		)
 		
 		function get_string_by_name(){

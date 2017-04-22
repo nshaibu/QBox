@@ -964,5 +964,34 @@ function is_valid_port_num() {
 	return ${test_port}
 }
 
+#argu: Test_variable:Name_configuration_part_to_test
+function _test_already_configured() {
+	local _ret=${SUCCESS}
+	
+	if [[ ${1%%:*} -eq ${SUCCESS} ]]; then
+		NOT_DEFINE ${__CMDLINE__} && {
+			${DIALOG} \
+				--colors --title "\Zb\Z1Already Configured\Zn\ZB" --yesno "Already configured:\Zb\Z1${1##*:}\Zn\ZB.\nDo you want to reconfigure?" \
+				$((HEIGHT-7)) $((WIDTH-20))
+				
+			case $? in 
+				${DIALOG_OK}) _ret=${SUCCESS} ;;
+				${DIALOG_CANCEL}) _ret=${FAILURE} ;;
+			esac
+		} || {
+			tput setaf 9
+			echo -en $(get_string_by_name COND_ALREADY_CONFIGURED "${1##*:}[y/N]?")
+			tput sgr0
+			read -n 1 ans
+			
+			case "$ans" in 
+				Y|y) _ret=${SUCCESS} ;;
+				N|n) _ret=${FAILURE} ;;
+			esac 
+		}
+	fi 
+	
+	return $_ret
+}
 	
 fi

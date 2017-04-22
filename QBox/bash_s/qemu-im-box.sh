@@ -36,6 +36,9 @@ if NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${ERRO
 	. ${LIB_DIR}/include '<error.h>'
 fi 
 
+let basic_conf_completed=${FAILURE}
+let network_conf_completed=${FAILURE}
+
 declare -a _hd_formats=("QCOW2(QEMU Copy-On-Write)" "RAW(Raw disk image format)" "QED(QEMU Enhanced Disk)" "VMDK(Virtual Machine Disk)" \
 						"VDI(Virtual Disk Image)")
 
@@ -190,6 +193,16 @@ while true; do
 			case ${opt} in 
 				0) break ;;
 				1) 
+					
+					echo
+					DEFINE __CMDLINE__
+					_test_already_configured ${basic_conf_completed}:"basic configurations"
+					
+					let _return=$?
+					UNDEFINE __CMDLINE__
+					#[ -z $_return ] && _return=${SUCCESS}
+					[ $_return  -eq ${SUCCESS} ] && {
+					
 					get_vm_name
 					. ${BASIC_BASH}/qbox_ostype_info.sh 
 					
@@ -278,7 +291,8 @@ while true; do
 						fi 
 					done
 					
-					echo -en $(get_string_by_name PROMPT_NUM_CPU_CORES)
+					echo 
+					echo -e $(get_string_by_name PROMPT_NUM_CPU_CORES)
 					read -p "[${LINENO}:$$]~>" -n 1 numcore
 					echo 
 					
@@ -329,6 +343,9 @@ while true; do
 					echo 
 					[ -z $snd ] && snd=1
 					sound_drivers $snd
+					
+					basic_conf_completed=${SUCCESS}
+					}
 				;;
 				2) ;;
 				3) ;;

@@ -158,7 +158,6 @@ case $1 in
 			;;
 				2) . ${BASIC_BASH}/qemu-im-box.sh ;;
 				3) 
-					#bash ${QBOX_DIR}/bash_s/qemu-sql-vms.sh l 2>/dev/null
 					declare -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) )
 							
 					if [[ ${#QDB_ARR[*]} -eq 0 ]]; then 
