@@ -145,6 +145,16 @@ elif [[ $1 = "<notify.h>" ]]; then
 		DEFINE NOTIFY_H
 		
 		: ${NOTICE:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% notify-send`}
+		
+		function show_notification() {
+			local _urgency="-u $1"
+			local _icon_=$( [ "$2" = "NO_ICON" ] && echo || echo -n "-i $2" )
+			
+			local summary=$3
+			local body=$4
+			
+			[ -n  ${NOTICE} ] && { ${NOTICE} ${_urgency} ${_icon_} ${summary} ${body}; }
+		}
 	} # NOTIFY_H
 	
 elif [[ $1 = "<qdb_database.h>" ]]; then
@@ -518,7 +528,7 @@ elif [[ $1 = "<http_server.h>" ]]; then
 				#HD_IMG_DIR="$HOME/.img_qemubox"
 				#QDB_FOLDER="${HD_IMG_DIR}/.qdb"
 				#VMS_DB="${QDB_FOLDER}/vms.qdb"		
-		
+		#TODO @qbox tcp server
 		function qbox_server_start() {
 			${TCP_SERVER} -l -p 4040 -c '
 				: ${LIB_DIR:=$HOME/my_script/QB}
@@ -569,10 +579,11 @@ elif [[ $1 = "<strings_definitions.h>" ]]; then
 			[PROMPT_DISK_FORMATS]="\n\t\tChoose_a_file_format_for_the_hard_disk_image" \
 			[PROMPT_NUM_CPU_CORES]="[$$]Enter_the_number_of_cpu_cores_to_emulate.\n\tOptions:_[1_2_3_4]" \
 			[PROMPT_DISPLAY]="[$$]Choose_a_display_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Display_video_output_via_curses\n\t\t2._Display_video_output_via_SDL\n\t\t3._Display_video_output_via_VNC" \
-			[PROMPT_VIDEO_CARD]="[$$]Choose_a_Video_Card_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Cirrus_Logic_GD5446_Video_card\n\t\t2._Standard_VGA_card_with_Bochs_VBE_extensions"
-			[PROMPT_USB_DEVICE]="[$$]Choose_a_Pointing_device_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Virtual_Mouse\n\t\t2._Pointer_device_like_a_touchscreen\n\t\t3._Default"
-			[PROMPT_SOUND_MODULE]="[$$]choose_the_sound_card_to_emulate.\n\tOptions:\n\t\t1._Creative_SoundBlaster_16_sound_card\n\t\t2._ENSONIQ_AudioPCI_ES1370_sound_card\n\t\t3._Intel_HD_Audio_Controller_and_HDA_codec"
-			[COND_ALREADY_CONFIGURED]="Already configured.\nDo you want to reconfigure"
+			[PROMPT_VIDEO_CARD]="[$$]Choose_a_Video_Card_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Cirrus_Logic_GD5446_Video_card\n\t\t2._Standard_VGA_card_with_Bochs_VBE_extensions" \
+			[PROMPT_USB_DEVICE]="[$$]Choose_a_Pointing_device_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Virtual_Mouse\n\t\t2._Pointer_device_like_a_touchscreen\n\t\t3._Default" \
+			[PROMPT_SOUND_MODULE]="[$$]choose_the_sound_card_to_emulate.\n\tOptions:\n\t\t1._Creative_SoundBlaster_16_sound_card\n\t\t2._ENSONIQ_AudioPCI_ES1370_sound_card\n\t\t3._Intel_HD_Audio_Controller_and_HDA_codec" \
+			[COND_ALREADY_CONFIGURED]="Already configured.\nDo you want to reconfigure" \
+		[STRING_FOR_FULLSCRN_NOTIFICATION]="The_Virtual_Machine_is_booting._It_was_configured_with_fullscreen_enable._To_come_back_to_SDL_windows_mode:press CTL+ALT+F_key_combination"
 		)
 		
 		function get_string_by_name(){
@@ -595,18 +606,45 @@ elif [[ $1 = "<sh_thread.h>" ]]; then
 		
 		DEFINE THREAD_MAX 20
 		
+		#declare -a thread_ids=
+		INPUT_PIPE=
+		OUTPUT_PIPE=
+		
+		function init_sh_thread() {
+			if check_is_set $INPUT_PIPE; then 
+				rm -f ${INPUT_PIPE} 2>/dev/null
+				INPUT_PIPE=""
+			elif check_is_set $OUTPUT_PIPE; then
+				rm -f ${OUTPUT_PIPE} 2>/dev/null
+				OUTPUT_PIPE=""
+			fi 
+			
+			[ -z $INPUT_PIPE ] && [ -z ${OUTPUT_PIPE} ] && { 
+				INPUT_PIPE=$(mktemp -uq /tmp/qbox_in_pipe.XXXXXXXXXXXX || echo -n "/tmp/qbox_in_pipe.$$")
+				OUTPUT_PIPE=$(mktemp -uq /tmp/qbox_out_pipe.XXXXXXXXXXXX || echo -n "/tmp/qbox_out_pipe.$$")
+				
+				mkfifo ${INPUT_PIPE} &>/dev/null
+				mkfifo ${OUTPUT_PIPE} &>/dev/null
+			}
+			
+			if [[ $# -gt 0 ]] ; then
+				for param in $@; do 
+					echo $param >>${INPUT_PIPE} 
+				done 
+			fi 
+		}
+		
 		#ret pid of threads started
 		#argu function_name:number_of_threads_to_create:arguments_pipe
 		function sh_thread_create() {
 			local function_name=${1%%:*}
-			local number_of_threads=$(echo $1 | cut -d : -f2)
-			local arguments=${1##*:}
+			local number_of_threads=${1##*:}
 			local -a pid_t=""
 			
-			[ ${number_of_threads} -gt THREAD_MAX ] && number_of_threads=${THREAD_MAX}
+			[ ${number_of_threads} -gt $THREAD_MAX ] && number_of_threads=${THREAD_MAX}
 			
 			for (( index=0; index<${number_of_threads}; index++ )); do 
-				${function_name} &
+				${function_name} ${index} &
 				pid_t[$index]=$!
 			done 
 			
@@ -616,7 +654,7 @@ elif [[ $1 = "<sh_thread.h>" ]]; then
 		##argu: pid_ts to wait for
 		function sh_thread_join() {
 			for pids in $@; do 
-				wait $pids
+				wait $pids 2>/dev/null
 			done
 		}
 		
@@ -624,6 +662,16 @@ elif [[ $1 = "<sh_thread.h>" ]]; then
 			for pids in $@; do 
 				kill $pids
 			done 
+		}
+		
+		function close_sh_thread() {
+			if [[ -p ${OUTPUT_PIPE} ]]; then
+				rm -f ${OUTPUT_PIPE} 2>/dev/null
+				OUTPUT_PIPE=""
+			elif [[ -p ${INPUT_PIPE} ]]; then
+				rm -f ${INPUT_PIPE} 2>/dev/null
+				INPUT_PIPE=""
+			fi 
 		}
 		
 	} ##SH_THREAD_H

@@ -27,6 +27,7 @@
 . ${LIB_DIR}/import '<qdb_database.h>'
 . ${LIB_DIR}/import '<boot_vm.h>'
 . ${LIB_DIR}/import '<http_server.h>'
+. ${LIB_DIR}/import '<notify.h>'
 
 if NOT_DEFINE ${CURSES_DIALOG_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
@@ -76,7 +77,19 @@ while : ; do
 								
 								boot_vm $(return_second_field ${bootfile}) $(return_first_field ${bootfile})
 								if [[ $? -eq ${SUCCESS} ]]; then
-									: #notify-send fullscn, keys shortcuts
+									
+									file_=`return_second_field ${bootfile}`
+									fullscn_set=""
+									fullscn_set=$(get_value_for_field "fullscreen" "${BOOT_DIR}/${file_}") 
+									#notify-send fullscn, keys shortcuts
+									
+									[ "${fullscn_set}" != "" ] && {
+										show_notification low ${QBOX_DIR}/icon/QBox.png "$(return_first_field ${bootfile})" \
+										"$(get_string_by_name STRING_FOR_FULLSCRN_NOTIFICATION)"
+									} || {
+										show_notification low ${QBOX_DIR}/icon/QBox.png "$(return_first_field ${bootfile})" \
+										"Booting Virtual Machine"
+									}
 								fi
 							fi  
 						;;
