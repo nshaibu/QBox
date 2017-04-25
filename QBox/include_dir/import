@@ -153,7 +153,7 @@ elif [[ $1 = "<notify.h>" ]]; then
 			local summary=$3
 			local body=$4
 			
-			[ -n  ${NOTICE} ] && { ${NOTICE} ${_urgency} ${_icon_} ${summary} ${body}; }
+			[ -n  ${NOTICE} ] && { ${NOTICE} ${_urgency} -t 2 ${_icon_} "${summary}" "${body}" 2>/dev/null; }
 		}
 	} # NOTIFY_H
 	
@@ -411,7 +411,7 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 				rm -f "${HD_IMG_DIR}/${hd_img}" 2>/dev/null
 				
 				echo -n "${qdb_name[@]}"
-				return 0
+				return ${SUCCESS}
 			}
 		}
 		
@@ -454,6 +454,7 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 		function startvm() {
 			local -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) ) ##initialize qdb
 			local sizeof_arr=${#QDB_ARR[@]}
+			local _ret=${FAILURE}
 			
 			if [[ ${sizeof_arr} -gt 0 ]]; then
 				QDB_ARR[$(( sizeof_arr ))]=$(String_to_Upper $1)
@@ -468,9 +469,11 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 					
 					vm_info=$(return_second_field ${vm_info})
 					
-					boot_vm ${vm_info} $(String_to_Upper $1)
+					boot_vm ${vm_info} $(String_to_Upper $1) && { _ret=$?; }
 				}
 			fi 
+			
+			return $_ret
 		}
 	} ## BOOT_VM_H
 	
@@ -583,7 +586,10 @@ elif [[ $1 = "<strings_definitions.h>" ]]; then
 			[PROMPT_USB_DEVICE]="[$$]Choose_a_Pointing_device_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Virtual_Mouse\n\t\t2._Pointer_device_like_a_touchscreen\n\t\t3._Default" \
 			[PROMPT_SOUND_MODULE]="[$$]choose_the_sound_card_to_emulate.\n\tOptions:\n\t\t1._Creative_SoundBlaster_16_sound_card\n\t\t2._ENSONIQ_AudioPCI_ES1370_sound_card\n\t\t3._Intel_HD_Audio_Controller_and_HDA_codec" \
 			[COND_ALREADY_CONFIGURED]="Already configured.\nDo you want to reconfigure" \
-		[STRING_FOR_FULLSCRN_NOTIFICATION]="The_Virtual_Machine_is_booting._It_was_configured_with_fullscreen_enable._To_come_back_to_SDL_windows_mode:press CTL+ALT+F_key_combination"
+			[STRING_FOR_FULLSCRN_NOTIFICATION]="The_Virtual_Machine_is_booting._To_exit_from_fullscreen_mode_to_SDL_window_mode, press CTL+ALT+F_key_combination"
+			[STRING_STOPPED_VM]="Stopped_Virtual_Machine_successfully"
+			[STRINGS_DELETE_VM]="Successfully_deleted_"
+			[STRINGS_EXPORT_VM]="Exported_Virtual_Machine_to_Desktop"
 		)
 		
 		function get_string_by_name(){
@@ -600,7 +606,7 @@ elif [[ $1 = "<strings_definitions.h>" ]]; then
 	} ##STRINGS_DEFINITIONS_H
 
 elif [[ $1 = "<sh_thread.h>" ]]; then
-	
+	#TODO a bash thread library to start using named pipeds for inter-process communications
 	NOT_DEFINE ${SH_THREAD_H} && {
 		DEFINE SH_THREAD_H
 		
@@ -623,8 +629,8 @@ elif [[ $1 = "<sh_thread.h>" ]]; then
 				INPUT_PIPE=$(mktemp -uq /tmp/qbox_in_pipe.XXXXXXXXXXXX || echo -n "/tmp/qbox_in_pipe.$$")
 				OUTPUT_PIPE=$(mktemp -uq /tmp/qbox_out_pipe.XXXXXXXXXXXX || echo -n "/tmp/qbox_out_pipe.$$")
 				
-				mkfifo ${INPUT_PIPE} &>/dev/null
-				mkfifo ${OUTPUT_PIPE} &>/dev/null
+				mkfifo -m 0666 ${INPUT_PIPE} &>/dev/null
+				mkfifo -m 0666 ${OUTPUT_PIPE} &>/dev/null
 			}
 			
 			if [[ $# -gt 0 ]] ; then

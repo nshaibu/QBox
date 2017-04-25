@@ -933,21 +933,15 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 
 	#ret: array of path to iso files
 	function check_for_iso_files() {
-		#local -a iso_files=
-		#local index=0
-		local dir_=
-	
-		[ -n $1 ] && { 
-			dir_=$(gawk -F "|" -v var="^$1\$" '$1 ~ var {print $2}' $INPUT_PIPE)
-		} || { dir_=${HOME}; }
+		local -a iso_files=
+		local index=0
 		
-		for iso in $(find ${dir_} -maxdepth 1 -type f -a -name "*.iso" -print 2>>/dev/null); do 
-			#iso_files[$index]=$iso
-			#(( index++ ))
-			echo $iso >OUTPUT_PIPE &
+		for iso in $(find ${HOME} -maxdepth 2 -type f -a -name "*.iso" -print 2>>/dev/null); do 
+			iso_files[$index]=$iso
+			(( index++ ))
 		done
 	
-		#echo -n ${iso_files[@]}
+		echo -n ${iso_files[@]}
 	}
 
 	function disk_size_valid(){
@@ -1047,6 +1041,7 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 		echo -e "Exec=sh -c '${QBOX_DIR}/QBox --startvm $1 ;$SHELL'\nComment=QBox for easy management of VMs locally or remotely">>${_filename}
 	
 		chmod 751 ${_filename}
+		return ${SUCCESS}
 	}
 	
 	##get the value for a field in the vm bootfile 

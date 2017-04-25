@@ -57,6 +57,11 @@ else
 		let sizeof_arr=${#QDB_ARR[@]}
 		vm_info_index=${QDB_ARR[$(( --sizeof_arr ))]}
 		
-		[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && { create_desktop_icon ${name}; }
+		[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && { 
+			create_desktop_icon ${name} && {
+				show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "$vm_info" \
+				"$(get_string_by_name STRINGS_EXPORT_VM)"
+			}
+		}
 	}
 fi 

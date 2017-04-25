@@ -52,13 +52,9 @@ case $1 in
 	;;
 	
 	-s|--[Ss][Tt][Aa][Rr][Tt][Vv][Mm]) 
-		NAME=`echo $2 | awk '{print toupper($0)}'`
-		search="^${NAME}$"
-	
-		set `gawk -F "|" -v var=$search '$1 ~ var {print $2 " " $3}' ${QDB_FOLDER}/vms.qdb`
-		if [[ $2 = "F" ]]; then
-			bash ${QBOX_DIR}/bash_s/qemu-bootfile-reader.sh $1 ${NAME}
-		fi 
+		name=$(String_to_Upper $2)
+		
+		startvm ${name} && { show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "$name" "$(get_string_by_name STRING_FOR_FULLSCRN_NOTIFICATION)"; }
 	;;
 	
 	-[Hh]|--[Hh][Ee][Ll][Pp])
@@ -82,10 +78,10 @@ case $1 in
 	
 		##check for paclages 
 		if [[ "$2" != "nocheck" ]]; then
-			bash ${QBOX_DIR}/bash_s/check_pkg_install.sh %CHECK_START%
+			. ${BASIC_BASH}/check_pkg_install.sh %CHECK_START%
 		fi 
 	
-		type $NOTICE >/dev/null 2>&1 && $NOTICE -u low -t 3 -i ${QBOX_DIR}/icon/QBox.png QBox "The Easy VM Manager" 
+		show_notification low ${QBOX_DIR}/icon/QBox.png "QBox" "The Easy VM Manager" 
 		. ${BASIC_BASH}/qemu-ansi-art.sh
 		
 		function other_options_menu(){
@@ -150,9 +146,13 @@ case $1 in
 						printf "\n%s" "Enter the name of the VM to boot[ENTER] "
 						read name
 						
-						if [[ ${name} = "" ]]; then
+						if [[ ${name} != "" ]]; then
 							name=$(String_to_Upper ${name}) 
-							startvm ${name}
+							
+							startvm ${name} && {
+								show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "$name" \
+								"$(get_string_by_name STRING_FOR_FULLSCRN_NOTIFICATION)"
+							}
 						fi
 					fi 
 			;;
@@ -187,10 +187,15 @@ case $1 in
 							
 							[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && {
 								(( sizeof_arr++ ))
-								QDB_ARR[$(( sizeof_arr++ ))]=${vm_info}
-								QDB_ARR[$sizeof_arr]=${VMS_DB}
+								vm_info=${QDB_ARR[${vm_info_index}]}
 								
-								QDB_ARR=( $(delete_val_qdb ${QDB_ARR[@]}) )
+								QDB_ARR[$(( sizeof_arr++ ))]=${vm_info}
+								QDB_ARR[$(( sizeof_arr ))]=${VMS_DB}
+								
+								QDB_ARR=( $(delete_val_qdb ${QDB_ARR[@]}) ) && {
+									show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "${vm_info%%|*}" \
+									"$(get_string_by_name STRINGS_DELETE_VM ${vm_info%%|*})"
+								}
 							}
 						}
 					fi 
@@ -240,8 +245,8 @@ case $1 in
 								} 						
 							fi 
 						;;
-						2) bash ${BASIC_BASH}/create_desktop_file.sh ;;
-						3) bash ${BASIC_BASH}/bash_s/qboxlogs.sh ;;
+						2) . ${BASIC_BASH}/create_desktop_file.sh ;;
+						3) . ${BASIC_BASH}/qboxlogs.sh ;;
 						*) 
 							clear
 							echo "wrong Option"		
@@ -254,7 +259,7 @@ case $1 in
 					done
 				
 				;;
-				5) bash ${QBOX_DIR}/bash_s/qemu-reconfigure.sh ;;
+				5) . ${BASIC_BASH}/qemu-reconfigure.sh ;;
 				6) 
 					_clear_pid_qdb_event
 					echo
@@ -276,8 +281,7 @@ case $1 in
 						echo
 						read -p "Enter the name of VM to stop[ENTER] " vmn
 					
-						#let x=0
-						[[ "$vmn" != "" ]] && {
+						[ "$vmn" != "" ] && {
 							name=$(String_to_Upper ${vmn}) 
 							let sizeof_arr=${#QDB_ARR[@]}
 							
@@ -290,13 +294,16 @@ case $1 in
 								pid_t=$(return_second_field ${QDB_ARR[$vm_info_index]})
 								
 								pid_t=${pid_t//\"/}
-								kill -9 ${pid_t}
+								kill -9 ${pid_t} 2>/dev/null && {
+									show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "$(return_first_field ${QDB_ARR[$vm_info_index]})" \
+									"$(get_string_by_name STRING_STOPPED_VM)"
+								}
 							}
 						}
 					fi
 			;;
-				7) bash ${QBOX_DIR}/bash_s/qboxhttpd.sh ;;
-				8) bash ${QBOX_DIR}/bash_s/direct_linux_boot.sh ;;
+				7) . ${BASIC_BASH}/qboxhttpd.sh ;;
+				8) . ${BASIC_BASH}/direct_linux_boot.sh ;;
 				*)
 					clear
 					echo "wrong Option";;

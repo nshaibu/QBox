@@ -35,5 +35,3 @@ case $opt in
 	1) less ${LOG_DIR}/qboxlog;;
 	2) cat /dev/null > ${LOG_DIR}/qboxlog;;
 esac
-
-exit 0

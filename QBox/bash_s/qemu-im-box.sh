@@ -29,6 +29,7 @@
 . ${LIB_DIR}/import '<qdb_database.h>'
 . ${LIB_DIR}/import '<boot_vm.h>'
 . ${LIB_DIR}/import '<strings_definitions.h>'
+. ${LIB_DIR}/import '<notify.h>'
 
 if NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${ERROR_H} ; then
 	. ${LIB_DIR}/include '<basic_utils.h>'
@@ -36,8 +37,14 @@ if NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${ERRO
 	. ${LIB_DIR}/include '<error.h>'
 fi 
 
-let basic_conf_completed=${FAILURE}
-let network_conf_completed=${FAILURE}
+if NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${VNC_INFO_H} || NOT_DEFINE ${HOST_IP_H} ; then 
+	. ${LIB_DIR}/include '<true_test.h>'
+	. ${LIB_DIR}/include '<vnc_info.h>'
+	. ${LIB_DIR}/include '<host_ip.h>'
+fi 
+
+basic_conf_completed=${FAILURE}
+network_conf_completed=${FAILURE}
 
 declare -a _hd_formats=("QCOW2(QEMU Copy-On-Write)" "RAW(Raw disk image format)" "QED(QEMU Enhanced Disk)" "VMDK(Virtual Machine Disk)" \
 						"VDI(Virtual Disk Image)")
@@ -359,13 +366,14 @@ while true; do
 					let _return=$?
 					UNDEFINE __CMDLINE__
 					read
-					[ $_return -ne ${SUCCESS} ] && {
+					[ $_return -eq ${SUCCESS} ] && {
 					echo
 					let value=1
 					until check_is_file $value && check_is_iso_file $value ; do
 						echo -e $(get_string_by_name PROMPT_CHECKING_FOR_ISO)
+						
 						declare -a iso_files=( $(check_for_iso_files) )
-					
+						
 						[ ${#iso_files[@]} -eq 0 ] && { perror ${NO_ISO_FILES} __CLI__; } || {
 							echo -e "\tFound:"
 							tput bold

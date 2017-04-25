@@ -167,5 +167,3 @@ elif [[ $1 = "%CHECK_RUN%" ]]; then
 	
 	echo ${_return_}
 fi
-
-exit 0
