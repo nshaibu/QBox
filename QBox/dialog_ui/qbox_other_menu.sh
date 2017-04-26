@@ -89,7 +89,7 @@ while : ; do
 			fi 
 			
 		;;
-		${DIALOG_CANCEL}) ;;
+		${DIALOG_CANCEL}) break ;;
 	esac
 	
 done 

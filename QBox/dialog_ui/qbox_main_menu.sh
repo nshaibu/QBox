@@ -33,6 +33,7 @@ if NOT_DEFINE ${CURSES_DIALOG_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
 fi 
 
+
 while : ; do 
 	#exit 0
 	exec 3>&1
@@ -77,19 +78,9 @@ while : ; do
 								
 								boot_vm $(return_second_field ${bootfile}) $(return_first_field ${bootfile})
 								if [[ $? -eq ${SUCCESS} ]]; then
-									
-									file_=`return_second_field ${bootfile}`
-									fullscn_set=""
-									fullscn_set=$(get_value_for_field "fullscreen" "${BOOT_DIR}/${file_}") 
-									#notify-send fullscn, keys shortcuts
-									
-									[ "${fullscn_set}" != "" ] && {
-										show_notification low ${QBOX_DIR}/icon/QBox.png "$(return_first_field ${bootfile})" \
-										"$(get_string_by_name STRING_FOR_FULLSCRN_NOTIFICATION)"
-									} || {
-										show_notification low ${QBOX_DIR}/icon/QBox.png "$(return_first_field ${bootfile})" \
-										"Booting Virtual Machine"
-									}
+									show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "$(return_first_field ${bootfile})" \
+									"$(get_string_by_name STRING_FOR_FULLSCRN_NOTIFICATION)"
+								
 								fi
 							fi  
 						;;
@@ -127,7 +118,10 @@ while : ; do
 							[ ${#QDB_ARR[@]} -ne 0 ] && {
 								pid=$(return_second_field ${QDB_ARR[$(( value-1 ))]})
 								pid=${pid//\"/}
-								kill -9 ${pid} 2>/dev/null
+								kill -9 ${pid} 2>/dev/null && { 
+									show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "$(return_first_field ${QDB_ARR[$(( value-1 ))]})" \
+									"$(get_string_by_name STRING_STOPPED_VM)"
+								}
 							} 
 						;;
 						${DIALOG_CANCEL}) break ;;
@@ -157,13 +151,17 @@ while : ; do
 							if [[ ${#QDB_ARR[*]} -ne 0 ]]; then
 								declare -i qdb_index=${#QDB_ARR[@]}
 								declare -a QDB_COPY=( ${QDB_ARR[@]} )
+								name_of_vm_to_del=${QDB_ARR[$(( value-1 ))]}
 								
 								QDB_COPY[$(( qdb_index++ ))]="${value}"
 								QDB_COPY[$(( qdb_index++ ))]=${QDB_ARR[$(( value-1 ))]}
 								QDB_COPY[$(( qdb_index ))]=${VMS_DB}
 								
 								if delete_msg_qdb $(return_first_field ${QDB_ARR[$(( value-1 ))]}); then
-									declare -a QDB_ARR=( $(delete_val_qdb ${QDB_COPY[@]}) )
+									declare -a QDB_ARR=( $(delete_val_qdb ${QDB_COPY[@]}) ) && {
+										show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "${name_of_vm_to_del%%|*}" \
+										"$(get_string_by_name STRINGS_DELETE_VM ${name_of_vm_to_del%%|*})"
+									}
 									break
 								else
 									break
@@ -265,7 +263,7 @@ while : ; do
 					esac
 				done 
 			elif [[ ${value} -eq 8 ]]; then
-				:
+				. ${DIALOG_DIR}/qbox_other_menu.sh
 			fi
 		;;
 		${DIALOG_CANCEL}) break ;;

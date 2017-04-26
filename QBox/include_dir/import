@@ -606,7 +606,7 @@ elif [[ $1 = "<strings_definitions.h>" ]]; then
 	} ##STRINGS_DEFINITIONS_H
 
 elif [[ $1 = "<sh_thread.h>" ]]; then
-	#TODO a bash thread library to start using named pipeds for inter-process communications
+	#TODO a bash thread library to start using named pipes for inter-process communications
 	NOT_DEFINE ${SH_THREAD_H} && {
 		DEFINE SH_THREAD_H
 		
