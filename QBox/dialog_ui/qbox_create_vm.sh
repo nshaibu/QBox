@@ -723,7 +723,7 @@ if NOT_DEFINE ${GUIDED_MODE_BOOT_VM}; then
 											disk_image_creation ${DISK_FORMAT} ${Disk_Name} ${DISK_SIZE}
 											_disk_c_failed=$?
 											
-											[[ ${_disk_c_failed} -eq ${FAILURE} ]] && {
+											[ ${_disk_c_failed} -eq ${FAILURE} ] && {
 												${DIALOG} \
 													--colors --extra-button  --extra-label "Cancel" --clear --ok-label "Continue" \
 													--title "\Zb\Z1Error Occured\Zn\ZB" \

@@ -32,11 +32,10 @@ if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
 fi 
 
 while : ; do 
-	#exit 0
 	exec 3>&1
 		value=$(${DIALOG} \
 				--no-shadow --clear --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
-				--menu "\Zb\Z0QBox Menu\Zn\ZB\nManage Virtual machine." ${HEIGHT} ${WIDTH} 4 1 "Information On Virtual Machines" \
+				--menu "\Zb\Z0QBox More Options\Zn\ZB\nManage Virtual machine." ${HEIGHT} ${WIDTH} 4 1 "Information On Virtual Machines" \
 				2 "Create Shortcut" 3 "QBox Logs" 2>&1 1>&3)
 	
 		let "test_return=$?"
@@ -85,7 +84,22 @@ while : ; do
 					esac
 				done 
 			elif [[ $value -eq 3 ]]; then
-				:
+					exec 3>&1
+						value=$(${DIALOG} \
+								--no-shadow --ok-label "Boot" --clear --cancel-label "Back" --colors --title "\Zb\Z0QBox VM Manager\Zn\ZB" \
+								--menu "\Zb\Z0QBox Logs\Zn\ZB\nView System Logs." ${HEIGHT} ${WIDTH} \
+								2 1 "View logs" 2 "Clear logs" 2>&1 1>&3)
+							
+						let "test_return=$?"
+					exec 3>&-
+					
+					case ${test_return} in 
+						${DIALOG_OK}) 
+							[ $value -eq 1 ] && { 
+								${DIALOG} --no-shadow --tailbox ${LOG_DIR}/qboxlog ${HEIGHT} ${WIDTH}; } || { cat /dev/null > ${LOG_DIR}/qboxlog; }
+						;;
+						${DIALOG_CANCEL}) break;;
+					esac
 			fi 
 			
 		;;

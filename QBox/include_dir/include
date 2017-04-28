@@ -647,6 +647,10 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 		. ${LIB_DIR}/include '<error.h>'
 	fi
 	
+	NOT_DEFINE ${LOGGS_H} && {
+		. ${LIB_DIR}/include '<loggs.h>'
+	}
+	
 	#function pointer
 	function boot_system_err_func() {
 		local y=""
@@ -707,13 +711,17 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				if NOT_DEFINE ${DIRECT_LINUX_BOOT}; then
 					
 					${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${default_install_network} ${QEMU_GRAPH} ${QEMU_SOUND} \
-					${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER}
+					${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>${LOGS_FILE}
 				
 				else 
-					${QEMU} ${VM_NAME} ${default_install_network} ${KERNEL} ${INITRD} ${KERNEL_CMD}
+					${QEMU} ${VM_NAME} ${default_install_network} ${KERNEL} ${INITRD} ${KERNEL_CMD} 2>${LOGS_FILE}
 				fi 
 				
-				[ $? -eq ${FAILURE} ] && { let "err_code = ${ERR_OCCURRED_DURING_BOOT}"; break; }
+				[ $? -eq ${FAILURE} ] && { 
+					let "err_code = ${ERR_OCCURRED_DURING_BOOT}"
+					logger_logging ${LOGS_FILE}
+					break 
+				}
 				_move_save=${SUCCESS}
 				
 				sleep 0.6

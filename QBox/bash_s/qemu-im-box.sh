@@ -37,10 +37,11 @@ if NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${ERRO
 	. ${LIB_DIR}/include '<error.h>'
 fi 
 
-if NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${VNC_INFO_H} || NOT_DEFINE ${HOST_IP_H} ; then 
+if NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${VNC_INFO_H} || NOT_DEFINE ${HOST_IP_H} || NOT_DEFINE ${LOGGS_H} ; then 
 	. ${LIB_DIR}/include '<true_test.h>'
 	. ${LIB_DIR}/include '<vnc_info.h>'
 	. ${LIB_DIR}/include '<host_ip.h>'
+	. ${LIB_DIR}/include '<loggs.h>'
 fi 
 
 basic_conf_completed=${FAILURE}
@@ -406,9 +407,14 @@ while true; do
 					
 					echo -e "[$$]Booting Virtual Machine..."
 					${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${default_network} ${QEMU_GRAPH} ${QEMU_SOUND} \
-					${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>/dev/null
+					${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>${LOGS_FILE}
 						
-					[ $? -eq ${FAILURE} ] && { perror ${ERR_OCCURRED_DURING_BOOT} __CLI__; exit ${FAILURE}; }
+					[ $? -eq ${FAILURE} ] && { 
+						perror ${ERR_OCCURRED_DURING_BOOT} __CLI__
+						
+						logger_logging ${LOGS_FILE}
+						exit ${FAILURE} 
+					}
 						
 						
 					echo -e "[$$]Saving Virtual Machine..."

@@ -24,6 +24,7 @@ function until_is_iso_file() {
 			--fselect $HOME/ 10 50 2>&1 1>&3`
 		exec 3>&-
 		#Sat 18 Feb 2017 05:55:42 PM GMT 
+		[ $_return -eq ${DIALOG_CANCEL} ] && break 2
 	done
 	
 	detect_architecture $value
