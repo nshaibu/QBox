@@ -81,8 +81,10 @@ while : ; do
 						value=`${DIALOG} \
 							--no-shadow --colors --clear --title "\Zb\Z0Select a file\Zn\ZB" \
 							--fselect $HOME/ 10 50 2>&1 1>&3`
+							let _return=$?
 					exec 3>&-
 					#Sat 18 Feb 2017 05:55:42 PM GMT 
+					[ $_return -eq ${DIALOG_CANCEL} ] && break 2
 				done
 				
 				DEFINE GUIDED_MODE_BOOT_VM
@@ -142,9 +144,9 @@ while : ; do
 							echo "XXX"	
 							
 							${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${default_network} ${QEMU_GRAPH} ${QEMU_SOUND} \
-							${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>/dev/null
+							${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>${LOGS_FILE}
 							
-							[ $? -eq ${FAILURE} ] && { let "err_code = ${ERR_OCCURRED_DURING_BOOT}"; break; }
+							[ $? -eq ${FAILURE} ] && { let "err_code = ${ERR_OCCURRED_DURING_BOOT}"; logger_logging ${LOGS_FILE}; break; }
 							
 							let "move_save=${SUCCESS}"
 							sleep 0.6
@@ -185,7 +187,7 @@ while : ; do
 					done 
 				} | ${DIALOG} --gauge "Please wait" 7 70 0
 				
-				perror ${err_code} "__DIALOG__"
+				perror ${err_code} __DIALOG__
 				break
 			
 			} || {
