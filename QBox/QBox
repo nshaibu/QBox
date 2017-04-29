@@ -57,13 +57,59 @@ case $1 in
 		startvm ${name} && { show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "$name" "$(get_string_by_name STRING_FOR_FULLSCRN_NOTIFICATION)"; }
 	;;
 	
+	-l|--[Ll][Ii][Ss][Tt][Vv][Mm]) 
+		declare -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) )
+					
+		[ ${#QDB_ARR[*]} -eq 0 ] && { printf "\n\t%s\n" "No Virtual Machine created yet..."; } || {
+			for (( index=0; index<${#QDB_ARR[*]}; index++)); do
+				vm_info=${QDB_ARR[$index]//\"/}
+				echo " $(return_first_field ${vm_info})"
+			done 
+		}
+	;;
+	
+	-d|--[Dd][Ee][Ll][Ee][Tt][Ee][Vv][Mm]) 
+		name=$(String_to_Upper $2)
+		
+		[ "$name" != "" ] && { 
+			let sizeof_arr=${#QDB_ARR[@]}
+			QDB_ARR[$sizeof_arr]=${name}
+							
+			QDB_ARR=( $(search_val_qdb ${QDB_ARR[@]}) )
+			let sizeof_arr=${#QDB_ARR[@]}
+			vm_info_index=${QDB_ARR[$(( --sizeof_arr ))]}
+							
+			[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && {
+				(( sizeof_arr++ ))
+				vm_info=${QDB_ARR[${vm_info_index}]}
+								
+				QDB_ARR[$(( sizeof_arr++ ))]=${vm_info}
+				QDB_ARR[$(( sizeof_arr ))]=${VMS_DB}
+								
+				QDB_ARR=( $(delete_val_qdb ${QDB_ARR[@]}) ) && {
+					show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "${vm_info%%|*}" \
+					"$(get_string_by_name STRINGS_DELETE_VM ${vm_info%%|*})"
+				}
+			}
+		}
+	;;
+	
 	-[Hh]|--[Hh][Ee][Ll][Pp])
 		printf "%s\n" "usage:QBox [Option]"
-			
+		tput bold
 		printf "%s\n" "Options:		long Options" \
 				"    -c,-C		--copyright, --COPYRIGHT" \
 				"    -h,-H		--help,--HELP" \
+				"     -s 		--startvm --STARTVM" \
+				"     -l 		--listvm --LISTVM" \
+				"     -d 		--deletevm --DELETEVM" \
 				"     nocheck 		Do not check for packages" && echo
+				
+		printf "%s\n" "Modes:               Definitions" \
+				"    --dialog          Start QBox in curses dialog Mode.Is the default mode." \
+				"    --cli             Start QBox in commandline text menu mode." \
+				"    --web             Start QBox in web interface mode."
+		tput sgr0
 		printf "%s\n" "Contact me @ <github.com/nshaibu>" && echo 
 		printf "%s\n" "QBox help users create and manage virtual machines locally and remotely" \
 			"by just knowing how to press keys like [ENTER] and answering yes or " \

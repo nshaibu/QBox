@@ -424,8 +424,9 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 		
 		. ${LIB_DIR}/import '<qdb_database.h>'
 		
-		if NOT_DEFINE ${TRUE_TEST_H}; then
+		if NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${LOGGS_H}; then
 			. ${LIB_DIR}/include '<true_test.h>'
+			. ${LIB_DIR}/include '<loggs.h>'
 		fi 
 		
 		##arrgu: bootfile, name of vm
@@ -440,8 +441,9 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 				
 				boot_config=${boot_config// ,/,} ##Replace " ," with ","
 				
-				${boot_config} 2>/dev/null &
+				${boot_config} 2>${LOGS_FILE} &
 				local pid_vm=$!
+				logger_logging ${LOGS_FILE}
 				
 				insert_into_qdb ${PID_DB} "$2|${pid_vm}"
 				return ${SUCCESS}
