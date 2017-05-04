@@ -589,8 +589,8 @@ elif [[ $1 = "<strings_definitions.h>" ]]; then
 			[PROMPT_SOUND_MODULE]="[$$]choose_the_sound_card_to_emulate.\n\tOptions:\n\t\t1._Creative_SoundBlaster_16_sound_card\n\t\t2._ENSONIQ_AudioPCI_ES1370_sound_card\n\t\t3._Intel_HD_Audio_Controller_and_HDA_codec" \
 			[COND_ALREADY_CONFIGURED]="Already configured.\nDo you want to reconfigure" \
 			[STRING_FOR_FULLSCRN_NOTIFICATION]="The_Virtual_Machine_is_booting._To_exit_from_fullscreen_mode_to_SDL_window_mode, press CTL+ALT+F_key_combination"
-			[STRING_STOPPED_VM]="Stopped_Virtual_Machine_successfully"
-			[STRINGS_DELETE_VM]="Successfully_deleted_"
+			[STRING_STOPPED_VM]="Stopped_Virtual_Machine_successfully" \
+			[STRINGS_DELETE_VM]="Successfully_deleted_" \
 			[STRINGS_EXPORT_VM]="Exported_Virtual_Machine_to_Desktop"
 		)
 		

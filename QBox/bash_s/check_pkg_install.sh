@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #===========================================================================================
-# Copyright (C) 2016 Nafiu Shaibu.
+# Copyright (C) 2017 Nafiu Shaibu.
 # Purpose: Check and Install Packages Required by QBox
 #-------------------------------------------------------------------------------------------
 # This is is free software; you can redistribute it and/or modify it

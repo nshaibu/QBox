@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #===========================================================================================
-# Copyright (C) 2016 Nafiu Shaibu.
+# Copyright (C) 2017 Nafiu Shaibu.
 # Purpose: Manage Virtual Machines
 #-------------------------------------------------------------------------------------------
 # QBox is free software; you can redistribute it and/or modify it
@@ -29,6 +29,7 @@ echo -ne "\033]0;QBox Easy VM Manager \007"
 . ${LIB_DIR}/import '<qdb_database.h>'
 . ${LIB_DIR}/import '<boot_vm.h>'
 . ${LIB_DIR}/import '<notify.h>'
+. ${LIB_DIR}/import '<http_server.h>'
 
 if NOT_DEFINE ${LOGGS_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
 	. ${LIB_DIR}/include '<loggs.h>'
@@ -96,7 +97,7 @@ case $1 in
 	
 	-[Hh]|--[Hh][Ee][Ll][Pp])
 		printf "%s\n" "usage:QBox [Option]"
-		tput bold
+		
 		printf "%s\n" "Options:		long Options" \
 				"    -c,-C		--copyright, --COPYRIGHT" \
 				"    -h,-H		--help,--HELP" \
@@ -105,24 +106,81 @@ case $1 in
 				"     -d 		--deletevm --DELETEVM" \
 				"     nocheck 		Do not check for packages" && echo
 				
-		printf "%s\n" "Modes:               Definitions" \
+		printf "%s\n" "Modes:                Definitions" \
 				"    --dialog          Start QBox in curses dialog Mode.Is the default mode." \
-				"    --cli             Start QBox in commandline text menu mode." \
-				"    --web             Start QBox in web interface mode."
-		tput sgr0
+				"    --cli,-i          Start QBox in commandline text menu mode." \
+				"    --web,-w          Start QBox in web interface mode."
+		
 		printf "%s\n" "Contact me @ <github.com/nshaibu>" && echo 
-		printf "%s\n" "QBox help users create and manage virtual machines locally and remotely" \
-			"by just knowing how to press keys like [ENTER] and answering yes or " \
-			"no questions" && echo
+		printf "%s\n" "QBox help users create and manage virtual machines locally and remotely" 
 		printf "%s\n" "To run this program on microsoft windows, install cygwin and Xserver." \
 			"The program might not work very well on other shells like ksh, csh, tcsh. You" \
 			"can make the neccesary changes to the code by reading the README file or use" \
 			"sh/bash shell" && echo
 	;;
+
+	--[Ww][Ee][Bb]|-w)
+		
+		if server_is_not_running ; then
+			let "i=0, pid_t=-1"
+									
+			tm_t=$(date +%T)
+			pid_host_ip=$(httpd_start)
+									
+			pid_t=${pid_host_ip%%|*}
+			host_ip_t=${pid_host_ip##*|}
+								
+			declare -a msg_arr=("[${pid_t}]using_host_ip:${host_ip_t}" "[${pid_t}]starting_httpd..." \
+							"[${pid_t}]httpd_started_at_${tm_t}..." \
+							"[${pid_t}]httpd_listening_on_port_4020" "[${pid_t}]trying_to_open_browser..." \
+							"[${pid_t}]Access:http://${host_ip_t}:4020" )
+
+			[ ${pid_t} -ne -1  ] && {
+				for (( index=0; index<${#msg_arr[@]}; index++ )); do 
+					echo -e "${msg_arr[$index]//_/ }"
+					sleep 2
+
+					[ $index -eq 4 ] && {
+						
+						if [ "${host_ip_t}" = "127.0.0.1" ] || [ "${host_ip_t}" = "localhost" ]; then
+							browser=$(which xdg-open || which gnome-open ) && {
+								${browser} "http://localhost:4020/www" 2>&1 1>/dev/null
+							}
+						fi
+					}
+	 
+					[ $index -eq 5 ] && { 
+						echo "${pid_t}|${tm_t}|http://${host_ip_t}:4020">${test_serv_running}
+
+						#pressing any key to exit
+						tput bold
+						echo -en "[${pid_t}]Hit any key to exit..."
+						tput sgr0
+						read
+						server_stop ${pid_t} && { rm -f ${test_serv_running}; } 
+					}
+				done 
+			}
+		else 
+			pid_t=$(return_first_field ${test_serv_running})	
+			tm_t=$(return_second_field ${test_serv_running})
+			url=$(return_n_field ${test_serv_running} 3 "|")
+			
+			printf "Server already started at %s with pid of %d on url %s\n" "${tm_t}" ${pid_t} "${url}" 
+			echo -n "Do you want to stop the server?[y/[N]]"
+			read -n 1
+
+			case ${REPLY} in 
+				[Yy]) server_stop ${pid_t} && { rm -f ${test_serv_running}; } ;;
+				*) ;;
+			esac
+		fi
+								 						
+	;;
 	
 	--[Cc][Ll][Ii]|-[Ii])
 	
-		##check for paclages 
+		##check for packages 
 		if [[ "$2" != "nocheck" ]]; then
 			. ${BASIC_BASH}/check_pkg_install.sh %CHECK_START%
 		fi 
@@ -132,8 +190,6 @@ case $1 in
 		
 		function other_options_menu(){
 			clear
-			#move_center 38 10
-			#echo
 			tput bold
 			echo -e "\t\t\tOther Options\n"
 			tput sgr0
@@ -275,7 +331,7 @@ case $1 in
 								[ "$name" != "" ] && {
 									let sizeof_arr=${#QDB_ARR[@]}
 									name=$(String_to_Upper $name)
-									QDB_ARR[sizeof_arr]=${name}
+									QDB_ARR[$sizeof_arr]=${name}
 									
 									QDB_ARR=( $(search_val_qdb ${QDB_ARR[@]}) )
 									let sizeof_arr=${#QDB_ARR[@]}
