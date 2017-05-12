@@ -19,7 +19,7 @@
 
 #===========================================================================================
 
-: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
+: ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
 
 echo -ne "\033]0;QBox Easy VM Manager \007"
 
@@ -36,6 +36,11 @@ if NOT_DEFINE ${LOGGS_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
 	. ${LIB_DIR}/include '<basic_utils.h>'
 fi 
 
+##add path to .profile file
+check=`cat $HOME/.profile | grep QBox`
+if [ "$check" = "" ]; then
+	echo -e "\n##QBox path \n[ -d /usr/local/bin/QBox ] && PATH=/usr/local/bin/QBox:\${PATH}">>${HOME}/.profile
+fi
 
 ##Setting up colors
 BOLD="tput bold"
@@ -43,13 +48,53 @@ RESET="tput sgr0"
 
 _resolving_inconsistencises_qdb
 
-case $1 in
+case $1 in 
 	-[Cc]|[Cc]|--[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt]|[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt])
 		echo -e "QBox Easy VM Manager Copyleft (\u0254) 2017 nafiu shaibu\nQEMU is a trademark of fabrice bellard\n"
 		printf "%s\n" "QBox comes with ABSOLUTELY NO WARRANTY." \
 			"You may redistribute copies of this program" \
 			"under the terms of the GNU General Public License." \
 			"For more information about these matters, see the file named COPYING." && echo
+	;;
+	
+	uninstall) 
+		let "_test=0, _dtest=0"
+		tmdir=${PWD}
+		
+		[ -d /usr/local/bin/QBox ] && {
+			echo -e "[$$]Removing QBox...\n"
+			cd /usr/local/bin
+			rm -r QBox 2>&1 1>/dev/null && _test=1
+			cd $tmdir
+		}
+	
+		[ -f /usr/share/applications/QBox.desktop ] && {
+			cd /usr/share/applications 
+			rm -f QBox.desktop 2>&1 1>/dev/null && _dtest=1
+			cd $tmdir
+		}
+		
+		echo -e $(get_string_by_name STRING_DEEP_REMOVE "[y/[N]]")
+		read
+		
+		case "$(String_to_Upper ${REPLY})" in 
+			Y|YES) 
+				cd $HOME
+				rm -r .img_qemubox 2>&1 1>/dev/null
+				cd $tmdir
+			;;
+			
+			*) ;;
+		esac
+		
+		if [ $_test -eq 0 ] || [ $_dtest -eq 0 ]; then
+			tput setaf 9
+			echo -e "QBox not removed."
+			tput sgr0
+		else
+			printf "%s\n" "QBox removed"
+			update-desktop-database "/usr/share/applications/"
+		fi
 	;;
 	
 	-s|--[Ss][Tt][Aa][Rr][Tt][Vv][Mm]) 
@@ -104,6 +149,7 @@ case $1 in
 				"     -s 		--startvm --STARTVM" \
 				"     -l 		--listvm --LISTVM" \
 				"     -d 		--deletevm --DELETEVM" \
+				"     uninstall 		Uninstall QBox" \
 				"     nocheck 		Do not check for packages" && echo
 				
 		printf "%s\n" "Modes:                Definitions" \
@@ -417,6 +463,10 @@ case $1 in
 		clear
 	;;
 	*) 
+		[ "$1" != "nocheck" ] && {
+			. ${BASIC_BASH}/check_pkg_install.sh %CHECK_START%
+		} 
+		
 		. ${QBOX_DIR}/dialog_ui/qbox_main_menu.sh
 		clear
 	;;

@@ -5,6 +5,7 @@
 ###################################################
 
 : ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
+
 . ${LIB_DIR}/include 
 . ${LIB_DIR}/import '<init.h>'
 

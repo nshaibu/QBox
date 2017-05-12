@@ -18,8 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #===========================================================================================
-HD_IMG_DIR=$HOME/.img_qemubox ##contains harddisk images
-QDB_FOLDER=${HD_IMG_DIR}/.qdb ##qbox database files location
+: ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
+
+. ${LIB_DIR}/import '<init.h>'
 
 INFO_FILE_=$1
 DESCRIPTION=${QDB_FOLDER}/description.qdb

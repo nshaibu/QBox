@@ -19,7 +19,7 @@
 
 #===========================================================================================
 
-: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
+: ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
 
 . ${LIB_DIR}/include
 
@@ -39,7 +39,7 @@ if [[ $1 = "<init.h>" ]]; then
 		: ${BOOT_DIR:="${HD_IMG_DIR}/.qemuboot"} ## contain boot files
 		
 		#Installation Directory /usr/local/bin/QBox
-		: ${QBOX_DIR:="${HOME}/my_script/QB/QBox"}
+		: ${QBOX_DIR:="/usr/local/bin/QBox"}
 				
 		#librarry dir 
 		: ${LIB_DIR:=${QBOX_DIR}/include_dir}
@@ -591,7 +591,8 @@ elif [[ $1 = "<strings_definitions.h>" ]]; then
 			[STRING_FOR_FULLSCRN_NOTIFICATION]="The_Virtual_Machine_is_booting._To_exit_from_fullscreen_mode_to_SDL_window_mode, press CTL+ALT+F_key_combination"
 			[STRING_STOPPED_VM]="Stopped_Virtual_Machine_successfully" \
 			[STRINGS_DELETE_VM]="Successfully_deleted_" \
-			[STRINGS_EXPORT_VM]="Exported_Virtual_Machine_to_Desktop"
+			[STRINGS_EXPORT_VM]="Exported_Virtual_Machine_to_Desktop" \
+			[STRING_DEEP_REMOVE]="[$$]Do_you_want_to_remove_all_created_virtual machines?"
 		)
 		
 		function get_string_by_name(){
