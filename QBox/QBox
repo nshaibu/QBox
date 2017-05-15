@@ -49,6 +49,59 @@ RESET="tput sgr0"
 _resolving_inconsistencises_qdb
 
 case $1 in 
+	
+	-[Rr]|--[Rr][Uu][Nn])
+		_clear_pid_qdb_event
+					
+		declare -a QDB_ARR=( $(init_database_qdb ${PID_DB}) )
+							
+		if [[ ${#QDB_ARR[*]} -eq 0 ]]; then 
+			tput setaf 9
+			printf "%s\n" "No Virtual is running..."
+			tput sgr0
+		else 
+			echo -e "\nRunning Virtual Machines..."
+							
+			for (( index=0; index<${#QDB_ARR[*]}; index++)); do
+				vm_info=${QDB_ARR[$index]//\"/}
+				echo "  $(( index+1 )).       $(return_first_field ${vm_info})"
+			done 	
+		fi
+	;;
+	
+	-[Kk]|--[Kk][Ii][Ll][Ll]) 
+		_clear_pid_qdb_event 
+					
+		declare -a QDB_ARR=( $(init_database_qdb ${PID_DB}) )
+							
+		if [[ ${#QDB_ARR[*]} -eq 0 ]]; then 
+			tput setaf 9
+			printf "%s\n" "No Virtual is running..."
+			tput sgr0
+		else 
+					
+		[ "$2" != "" ] && {
+				name=$(String_to_Upper $2) 
+				let sizeof_arr=${#QDB_ARR[@]}
+							
+				QDB_ARR[$sizeof_arr]=${name}
+				QDB_ARR=( $(search_val_qdb ${QDB_ARR[@]}) )
+				let sizeof_arr=${#QDB_ARR[@]}
+				vm_info_index=${QDB_ARR[$(( --sizeof_arr ))]} && unset 'QDB_ARR[$sizeof_arr]'
+							
+				[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && {
+					pid_t=$(return_second_field ${QDB_ARR[$vm_info_index]})
+							
+					pid_t=${pid_t//\"/}
+					kill -9 ${pid_t} 2>/dev/null && {
+					show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "$(return_first_field ${QDB_ARR[$vm_info_index]})" \
+					"$(get_string_by_name STRING_STOPPED_VM)"
+				}
+			}
+		}
+	fi
+	;;
+	
 	-[Cc]|[Cc]|--[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt]|[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt])
 		echo -e "QBox Easy VM Manager Copyleft (\u0254) 2017 nafiu shaibu\nQEMU is a trademark of fabrice bellard\n"
 		printf "%s\n" "QBox comes with ABSOLUTELY NO WARRANTY." \
