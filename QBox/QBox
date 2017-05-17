@@ -118,6 +118,7 @@ case $1 in
 			echo -e "[$$]Removing QBox...\n"
 			cd /usr/local/bin
 			rm -r QBox 2>&1 1>/dev/null && _test=1
+			rm QBox 2>&1 1>/dev/null
 			cd $tmdir
 		}
 	
@@ -202,6 +203,8 @@ case $1 in
 				"     -s 		--startvm --STARTVM" \
 				"     -l 		--listvm --LISTVM" \
 				"     -d 		--deletevm --DELETEVM" \
+				"     -r 		List running virtual Machines --run/--RUN" \
+				"     -k 		Kill running virtual Machines --kill/--KILL" \
 				"     uninstall 		Uninstall QBox" \
 				"     nocheck 		Do not check for packages" && echo
 				
