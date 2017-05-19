@@ -1,6 +1,13 @@
 QBox Easy VM Manager
 =========================================================================================================================
 
+Installation
+=========================
+Go to the QBox Folder and type this command: sudo ./install.sh.
+Uninstall QBox
+=========================
+type this command: sudo QBox unistall
+
 Date:1/nov/16 Time:4:49PM
 =========================
 1. For tap interface networking module, user can only boot one vm at a time because it hungs up shell preventing
