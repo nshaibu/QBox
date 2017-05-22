@@ -231,18 +231,25 @@ case $1 in
 									
 			pid_t=${pid_host_ip%%|*}
 			host_ip_t=${pid_host_ip##*|}
-								
+			pid_QS=$pid_t
+			
 			declare -a msg_arr=("[${pid_t}]using_host_ip:${host_ip_t}" "[${pid_t}]starting_httpd..." \
-							"[${pid_t}]httpd_started_at_${tm_t}..." \
-							"[${pid_t}]httpd_listening_on_port_4020" "[${pid_t}]trying_to_open_browser..." \
-							"[${pid_t}]Access:http://${host_ip_t}:4020" )
-
+							"[${pid_t}]httpd_started_at_${tm_t}..." "[${pid_t}]httpd_listening_on_port_4020" \
+							"[${pid_QS}]starting_QBox_server..." "[${pid_QS}]QBox_server_on_port_4040..." "[$pid_QS]QBox_server_started_at_$(date +%T)..." \
+							"[${pid_t}]trying_to_open_browser..." "[${pid_t}]Access:http://${host_ip_t}:4020" )
+								
 			[ ${pid_t} -ne -1  ] && {
 				for (( index=0; index<${#msg_arr[@]}; index++ )); do 
 					echo -e "${msg_arr[$index]//_/ }"
 					sleep 2
-
+						
 					[ $index -eq 4 ] && {
+						pid_QS=$(qbox_server_start)
+						echo $pid_QS >$HOME/my_script/QB/v.txt
+						[ ${pid_QS} -eq -1 ] && { echo "[$$]QBox server failed to start..."; }
+					}
+					
+					[ $index -eq 7 ] && {
 						
 						if [ "${host_ip_t}" = "127.0.0.1" ] || [ "${host_ip_t}" = "localhost" ]; then
 							browser=$(which xdg-open || which gnome-open ) && {
@@ -250,16 +257,18 @@ case $1 in
 							}
 						fi
 					}
-	 
-					[ $index -eq 5 ] && { 
-						echo "${pid_t}|${tm_t}|http://${host_ip_t}:4020">${test_serv_running}
-
+						
+					[ $index -eq 8 ] && { 
+						echo "${pid_t}|${tm_t}|http://${host_ip_t}:4020|${pid_QS}">${test_serv_running}
+						
 						#pressing any key to exit
 						tput bold
 						echo -en "[${pid_t}]Hit any key to exit..."
 						tput sgr0
 						read
-						server_stop ${pid_t} && { rm -f ${test_serv_running}; } 
+						
+						server_stop ${pid_t} && { rm -f ${test_serv_running} 2>/dev/null; } 
+						server_stop ${pid_QS} && { rm -f ${qbox_server_running} 2>/dev/null; }
 					}
 				done 
 			}
@@ -267,15 +276,20 @@ case $1 in
 			pid_t=$(return_first_field ${test_serv_running})	
 			tm_t=$(return_second_field ${test_serv_running})
 			url=$(return_n_field ${test_serv_running} 3 "|")
+			pid_QS=$(return_n_field ${test_serv_running} 4 "|")
 			
-			printf "Server already started at %s with pid of %d on url %s\n" "${tm_t}" ${pid_t} "${url}" 
+			printf "Server already started at %s with pids of %d  on url %s\n" "${tm_t}" ${pid_t} "${url}" 
 			echo -n "Do you want to stop the server?[y/[N]]"
 			read -n 1
 
 			case ${REPLY} in 
-				[Yy]) server_stop ${pid_t} && { rm -f ${test_serv_running}; } ;;
+				[Yy]) 
+					server_stop ${pid_t} && { rm -f ${test_serv_running} 2>/dev/null; } 
+					server_stop ${pid_QS} && { rm -f ${qbox_server_running} 2>/dev/null; }
+				;;
 				*) ;;
 			esac
+			echo 
 		fi
 								 						
 	;;

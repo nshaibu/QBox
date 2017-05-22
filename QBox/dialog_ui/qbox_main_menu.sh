@@ -206,10 +206,11 @@ while : ; do
 									pid_t=${pid_host_ip%%|*}
 									host_ip_t=${pid_host_ip##*|}
 								
-									declare -a msg_arr=("[${pid_t}]using_host_ip:${host_ip_t}\n" "[${pid_t}]starting_httpd...\n" \
-													"[${pid_t}]httpd_started_at_${tm_t}...\n" \
-													"[${pid_t}]httpd_listening_on_port_4020\n" "[${pid_t}]trying_to_open_browser...\n" \
-													"[${pid_t}]Access:http://${host_ip_t}:4020" )
+								declare -a msg_arr=("[${pid_t}]using_host_ip:${host_ip_t}\n" "[${pid_t}]starting_httpd...\n" \
+										"[${pid_t}]httpd_started_at_${tm_t}...\n" "[${pid_t}]httpd_listening_on_port_4020\n" \
+										"[${pid_QS}]starting_QBox_server...\n" "[${pid_QS}]QBox_server_on_port_4040...\n" \
+										"[$pid_QS]QBox_server_started_at_$(date +%T)...\n" "[${pid_t}]trying_to_open_browser...\n" \
+										"[${pid_t}]Access:http://${host_ip_t}:4020\n" )
 								 						
 														
 									[ ${pid_t} -ne -1 ] && {
@@ -221,7 +222,13 @@ while : ; do
 											sleep 2
 											(( i++ ))
 											
-											[ $i -eq 4 ] && { 
+											[ $index -eq 4 ] && {
+												pid_QS=$(qbox_server_start)
+											
+												[ ${pid_QS} -eq -1 ] && { echo "[$$]QBox server failed to start..."; }
+											}
+											
+											[ $i -eq 7 ] && { 
 												if [ "${host_ip_t}" = "127.0.0.1" ] || [ "${host_ip_t}" = "localhost" ]; then
 													browser=$(which xdg-open || which gnome-open ) && {
 														${browser} "http://localhost:4020/www" 2>&1 1>/dev/null
@@ -229,17 +236,18 @@ while : ; do
 												fi 
 											}
 											
-											[ $i -gt 5 ] && { 
-												echo "${pid_t}|${tm_t}|http://${host_ip_t}:4020">${test_serv_running}
+											[ $i -gt 8 ] && { 
+												echo "${pid_t}|${tm_t}|http://${host_ip_t}:4020|${pid_QS}">${test_serv_running}
 												msg_str="" && break
 											}
 										done 
 									}
 								else 
 									pid_t="`return_first_field $(cat ${test_serv_running})`"
+									pid_QS=$(return_n_field ${test_serv_running} 4 "|")
 									
 									${DIALOG} \
-										--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n[${pid_t}]Server already running" \
+										--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n[${pid_t}:${pid_QS}]Server already running" \
 										$((HEIGHT-7)) $((WIDTH-10))
 								fi 
 								
@@ -247,10 +255,11 @@ while : ; do
 									
 									if server_is_not_running; then
 										${DIALOG} \
-											--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n  Server is not runing" $((HEIGHT-7)) $((WIDTH-10))
+											--colors --title "\Zb\Z1QBox Server\Zn\ZB" --msgbox "\n\n  Server is not running" $((HEIGHT-7)) $((WIDTH-10))
 									else
-										server_stop "`return_first_field $(cat ${test_serv_running})`" 
-										rm -f ${test_serv_running} 2>/dev/null 
+										server_stop "`return_first_field $(cat ${test_serv_running})`" && { rm -f ${test_serv_running} 2>/dev/null; }
+										server_stop $(return_first_field ${qbox_server_running}) && { rm -f ${qbox_server_running} 2>/dev/null; }
+										
 											
 										${DIALOG} \
 											--colors --title "\Zb\Z1QBox Server\Zn\ZB" \

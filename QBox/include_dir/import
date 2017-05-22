@@ -491,6 +491,7 @@ elif [[ $1 = "<http_server.h>" ]]; then
 		
 		: ${DOC_ROOT:="${QBOX_DIR}/www"}
 		: ${test_serv_running:="${TEMP_FOLDER}/.svrpid"}
+		: ${qbox_server_running:="${TEMP_FOLDER}/qbox_server.pid"}
 		
 		#request to tcp server
 		DEFINE BOOT_REQUEST 521
@@ -530,26 +531,172 @@ elif [[ $1 = "<http_server.h>" ]]; then
 			echo -n ${gen_str_}
 		}
 		
-				#HD_IMG_DIR="$HOME/.img_qemubox"
-				#QDB_FOLDER="${HD_IMG_DIR}/.qdb"
-				#VMS_DB="${QDB_FOLDER}/vms.qdb"		
+		
 		#TODO @qbox tcp server
-		function qbox_server_start() {
-			${TCP_SERVER} -l -p 4040 -c '
-				: ${LIB_DIR:=$HOME/my_script/QB}
+		function qbox_server() {
+			coproc ${TCP_SERVER} -l -p 4040 -c '
 				
-				#. ${LIB_DIR}/import "<http_server.h>"
+				BOOT_REQUEST=521
+				STOP_VM_REQUEST=522
+				LIST_VM_REQUEST=523
+				LIST_RUNNING_VM_REQUEST=524
+				
+				QBOX_DIR="/usr/local/bin/QBox"
+				HD_IMG_DIR="$HOME/.img_qemubox"
+				TEMP_FOLDER="${HD_IMG_DIR}/.tmp_qbox"
+				QDB_FOLDER="${HD_IMG_DIR}/.qdb"
+				
+				VMS_DB="${QDB_FOLDER}/vms.qdb"
+				PID_DB="${QDB_FOLDER}/pid.qdb"
+				
+				BOOT_DIR="${HD_IMG_DIR}/.qemuboot"
+				LOGS_FILE="${TEMP_FOLDER}/.error.tt"
+				
+				SUCCESS=0
+				FAILURE=1
+					
+				logger_logging(){
+					if [ -f $1 ]; then
+						${QBOX_DIR}/bin/qemubox_logger "`tr "\n" " " <$1`" ${LOG_DIR}/qboxlog
+						rm -f $1
+					fi
+				}
+				
+				
+				check_is_file() {
+					[ -f $1 ] && return ${SUCCESS} || return ${FAILURE}
+				}				
+				
+				return_first_field() {
+					if check_is_file $1 ; then
+						echo -n "$(cut -d"|" -f1 $1)"
+					else 
+						echo -n "$(echo $1 | cut -d"|" -f1)"
+					fi 
+				}
+				
+				return_n_field() {
+					field=$2
+					delimiter="$3"
+					
+					if check_is_file $1; then
+						echo -n "$(cut -d"${delimiter}" -f ${field} $1)"
+					else 
+						echo -n "$(echo $1 | cut -d"${delimiter}" -f ${field})"
+					fi 		
+				}
+				
+				list_created_vms() {
+					for index in $(cat $1); do 
+						echo $(return_first_field $index)
+					done
+				}
+				
+				insert_into_qdb() {
+					echo $2>>$1
+				}
+				
+				##---boot---VM------
+				search_val() {
+					if [ "$(cat $1)" != "" ]; then
+						for index in $(cat $1); do 
+							vm_conf=$(return_n_field ${index} 2 "|")
+							vm_name=${index%%|*}
+							
+							[ "$vm_name" = "$2" ] && {
+								echo -n "$vm_conf"
+							}
+						done
+					fi 
+					
+				}
+				
+				bootvm() {
+					boot_config=""
+					boot_file_loc="${BOOT_DIR}/$1"
+					
+					if check_is_file ${boot_file_loc}; then
+						boot_config=$(cat ${boot_file_loc} | cut -d"|" -f2 | tr "\n" " ")
+						
+						boot_config=`echo ${boot_config} | tr -s " "` ##Replace multiple space char with a space char
+						
+						boot_config=$(echo ${boot_config} | sed "s/ ,/,/g")
+						
+						${boot_config} 2>${LOGS_FILE} &
+						pid_vm=$!
+						logger_logging ${LOGS_FILE}
+						
+						insert_into_qdb ${PID_DB} "$2|${pid_vm}"
+						return ${SUCCESS}
+					else 
+						return ${FAILURE}
+					fi 					
+				}
+				
+				_clear_pid_qdb_event() {
+					if [ "<${PID_DB}" != "" ]; then
+						for i in `cut -d "|" -f2 ${PID_DB}`;do 
+						
+							if [ ! -d /proc/$i ]; then
+								name="^$i\$"
+								echo $(gawk -F "|" -v var=$name -f ${QBOX_DIR}/awk/complement.awk ${PID_DB}) > ${TEMP_FOLDER}/vms.tt
+								##replace black or space character with newline character
+								sed -e "s/[[:blank:]]\+/\n/g" ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
+								rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null
+							fi 
+						done 
+					fi 
+				}	
+				
+				echo $$ >${TEMP_FOLDER}/qbox_server.pid
 				
 				while true ; do 
 					read request
 					
-					case ${request} in 
-						${LIST_VM_REQUET}) echo 1 ;; #list_created_vms ;;
-						${BOOT_REQUEST}) ;;
-						${STOP_VM_REQUEST}) ;;
+					req=${request%%:*}
+					
+					case ${req} in 
+						$LIST_VM_REQUEST) 
+							if [ "$( cat ${VMS_DB})" = "" ]; then
+								echo "No Virtual Machine created"
+							else
+								list_created_vms ${VMS_DB}
+							fi 
+						;;
+						${BOOT_REQUEST}) 
+							var=$(search_val ${VMS_DB} ${request##*:})
+							
+							[ -n $var ] && bootvm $var ${request##*:}
+						;;
+						${STOP_VM_REQUEST}) 
+							_clear_pid_qdb_event
+							
+							pid_t=""
+							if [ "$(cat ${PID_DB})" != "" ]; then
+								pid_t=$(search_val ${PID_DB} ${request##*:})
+								
+								[ -n $pid_t ] && kill -9 ${pid_t} 2>&1 1>/dev/null
+							fi 
+						;;
+						${LIST_RUNNING_VM_REQUEST}) 
+							if [ "$( cat ${PID_DB})" = "" ]; then
+								echo "No Virtual Machine running"
+							else
+								list_created_vms ${PID_DB}
+							fi 							
+						;;
 					esac
 				done 
-			'
+			' 2>&1
+		}
+		
+		function qbox_server_start() {
+			qbox_server
+			
+			check_is_file ${qbox_server_running} && { 
+				local pid_s="$(cat ${qbox_server_running})"
+				[ ${pid_s} -gt 1 ] && [ ${pid_s} -le ${PID_MAX} ] && { echo -n ${pid_s}; } || { echo -n "-1"; }
+			} || { echo -n "-1"; }
 		}
 		
 		#stop service
