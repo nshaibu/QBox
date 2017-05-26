@@ -4,9 +4,9 @@
 # Copyright (C) 2017 Nafiu Shaibu.
 # Purpose: General library including system
 #-------------------------------------------------------------------------------------------
-# This is is free software; you can redistribute it and/or modify it
+# This is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
-# Free Software Foundation; either version 3 of the License, or (at your option) 
+# Free Software Foundation; either version 3 of the License, or (at your option)
 # any later version.
 
 # This is distributed in the hopes that it will be useful, but
@@ -25,36 +25,36 @@
 
 
 if [[ $1 = "<init.h>" ]]; then
-	
+
 	if NOT_DEFINE ${INIT_H}; then
 		DEFINE INIT_H
-		
+
 		. ${LIB_DIR}/import '<qdb_database.h>'
-		
+
 		##global variables
 		: ${HD_IMG_DIR:="$HOME/.img_qemubox"}
 		: ${TEMP_FOLDER:="${HD_IMG_DIR}/.tmp_qbox"}
 		: ${QDB_FOLDER=:"${HD_IMG_DIR}/.qdb"} ##qbox database files location
 		: ${LOG_DIR:="${HD_IMG_DIR}/logs_dir"}
 		: ${BOOT_DIR:="${HD_IMG_DIR}/.qemuboot"} ## contain boot files
-		
+
 		#Installation Directory /usr/local/bin/QBox
 		: ${QBOX_DIR:="/usr/local/bin/QBox"}
-				
-		#librarry dir 
+
+		#librarry dir
 		: ${LIB_DIR:=${QBOX_DIR}/include_dir}
-		
+
 		#python directory
 		: ${PYTHON_LOC:=${QBOX_DIR}/python3}
-		
+
 		##dialog_ui directory
 		: ${DIALOG_DIR:="${QBOX_DIR}/dialog_ui"}
-		
+
 		##basic bash directory
 		: ${BASIC_BASH:=${QBOX_DIR}/bash_s}
-		
+
 		export SDL_VIDEO_X11_DGAMOUSE=0 ##to prevent qemu cursor from been difficult to control
-		
+
 		[ ! -d ${HD_IMG_DIR} ] && mkdir ${HD_IMG_DIR} ##Check and creates Harddisk image folder
 		[ ! -d ${BOOT_DIR} ] && mkdir ${BOOT_DIR} ##check and create boot folder
 		[ ! -d ${QDB_FOLDER} ] && mkdir ${QDB_FOLDER} ##check for qbox database folder
@@ -62,60 +62,60 @@ if [[ $1 = "<init.h>" ]]; then
 		[ ! -d ${LOG_DIR} ] && mkdir ${LOG_DIR} && touch ${LOG_DIR}/qboxlog ##check and create log directory
 		[ ! -f ${QDB_FOLDER}/pid.qdb ] && touch ${QDB_FOLDER}/pid.qdb ##check pid database vm_name|pid
 		[ ! -f ${QDB_FOLDER}/vms.qdb ] && touch ${QDB_FOLDER}/vms.qdb
-		
+
 		#echo -ne "\033]0;QBox Easy VM Manager \007"
-		
+
 		function _clear_pid_qdb_event() {
 			if [ "<${PID_DB}" != "" ]; then
-				for i in `cut -d "|" -f2 ${PID_DB}`;do 
-					
+				for i in `cut -d "|" -f2 ${PID_DB}`;do
+
 					if [ ! -d /proc/$i ]; then
 						name="^$i\$"
 						echo $(gawk -F "|" -v var=$name '$2 !~ var {print $0}' ${PID_DB}) > ${TEMP_FOLDER}/vms.tt
 						##replace black or space character with newline character
 						sed -e 's/[[:blank:]]\+/\n/g' ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
 						rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null
-					fi 
-				done 
-			fi 
-		}	
-		
-		#tty info 
+					fi
+				done
+			fi
+		}
+
+		#tty info
 		function _tty_tigetnum() {
 			declare -a tty_info=( $(stty -a) )
-			
-			for (( index=0; index<${#tty_info[@]}; index++ )); do 
-				[ "${tty_info[$index]}" = "$1" ] && { 
+
+			for (( index=0; index<${#tty_info[@]}; index++ )); do
+				[ "${tty_info[$index]}" = "$1" ] && {
 					echo -n "${tty_info[$(( index+1 ))]//;/}"
 					break
 				}
-			done 
+			done
 		}
-		
+
 		declare -a SCR_TTY_MSG= ##prompts msg
 		shopt -s checkwinsize ## check and update cols and lines in tty database
-		
+
 		function move_center() {
-			local x_tty_cord=$(_tty_tigetnum "columns") 
+			local x_tty_cord=$(_tty_tigetnum "columns")
 			local y_tty_cord=$(_tty_tigetnum "rows")
-			
+
 			local y_cord=$(( (y_tty_cord-$2) / 2 ))
 			local x_cord=$(( (x_tty_cord-$1) / 2 ))
-			
+
 			tput cup ${y_cord} ${x_cord}
 		}
-		
+
 		display_center(){
 			columns="$(tput cols)"
-			
-			for line in ${SCR_TTY_MSG[@]}; do 
+
+			for line in ${SCR_TTY_MSG[@]}; do
 				printf "%*s\n" 31 "$line"
-			done 
+			done
 		}
-		
+
 		_display_center() {
 			row=0
-			for text in ${SCR_TTY_MSG[@]}; do 
+			for text in ${SCR_TTY_MSG[@]}; do
 				col=$(( ($(tput cols) - 31) / 2 ))
 				tput clear
 				tput cup $row $col
@@ -129,600 +129,614 @@ if [[ $1 = "<init.h>" ]]; then
 			local number_of_options=$(( sizeof_arr ))
 			local len_of_long_str=${SCR_TTY_MSG[$(( --sizeof_arr ))]} && unset 'SCR_TTY_MSG[$sizeof_arr]'
 			#move_center ${len_of_long_str} ${number_of_options}
-			[ ${sizeof_arr} -gt 0 ] && { 
-				for (( index=0; index<${sizeof_arr}; index++ )); do 
+			[ ${sizeof_arr} -gt 0 ] && {
+				for (( index=0; index<${sizeof_arr}; index++ )); do
 					move_center ${len_of_long_str} $(( number_of_options-index+1 ))
 					echo -ne "${SCR_TTY_MSG[$index]}"
-				done 
+				done
 			}
 		}
-		
+
 	fi ## INIT_H
-	
+
 elif [[ $1 = "<notify.h>" ]]; then
-	
+
 	NOT_DEFINE ${NOTIFY_H} && {
 		DEFINE NOTIFY_H
-		
+
 		: ${NOTICE:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% notify-send`}
-		
+
 		function show_notification() {
 			local _urgency="-u $1"
 			local _icon_=$( [ "$2" = "NO_ICON" ] && echo || echo -n "-i $2" )
-			
+
 			local summary=$3
 			local body=$4
-			
+
 			[ -n  ${NOTICE} ] && { ${NOTICE} ${_urgency} -t 2 ${_icon_} "${summary}" "${body}" 2>/dev/null; }
 		}
 	} # NOTIFY_H
-	
+
 elif [[ $1 = "<qdb_database.h>" ]]; then
-	
+
 	NOT_DEFINE ${QDB_DATABASE_H} && {
 		DEFINE QDB_DATABASE_H
-		
+
 		. ${LIB_DIR}/import '<init.h>'
-		
+
 		DEFINE ARR_IS_EMPTY -1
 		DEFINE SRCH_VAL_NOT_IN_ARR -2
-		
+
 		if NOT_DEFINE ${ERROR_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
 			. ${LIB_DIR}/include '<error.h>'
 			. ${LIB_DIR}/include '<basic_utils.h>'
-		fi 
-		
+		fi
+
 		: ${VMS_DB:="${QDB_FOLDER}/vms.qdb"}
 		: ${PID_DB:="${QDB_FOLDER}/pid.qdb"}
-		
+
 		function return_first_field() {
 			if check_is_file $1 ; then
 				echo -n "$(cut -d"|" -f1 $1)"
-			else 
+			else
 				echo -n "$(echo $1 | cut -d"|" -f1)"
-			fi 
+			fi
 		}
-		
+
 		function return_second_field() {
 			if check_is_file $1; then
 				echo -n "$(cut -d"|" -f2 $1)"
-			else 
+			else
 				echo -n "$(echo $1 | cut -d"|" -f2)"
-			fi 
+			fi
 		}
-		
+
 		function return_n_field() {
 			local field=$2
 			local delimiter="$3"
-			
+
 			if check_is_file $1; then
 				echo -n "$(cut -d"${delimiter}" -f ${field} $1)"
-			else 
+			else
 				echo -n "$(echo $1 | cut -d"${delimiter}" -f ${field})"
-			fi 		
+			fi
 		}
-		
+
 		# value, input file, output file
 		function complement_of() {
 			local search="^$1\$"
 			gawk -F "|" -v var=$search '$1 !~ var {print $0}' $2 1>$3
-			
+
 		}
-		
+
 		#argu dir_name, regex
 		#ret :array of files
 		function get_all_file_from_dir() {
 			local -a arr_file=
 			local index=0
-			
+
 			local dir_=$1
 			local regex=$2
-			
-			for arr_file in $(find ${dir_} -type f -a -name "${regex}" -print 2>>/dev/null ); do 
+
+			for arr_file in $(find ${dir_} -type f -a -name "${regex}" -print 2>>/dev/null ); do
 				arr_file[$index]="${arr_file}"
 				(( index++ ))
-			done 
-		
+			done
+
 			echo -n ${arr_file[@]}
 		}
-		
+
 		#it returns the name of all vms by assigned it to an array and return SUCCESS if successful
 		#ARGU: DB_NAME
 		#RET: ARR_
 		function init_database_qdb() {
 			local i=0
 			local -a qdb_name
-			
+
 			check_is_file $1 && {
 				if [[ "<$1" != "" ]]; then
-					for j in $(cat $1); do 
+					for j in $(cat $1); do
 						qdb_name[$i]="\"$j\""
 						(( i++ ))
-					done 
+					done
 					echo "${qdb_name[@]}"
-				fi 
+				fi
 			} || { err_code=${QDB_NOT_EXIT}; }
-			
+
 		}
-		
+
 		##argu :db_name
-		##return the name of vms without qvm file or hd img 
+		##return the name of vms without qvm file or hd img
 		function check_qdb_consistency() {
 			local -a qdb_name=( $@ )
-			
+
 			local -a no_bootfile_arr=
-			local -a no_hd_arr= 
+			local -a no_hd_arr=
 			local -a result_arr=
 			let "i=0"
-			
+
 			if [[ ${#qdb_name[@]} -gt 0 ]]; then
-				
-				for (( index=0; index<${#qdb_name[@]}; index++ )); do 
+
+				for (( index=0; index<${#qdb_name[@]}; index++ )); do
 					#----check bootfile-------
 						local vm_info=${qdb_name[$index]//\"/}
 						local boot_file_name=$(return_second_field ${vm_info})
-						
+
 						if ! [ -f "${BOOT_DIR}/${boot_file_name}" ]; then
 							no_bootfile_arr[$i]=$(return_first_field ${vm_info})
 							(( i++ ))
-						fi 
+						fi
 					#----check hd img---------
 						boot_file_name=${boot_file_name//.qvm/.img}
-						
+
 						if ! [ -f "${HD_IMG_DIR}/${boot_file_name}" ]; then
 							check_is_file "${BOOT_DIR}/${boot_file_name//.img/.qvm}" || {
 								no_hd_arr[$i]=$(return_first_field ${vm_info})
 								(( i++ ))
 							}
-						fi 			
-				done 
-				
+						fi
+				done
+
 				if [ ${#no_bootfile_arr[@]} -ne 0 ] || [ ${#no_hd_arr[@]} -ne 0 ] ; then
 					result_arr=( ${no_bootfile_arr[@]} ${no_hd_arr[@]} )
 					echo -n ${result_arr[@]}
-				fi 
-			fi 
+				fi
+			fi
 		}
-		
+
 		#argu: arr_of vms with no hd img or qvm file
 		function resolve_qdb_inconsistencies() {
 			local -a arr_vms=( $@ )
-			
+
 			if [[ ${#arr_vms[*]} -ne 0 ]]; then
 				local TMPFILE=$(mktemp -uq qbox.XXXXXXXXXXXX || echo "qbox.$$")
-				
-				for (( index=0; index<${#arr_vms[*]}; index++ )); do 
+
+				for (( index=0; index<${#arr_vms[*]}; index++ )); do
 					complement_of ${arr_vms[$index]} "${VMS_DB}" "${QDB_FOLDER}/${TMPFILE}"
 					mv "${QDB_FOLDER}/${TMPFILE}" ${VMS_DB}
-				done 
-			fi 
+				done
+			fi
 		}
-		
+
 		function hd_a_qvm_no_qdb_entry() {
 			local -a arr_hd_=( $(get_all_file_from_dir "${HD_IMG_DIR}" "*.img") )
 			#local -a arr_qvm_=( $(get_all_file_from_dir "${BOOT_DIR}" "*.qvm") )
-			
+
 			#local -a qdb_name=( $(init_database_qdb ${VMS_DB}) )
-			
-			for (( index=0; index<${#arr_hd_[@]}; index++ )); do 
+
+			for (( index=0; index<${#arr_hd_[@]}; index++ )); do
 				local qvm_file=$(basename ${arr_hd_[$index]})
 				local qvm_file=${qvm_file//.img/.qvm}
-				
+
 				check_is_file "${BOOT_DIR}/${qvm_file}" || { rm -f "${HD_IMG_DIR}/${qvm_file//.qvm/.img}" 2>/dev/null; }
-			done 
+			done
 		}
-		
+
 		#argu: db_name
 		function _resolving_inconsistencises_qdb() {
 			local -a qdb_name=( $(init_database_qdb ${VMS_DB}) )
-			
+
 			qdb_name=( $(check_qdb_consistency ${qdb_name[@]}) )
 			resolve_qdb_inconsistencies ${qdb_name[@]}
-			
+
 			hd_a_qvm_no_qdb_entry
 		}
-		
+
 		#ARGU:	array of values contain the search value at the end of the array
 		#RET:	append the index of the search value to the back of the array
 		function search_val_qdb() {
 			local -a qdb_vm_info=( $@ )
 			local sizeof_arr=${#qdb_vm_info[@]}
-			local search_val=${qdb_vm_info[$(( --sizeof_arr ))]} && unset 'qdb_vm_info[$sizeof_arr]' 
-			
+			local search_val=${qdb_vm_info[$(( --sizeof_arr ))]} && unset 'qdb_vm_info[$sizeof_arr]'
+
 			[ ${sizeof_arr} -eq 0 ]  && echo "${qdb_vm_info[@]} ${ARR_IS_EMPTY}"
-			
+
 			if [[ ${sizeof_arr} -gt 0 ]]; then
-				for (( index=0; index<${sizeof_arr}; index++ )); do 
+				for (( index=0; index<${sizeof_arr}; index++ )); do
 					local vm_info=${qdb_vm_info[$index]//\"/}
 					#local vm_info={vm_info[$index]%%|*}
 					[ "${vm_info%%|*}" = "$(String_to_Upper ${search_val})" ] && {
 						echo -n "${qdb_vm_info[@]} ${index}"
 						return 0
 					}
-				done 
+				done
 			fi
-			
+
 			echo "${qdb_vm_info[@]} ${SRCH_VAL_NOT_IN_ARR}"
 			return 0
 		}
-		
+
 		###generate string from arr of vms sizeof_arr, set_str
 		function names_str_qdb() {
 			local -a qdb_name=( $@ )
 			local gen_str=""
 			local str_tmp=""
-			
-			for (( index=0; index<${#qdb_name[@]}; index++ )); do 
+
+			for (( index=0; index<${#qdb_name[@]}; index++ )); do
 					str_tmp="${qdb_name[$index]//\"/}"
 					str_tmp="${str_tmp// /_}"
 					gen_str+="%$(( index+1 ))%${str_tmp%%|*}"
 			done
-			
+
 			echo -n ${gen_str//%/ }
 		}
-		
+
 		#argu: db_name, var_to_insert
 		function insert_into_qdb() {
 			echo $2>>$1
 		}
-		
+
 		function delete_msg_qdb() {
 			${DIALOG} \
-				--keep-window --colors --title "\Zb\Z1INFO\Zn\ZB" --yesno "\n\nDo you really want to \Zb\Z1delete $1\Zn\ZB" $((HEIGHT-7)) $((WIDTH-20))	
-			
-			case $? in 
+				--keep-window --colors --title "\Zb\Z1INFO\Zn\ZB" --yesno "\n\nDo you really want to \Zb\Z1delete $1\Zn\ZB" $((HEIGHT-7)) $((WIDTH-20))
+
+			case $? in
 				${DIALOG_OK}) return ${SUCCESS} ;;
 				${DIALOG_CANCEL}) return ${FAILURE} ;;
 			esac
 		}
-		
+
 		#argu:	are all assigned to an array "search_index|name_of_vm_to_del|db_type" and the array is passed to the function
 		function delete_val_qdb() {
 			local -a qdb_name=( $@ ) ##get all db values
 			declare -i sizeof_arr=${#qdb_name[@]}
-				
+
 			local qdb_type=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
 			local info_vm_to_del=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
 			local key=${qdb_name[$(( --sizeof_arr ))]} && unset 'qdb_name[$sizeof_arr]'
-				
+
 			[ $key -eq ${ARR_IS_EMPTY} ] && return ${ARR_IS_EMPTY}
 			[ $key -eq ${SRCH_VAL_NOT_IN_ARR} ] && return ${SRCH_VAL_NOT_IN_ARR}
-			
-			[ $key -gt 0 ] && {		
+
+			[ $key -gt 0 ] && {
 				local boot_file_name=$(return_second_field ${info_vm_to_del})
-				
-				while [[ ${key} -lt ${#qdb_name[@]} ]]; do 
+
+				while [[ ${key} -lt ${#qdb_name[@]} ]]; do
 					qdb_name[$key]=${qdb_name[$(( key + 1 ))]}
 					(( key++ ))
 				done
-				
+
 				unset 'qdb_name[$(( --key ))]' ##delete the last slot to reduce the size of arr by 1
-				
+
 				##-----commit changes to db files--------------
 				local TMPFILE=$(mktemp -uq qbox.XXXXXXXXXXXX || echo "qbox.$$")
 				local vm_name=$(return_first_field ${info_vm_to_del})
 				local vm_name=${vm_name//\"/}
-				
+
 				complement_of ${vm_name} "${qdb_type}" "${QDB_FOLDER}/${TMPFILE}"
 				local hd_img=${boot_file_name/.qvm/.img}
-				
-				mv "${QDB_FOLDER}/${TMPFILE}" ${qdb_type} 
+
+				mv "${QDB_FOLDER}/${TMPFILE}" ${qdb_type}
 				rm -f "${BOOT_DIR}/${boot_file_name}" 2>/dev/null
 				rm -f "${HD_IMG_DIR}/${hd_img}" 2>/dev/null
-				
+
 				echo -n "${qdb_name[@]}"
 				return ${SUCCESS}
 			}
 		}
-		
+
 	}
-	
+
 elif [[ $1 = "<boot_vm.h>" ]]; then
-	
+
 	NOT_DEFINE ${BOOT_VM_H} && {
 		DEFINE BOOT_VM_H
-		
+
 		. ${LIB_DIR}/import '<qdb_database.h>'
-		
+
 		if NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${LOGGS_H}; then
 			. ${LIB_DIR}/include '<true_test.h>'
 			. ${LIB_DIR}/include '<loggs.h>'
-		fi 
-		
+		fi
+
 		##arrgu: bootfile, name of vm
 		function boot_vm() {
 			local boot_config=""
 			local boot_file_loc="${BOOT_DIR}/$1"
-			
+
 			if check_is_file ${boot_file_loc}; then
 				boot_config=$(cat ${boot_file_loc} | cut -d"|" -f2 | sed ':a;N;$!ba;s/\n/ /g')
-				
+
 				boot_config=`echo ${boot_config} | tr -s " "` ##Replace multiple space char with a space char
-				
+
 				boot_config=${boot_config// ,/,} ##Replace " ," with ","
-				
+
 				${boot_config} 2>${LOGS_FILE} &
 				local pid_vm=$!
 				logger_logging ${LOGS_FILE}
-				
+
 				insert_into_qdb ${PID_DB} "$2|${pid_vm}"
 				return ${SUCCESS}
-			else 
+			else
 				return ${FAILURE}
-			fi 
+			fi
 		}
-		
+
 		#argu: name_of_vm_to_boot
 		function startvm() {
 			local -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) ) ##initialize qdb
 			local sizeof_arr=${#QDB_ARR[@]}
 			local _ret=${FAILURE}
-			
+
 			if [[ ${sizeof_arr} -gt 0 ]]; then
 				QDB_ARR[$(( sizeof_arr ))]=$(String_to_Upper $1)
 				QDB_ARR=( $(search_val_qdb ${QDB_ARR[@]}) )
 				sizeof_arr=${#QDB_ARR[@]}
-				
+
 				local vm_info_index=${QDB_ARR[$(( --sizeof_arr ))]} && unset 'QDB_ARR[$sizeof_arr]'
-				
+
 				[ ${vm_info_index} -ne ${ARR_IS_EMPTY} ] && [ ${vm_info_index} -ne ${SRCH_VAL_NOT_IN_ARR} ] && {
 					vm_info=${QDB_ARR[${vm_info_index}]}
 					vm_info=${vm_info//\"/}
-					
+
 					vm_info=$(return_second_field ${vm_info})
-					
+
 					boot_vm ${vm_info} $(String_to_Upper $1) && { _ret=$?; }
 				}
-			fi 
-			
+			fi
+
 			return $_ret
 		}
 	} ## BOOT_VM_H
-	
+
 elif [[ $1 = "<http_server.h>" ]]; then
-	
+
 	NOT_DEFINE ${HTTP_SERVER_H} && {
 		DEFINE HTTP_SERVER_H
-		
+
 		. ${LIB_DIR}/import '<qdb_database.h>'
-		
+
 		: ${PHP_PARSER:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% php`}
 		: ${TCP_SERVER:=$(${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% ncat)}
-		
+
 		: ${DOC_ROOT:="${QBOX_DIR}/www"}
 		: ${test_serv_running:="${TEMP_FOLDER}/.svrpid"}
 		: ${qbox_server_running:="${TEMP_FOLDER}/qbox_server.pid"}
-		
+
 		#request to tcp server
 		DEFINE BOOT_REQUEST 521
 		DEFINE STOP_VM_REQUEST 522
 		DEFINE LIST_VM_REQUET 523
-		
+
 		if NOT_DEFINE ${HOST_IP_H} || NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${LOGGS_H} || NOT_DEFINE ${TRUE_TEST_H} ; then
 			. ${LIB_DIR}/include '<host_ip.h>'
 			. ${LIB_DIR}/include '<basic_utils.h>'
 			. ${LIB_DIR}/include '<loggs.h>'
 			. ${LIB_DIR}/include '<true_test.h>'
-		fi 
-		
+		fi
+
 		: ${PID_MAX:=$(cat /proc/sys/kernel/pid_max 2>/dev/null || echo -n 32768)}
-		
+
 		function httpd_start() {
 			${PHP_PARSER} -S ${HOST_IP}:4020 -t ${DOC_ROOT} 1>${LOGS_FILE} 2>&1 &
 			local pid_s=$!
-			
+
 			logger_logging ${LOGS_FILE}
 			[ ${pid_s} -gt 1 ] && [ ${pid_s} -le ${PID_MAX} ] && { echo -n "${pid_s}|${HOST_IP}"; } || { echo -n "-1"; }
 		}
-		
+
 		function list_created_vms() {
 			local -a QDB_ARR=( $(init_database_qdb ${VMS_DB}) ) ##initialize qdb
-			
+
 			if [[ ${#QDB_ARR[*]} -ne 0 ]]; then
 				local gen_str_=$(names_str_qdb ${QDB_ARR[@]})
 			else
 				local gen_str_="No_Virtual_Machine_created_yet..."
 			fi
-			
+
 			gen_str_=${gen_str_//\"/}
 			gen_str_=${gen_str_//[[:digit:]]/}
 			gen_str_=${gen_str_//[[:space:]]/:}
-			
+
 			echo -n ${gen_str_}
 		}
-		
-		
+
+
 		#TODO @qbox tcp server
 		function qbox_server() {
 			coproc ${TCP_SERVER} -l -p 4040 -c '
-				
+
 				BOOT_REQUEST=521
 				STOP_VM_REQUEST=522
 				LIST_VM_REQUEST=523
 				LIST_RUNNING_VM_REQUEST=524
-				
+
 				QBOX_DIR="/usr/local/bin/QBox"
 				HD_IMG_DIR="$HOME/.img_qemubox"
 				TEMP_FOLDER="${HD_IMG_DIR}/.tmp_qbox"
 				QDB_FOLDER="${HD_IMG_DIR}/.qdb"
-				
+
 				VMS_DB="${QDB_FOLDER}/vms.qdb"
 				PID_DB="${QDB_FOLDER}/pid.qdb"
-				
+
 				BOOT_DIR="${HD_IMG_DIR}/.qemuboot"
 				LOGS_FILE="${TEMP_FOLDER}/.error.tt"
-				
+
 				SUCCESS=0
 				FAILURE=1
-					
+
 				logger_logging(){
 					if [ -f $1 ]; then
 						${QBOX_DIR}/bin/qemubox_logger "`tr "\n" " " <$1`" ${LOG_DIR}/qboxlog
 						rm -f $1
 					fi
 				}
-				
-				
+
+
 				check_is_file() {
 					[ -f $1 ] && return ${SUCCESS} || return ${FAILURE}
-				}				
-				
+				}
+
 				return_first_field() {
 					if check_is_file $1 ; then
 						echo -n "$(cut -d"|" -f1 $1)"
-					else 
+					else
 						echo -n "$(echo $1 | cut -d"|" -f1)"
-					fi 
+					fi
 				}
-				
+
 				return_n_field() {
 					field=$2
 					delimiter="$3"
-					
+
 					if check_is_file $1; then
 						echo -n "$(cut -d"${delimiter}" -f ${field} $1)"
-					else 
+					else
 						echo -n "$(echo $1 | cut -d"${delimiter}" -f ${field})"
-					fi 		
+					fi
 				}
-				
+
 				list_created_vms() {
-					for index in $(cat $1); do 
+					for index in $(cat $1); do
 						echo $(return_first_field $index)
 					done
 				}
-				
+
 				insert_into_qdb() {
 					echo $2>>$1
 				}
-				
+
 				##---boot---VM------
 				search_val() {
 					if [ "$(cat $1)" != "" ]; then
-						for index in $(cat $1); do 
+						for index in $(cat $1); do
 							vm_conf=$(return_n_field ${index} 2 "|")
 							vm_name=${index%%|*}
-							
+
 							[ "$vm_name" = "$2" ] && {
 								echo -n "$vm_conf"
 							}
 						done
-					fi 
-					
+					fi
+
 				}
-				
+
 				bootvm() {
 					boot_config=""
 					boot_file_loc="${BOOT_DIR}/$1"
-					
+
 					if check_is_file ${boot_file_loc}; then
 						boot_config=$(cat ${boot_file_loc} | cut -d"|" -f2 | tr "\n" " ")
-						
+
 						boot_config=`echo ${boot_config} | tr -s " "` ##Replace multiple space char with a space char
-						
+
 						boot_config=$(echo ${boot_config} | sed "s/ ,/,/g")
-						
+
 						${boot_config} 2>${LOGS_FILE} &
 						pid_vm=$!
 						logger_logging ${LOGS_FILE}
-						
+
 						insert_into_qdb ${PID_DB} "$2|${pid_vm}"
 						return ${SUCCESS}
-					else 
+					else
 						return ${FAILURE}
-					fi 					
+					fi
 				}
-				
+
 				_clear_pid_qdb_event() {
 					if [ "<${PID_DB}" != "" ]; then
-						for i in `cut -d "|" -f2 ${PID_DB}`;do 
-						
+						for i in `cut -d "|" -f2 ${PID_DB}`;do
+
 							if [ ! -d /proc/$i ]; then
 								name="^$i\$"
 								echo $(gawk -F "|" -v var=$name -f ${QBOX_DIR}/awk/complement.awk ${PID_DB}) > ${TEMP_FOLDER}/vms.tt
 								##replace black or space character with newline character
 								sed -e "s/[[:blank:]]\+/\n/g" ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
 								rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null
-							fi 
-						done 
-					fi 
-				}	
-				
-				echo $$ >${TEMP_FOLDER}/qbox_server.pid
-				
-				while true ; do 
+							fi
+						done
+					fi
+				}
+
+				if ! check_is_file ${TEMP_FOLDER}/qbox_server.pid ; then
+					echo $$ >${TEMP_FOLDER}/qbox_server.pid
+				fi
+
+				while true ; do
 					read request
-					
+
 					req=${request%%:*}
-					
-					case ${req} in 
-						$LIST_VM_REQUEST) 
+
+					case ${req} in
+						$LIST_VM_REQUEST)
 							if [ "$( cat ${VMS_DB})" = "" ]; then
 								echo "No Virtual Machine created"
 							else
 								list_created_vms ${VMS_DB}
-							fi 
+							fi
 						;;
-						${BOOT_REQUEST}) 
+						${BOOT_REQUEST})
 							var=$(search_val ${VMS_DB} ${request##*:})
-							
+
 							[ -n $var ] && bootvm $var ${request##*:}
 						;;
-						${STOP_VM_REQUEST}) 
+						${STOP_VM_REQUEST})
 							_clear_pid_qdb_event
-							
+
 							pid_t=""
 							if [ "$(cat ${PID_DB})" != "" ]; then
 								pid_t=$(search_val ${PID_DB} ${request##*:})
-								
+
 								[ -n $pid_t ] && kill -9 ${pid_t} 2>&1 1>/dev/null
-							fi 
+							fi
 						;;
-						${LIST_RUNNING_VM_REQUEST}) 
-							if [ "$( cat ${PID_DB})" = "" ]; then
+						${LIST_RUNNING_VM_REQUEST})
+							if [ "$(cat ${PID_DB})" = "" ]; then
 								echo "No Virtual Machine running"
 							else
 								list_created_vms ${PID_DB}
-							fi 							
+							fi
 						;;
 					esac
-				done 
-			' 2>&1
+				done
+			' 1>&2 2>${LOGS_FILE}
+
+			logger_logging ${LOGS_FILE}
 		}
-		
+
 		function qbox_server_start() {
 			qbox_server
-			
-			check_is_file ${qbox_server_running} && { 
-				local pid_s="$(cat ${qbox_server_running})"
-				[ ${pid_s} -gt 1 ] && [ ${pid_s} -le ${PID_MAX} ] && { echo -n ${pid_s}; } || { echo -n "-1"; }
-			} || { echo -n "-1"; }
 		}
-		
+
+		function get_qboxServer_pid() {
+
+			while ! check_is_file ${qbox_server_running} ; do
+				kill -9 ${pid_} 1>&2 2>/dev/null
+
+				echo ${STOP_VM_REQUEST} | nc ${HOST_IP} 4040 2>&1 1>/dev/null &
+				local pid_=$!
+			done
+
+			kill -9 ${pid_} 1>&2 2>/dev/null
+
+			local pid_s=$(<${qbox_server_running})
+			[ ${pid_s} -gt 1 ] && [ ${pid_s} -le ${PID_MAX} ] && { echo -n ${pid_s}; } || { echo -n "-1"; }
+		}
+
 		#stop service
 		function server_stop() {
 			if kill -9 $@ 2>/dev/null ; then
-				return ${SUCCESS} 
-			else 
+				return ${SUCCESS}
+			else
 				return ${FAILURE}
-			fi 
+			fi
 		}
-		
+
 		#test server is runing
 		function server_is_not_running() {
 			if check_is_file ${test_serv_running}; then
-				return ${FAILURE} 
-			else 
+				return ${FAILURE}
+			else
 				return ${SUCCESS}
-			fi 
+			fi
 		}
-		
+
 	} ## HTTP_SERVER_H
 elif [[ $1 = "<strings_definitions.h>" ]]; then
 
 	NOT_DEFINE ${STRINGS_DEFINITIONS_H} && {
 		DEFINE STRINGS_DEFINITIONS_H
-		
+
 		declare -A STRINGS=(
 			[PROMPT_SIZE_OF_MEM]="[$$]Enter_the_RAM_size_" \
 			[PROMPT_CHECKING_FOR_ISO]="Checking_for_iso_files_in_[$HOME]..._" \
@@ -741,85 +755,85 @@ elif [[ $1 = "<strings_definitions.h>" ]]; then
 			[STRINGS_EXPORT_VM]="Exported_Virtual_Machine_to_Desktop" \
 			[STRING_DEEP_REMOVE]="[$$]Do_you_want_to_remove_all_created_virtual machines?"
 		)
-		
+
 		function get_string_by_name(){
 			local string_=""
-			
+
 			if [[ ${#@} -gt 0 ]]; then
 				local string_=${STRINGS[$1]//_/ }
-				
+
 				echo -n "${string_} $2"
-			fi 
+			fi
 		}
-		
-		
+
+
 	} ##STRINGS_DEFINITIONS_H
 
 elif [[ $1 = "<sh_thread.h>" ]]; then
 	#TODO a bash thread library to start using named pipes for inter-process communications
 	NOT_DEFINE ${SH_THREAD_H} && {
 		DEFINE SH_THREAD_H
-		
+
 		DEFINE THREAD_MAX 20
-		
+
 		#declare -a thread_ids=
 		INPUT_PIPE=
 		OUTPUT_PIPE=
-		
+
 		function init_sh_thread() {
-			if check_is_set $INPUT_PIPE; then 
+			if check_is_set $INPUT_PIPE; then
 				rm -f ${INPUT_PIPE} 2>/dev/null
 				INPUT_PIPE=""
 			elif check_is_set $OUTPUT_PIPE; then
 				rm -f ${OUTPUT_PIPE} 2>/dev/null
 				OUTPUT_PIPE=""
-			fi 
-			
-			[ -z $INPUT_PIPE ] && [ -z ${OUTPUT_PIPE} ] && { 
+			fi
+
+			[ -z $INPUT_PIPE ] && [ -z ${OUTPUT_PIPE} ] && {
 				INPUT_PIPE=$(mktemp -uq /tmp/qbox_in_pipe.XXXXXXXXXXXX || echo -n "/tmp/qbox_in_pipe.$$")
 				OUTPUT_PIPE=$(mktemp -uq /tmp/qbox_out_pipe.XXXXXXXXXXXX || echo -n "/tmp/qbox_out_pipe.$$")
-				
+
 				mkfifo -m 0666 ${INPUT_PIPE} &>/dev/null
 				mkfifo -m 0666 ${OUTPUT_PIPE} &>/dev/null
 			}
-			
+
 			if [[ $# -gt 0 ]] ; then
-				for param in $@; do 
-					echo $param >>${INPUT_PIPE} 
-				done 
-			fi 
+				for param in $@; do
+					echo $param >>${INPUT_PIPE}
+				done
+			fi
 		}
-		
+
 		#ret pid of threads started
 		#argu function_name:number_of_threads_to_create:arguments_pipe
 		function sh_thread_create() {
 			local function_name=${1%%:*}
 			local number_of_threads=${1##*:}
 			local -a pid_t=""
-			
+
 			[ ${number_of_threads} -gt $THREAD_MAX ] && number_of_threads=${THREAD_MAX}
-			
-			for (( index=0; index<${number_of_threads}; index++ )); do 
+
+			for (( index=0; index<${number_of_threads}; index++ )); do
 				${function_name} ${index} &
 				pid_t[$index]=$!
-			done 
-			
+			done
+
 			echo -n ${pid_t[@]}
 		}
-		
+
 		##argu: pid_ts to wait for
 		function sh_thread_join() {
-			for pids in $@; do 
+			for pids in $@; do
 				wait $pids 2>/dev/null
 			done
 		}
-		
+
 		function sh_kill_thread() {
-			for pids in $@; do 
+			for pids in $@; do
 				kill $pids
-			done 
+			done
 		}
-		
+
 		function close_sh_thread() {
 			if [[ -p ${OUTPUT_PIPE} ]]; then
 				rm -f ${OUTPUT_PIPE} 2>/dev/null
@@ -827,8 +841,8 @@ elif [[ $1 = "<sh_thread.h>" ]]; then
 			elif [[ -p ${INPUT_PIPE} ]]; then
 				rm -f ${INPUT_PIPE} 2>/dev/null
 				INPUT_PIPE=""
-			fi 
+			fi
 		}
-		
+
 	} ##SH_THREAD_H
 fi
