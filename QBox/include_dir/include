@@ -25,7 +25,7 @@
 
 : ${HD_IMG_DIR:=$HOME/.img_qemubox} ##contains harddisk images
 : ${LOG_DIR:=${HD_IMG_DIR}/logs_dir}
-: ${QBOX_DIR:="${HOME}/my_script/QB/QBox"}
+: ${QBOX_DIR:="/usr/local/bin/QBox"}
 : ${TEMP_FOLDER:="${HD_IMG_DIR}/.tmp_qbox"}
 : ${QDB_FOLDER:=${HD_IMG_DIR}/.qdb} ##qbox database files location
 
@@ -599,13 +599,15 @@ elif [[ $1 = "<disk_details.h>" ]]; then
 	
 	. ${LIB_DIR}/include '<random_uid.h>'
 	
-	if NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${LOGGS_H}; then 
+	if NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${LOGGS_H} || NOT_DEFINE ${BASIC_UTILS_H}; then 
 		. ${LIB_DIR}/include '<true_test.h>'
 		. ${LIB_DIR}/include "<loggs.h>"
+		. ${LIB_DIR}/include '<basic_utils.h>'
 	fi 
 	
 	: ${QEMU_DSKIMG_CREATOR:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% qemu-img`}
-	
+	install_pkg QEMU_DSKIMG_CREATOR qemu-img
+
 	DISK_FORMAT=
 	DISK_SIZE=
 	HD_BI_IMG=
@@ -793,6 +795,7 @@ elif [[ $1 = "<curses_dialog.h>" ]]; then
 	declare -i WIDTH=50
 	
 	: ${DIALOG=$(${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% dialog)}
+	install_pkg DIALOG dialog
 
 	: ${DIALOG_OK:=0}
 	: ${DIALOG_BACK:=3}
@@ -1063,4 +1066,77 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 		[ "$value" != "" ] && { echo -n "$value"; } || { echo -n ""; }
 	}
 
+	function package_install_func() {
+	
+		local pkg_man="`{ type yum >/dev/null 2>&1 && which yum; } || { type apt-get >/dev/null 2>&1 && which apt-get; }`"
+	
+		[ ${INST_CON} -eq 0 ] && {
+			tput setaf 9
+			echo -e "\n	NOTICE!!!\nQBox will now try to install [$1]\nIn case of [INSTALL-ERROR-LOOPS] press [CTRL+C] to exit\n"
+			tput sgr0
+			sleep 3 && INST_CON=10
+			echo -e "Updating Cache..." && sudo ${pkg_man} update >/dev/null 2>&1
+			[ $? -eq 0 ] && echo -e "[OK]" || echo -e "[ERROR]"
+		}
+	
+		echo -e "Installing [$1]..." && sudo ${pkg_man} install $1 -y >/dev/null 2>&1
+		[ $? -eq 0 ] && echo -e "[OK]" || { 
+			echo -e "[ERROR]"
+			package_install_func $1 
+		}
+	}
+
+	function pkg_display_download(){
+		path_error_display="`{ type zenity >/dev/null 2>&1 && which zenity; } || { type dialog >/dev/null 2>&1 && which dialog; } || { echo 1; }`"
+		base_n="`[ "${path_error_display}" = "1" ] && echo 1 || basename $path_error_display`"
+		
+		case "$base_n" in 
+			zenity) 
+				${path_error_display} \
+						--question --title="Package $1 Required"  --width=30 --height=20 --window-icon=question \
+						--text="QBox required $1 to continue..\n Do you want to install it?" >/dev/null 2>&1
+					
+				if [ $? -eq 0 ]; then
+					INST_CON=0
+					package_install_func $1
+				else
+				  _return_="`which $1`"
+				fi
+			;;
+			dialog) 
+				${path_error_display} \
+						--no-shadow --title "Package $1 Required" --yesno "QBox required $1 to continue..\n Do you want to install it?" 18 50
+			
+				if [ $? -eq 0 ]; then
+					clear
+					INST_CON=0
+				    package_install_func $1
+
+				else
+					_return_="`which $1`"
+				fi 
+			;;
+			1) 
+				echo "Package $1 Required"
+				echo -e "QBox required $1 to continue..\n Do you want to install it?[YES/no] "
+				hld=$(yes_no)
+			
+				if [ $hld -eq 0 ]; then
+		    		INST_CON=0
+		    		package_install_func $1
+				else
+					_return_="`which $1`"
+				fi
+			;;
+		esac
+	}
+
+	function install_pkg() {
+		eval y='$'$1
+
+		[ "$y" = "" ] && {
+			pkg_display_download $2
+			eval $1=`which $2`
+		}
+	}
 fi

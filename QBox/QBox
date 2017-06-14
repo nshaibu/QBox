@@ -111,44 +111,48 @@ case $1 in
 	;;
 	
 	uninstall) 
-		let "_test=0, _dtest=0"
-		tmdir=${PWD}
+    
+    function uninstall_qbox() {
+  		let "_test=0, _dtest=0"
+	  	tmdir=${PWD}
 		
-		[ -d /usr/local/bin/QBox ] && {
-			echo -e "[$$]Removing QBox...\n"
-			cd /usr/local/bin
-			rm -r QBox 2>&1 1>/dev/null && _test=1
-			rm QBox 2>&1 1>/dev/null
-			cd $tmdir
-		}
+		  [ -d /usr/local/bin/QBox ] && {
+			  echo -e "[$$]Removing QBox...\n"
+			  cd /usr/local/bin
+			  sudo rm -r QBox 2>&1 1>/dev/null && _test=1
+			  cd $tmdir
+		  }
 	
-		[ -f /usr/share/applications/QBox.desktop ] && {
-			cd /usr/share/applications 
-			rm -f QBox.desktop 2>&1 1>/dev/null && _dtest=1
-			cd $tmdir
-		}
+		  [ -f /usr/share/applications/QBox.desktop ] && {
+			  cd /usr/share/applications 
+			  sudo rm -f QBox.desktop 2>&1 1>/dev/null && _dtest=1
+			  cd $tmdir
+		  }
 		
-		echo -e $(get_string_by_name STRING_DEEP_REMOVE "[y/[N]]")
-		read
+		  echo -e $(get_string_by_name STRING_DEEP_REMOVE "[y/[N]]")
+		  read
 		
-		case "$(String_to_Upper ${REPLY})" in 
-			Y|YES) 
-				cd $HOME
-				rm -r .img_qemubox 2>&1 1>/dev/null
-				cd $tmdir
-			;;
+		  case "$(String_to_Upper ${REPLY})" in 
+			  Y|YES) 
+				  cd $HOME
+				  sudo rm -r .img_qemubox 2>&1 1>/dev/null
+				  cd $tmdir
+			  ;;
 			
-			*) ;;
-		esac
+			  *) ;;
+		  esac
 		
-		if [ $_test -eq 0 ] || [ $_dtest -eq 0 ]; then
-			tput setaf 9
-			echo -e "QBox not removed."
-			tput sgr0
-		else
-			printf "%s\n" "QBox removed"
-			update-desktop-database "/usr/share/applications/"
-		fi
+		  if [ $_test -eq 0 ] || [ $_dtest -eq 0 ]; then
+			  tput setaf 9
+			  echo -e "QBox not removed."
+			  tput sgr0
+		  else
+			  printf "%s\n" "QBox removed"
+			  sudo update-desktop-database "/usr/share/applications/"
+		  fi
+    }
+
+    uninstall_qbox  
 	;;
 	
 	-s|--[Ss][Tt][Aa][Rr][Tt][Vv][Mm]) 

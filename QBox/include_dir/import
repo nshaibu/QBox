@@ -39,7 +39,7 @@ if [[ $1 = "<init.h>" ]]; then
 		: ${BOOT_DIR:="${HD_IMG_DIR}/.qemuboot"} ## contain boot files
 
 		#Installation Directory /usr/local/bin/QBox
-		: ${QBOX_DIR:="/usr/local/bin/QBox"}
+		: ${QBOX_DIR="/usr/local/bin/QBox"}
 
 		#librarry dir
 		: ${LIB_DIR:=${QBOX_DIR}/include_dir}
@@ -143,6 +143,8 @@ elif [[ $1 = "<notify.h>" ]]; then
 
 	NOT_DEFINE ${NOTIFY_H} && {
 		DEFINE NOTIFY_H
+
+		. ${LIB_DIR}/import '<init.h>'
 
 		: ${NOTICE:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% notify-send`}
 
@@ -484,10 +486,19 @@ elif [[ $1 = "<http_server.h>" ]]; then
 	NOT_DEFINE ${HTTP_SERVER_H} && {
 		DEFINE HTTP_SERVER_H
 
+		. ${LIB_DIR}/import '<init.h>'
 		. ${LIB_DIR}/import '<qdb_database.h>'
+		
+		if NOT_DEFINE ${LOGGS_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
+			. ${LIB_DIR}/include '<loggs.h>'
+			. ${LIB_DIR}/include '<basic_utils.h>'
+		fi 
 
 		: ${PHP_PARSER:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% php`}
+		install_pkg PHP_PARSER php
+			
 		: ${TCP_SERVER:=$(${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% ncat)}
+		install_pkg TCP_SERVER ncat
 
 		: ${DOC_ROOT:="${QBOX_DIR}/www"}
 		: ${test_serv_running:="${TEMP_FOLDER}/.svrpid"}
@@ -748,7 +759,7 @@ elif [[ $1 = "<strings_definitions.h>" ]]; then
 			[PROMPT_VIDEO_CARD]="[$$]Choose_a_Video_Card_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Cirrus_Logic_GD5446_Video_card\n\t\t2._Standard_VGA_card_with_Bochs_VBE_extensions" \
 			[PROMPT_USB_DEVICE]="[$$]Choose_a_Pointing_device_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Virtual_Mouse\n\t\t2._Pointer_device_like_a_touchscreen\n\t\t3._Default" \
 			[PROMPT_SOUND_MODULE]="[$$]choose_the_sound_card_to_emulate.\n\tOptions:\n\t\t1._Creative_SoundBlaster_16_sound_card\n\t\t2._ENSONIQ_AudioPCI_ES1370_sound_card\n\t\t3._Intel_HD_Audio_Controller_and_HDA_codec" \
-			[COND_ALREADY_CONFIGURED]="Already configured.\nDo you want to reconfigure" \
+			[COND_ALREADY_CONFIGURED]="Already_configured.\nDo_you_want_to_reconfigure" \
 			[STRING_FOR_FULLSCRN_NOTIFICATION]="The_Virtual_Machine_is_booting._To_exit_from_fullscreen_mode_to_SDL_window_mode, press CTL+ALT+F_key_combination"
 			[STRING_STOPPED_VM]="Stopped_Virtual_Machine_successfully" \
 			[STRINGS_DELETE_VM]="Successfully_deleted_" \
