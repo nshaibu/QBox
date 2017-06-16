@@ -573,7 +573,6 @@ elif [[ $1 = "<http_server.h>" ]]; then
 					fi
 				}
 
-
 				check_is_file() {
 					[ -f $1 ] && return ${SUCCESS} || return ${FAILURE}
 				}
@@ -701,7 +700,7 @@ elif [[ $1 = "<http_server.h>" ]]; then
 					esac
 				done
 			' 1>&2 2>${LOGS_FILE}
-
+			
 			logger_logging ${LOGS_FILE}
 		}
 
@@ -710,32 +709,44 @@ elif [[ $1 = "<http_server.h>" ]]; then
 		}
 
 		function get_qboxServer_pid() {
-
-			while ! check_is_file ${qbox_server_running} ; do
-				kill -9 ${pid_} 1>&2 2>/dev/null
-
-				echo ${STOP_VM_REQUEST} | nc ${HOST_IP} 4040 2>&1 1>/dev/null &
-				local pid_=$!
-			done
-
-			kill -9 ${pid_} 1>&2 2>/dev/null
-
-			local pid_s=$(<${qbox_server_running})
-			[ ${pid_s} -gt 1 ] && [ ${pid_s} -le ${PID_MAX} ] && { echo -n ${pid_s}; } || { echo -n "-1"; }
+			check_is_file ${qbox_server_running} && {
+				local pid_s=$(<${qbox_server_running})
+				[ ${pid_s} -gt 1 ] && [ ${pid_s} -le ${PID_MAX} ] && { echo -n ${pid_s}; }
+			}
 		}
-
+		
 		#stop service
 		function server_stop() {
-			if kill -9 $@ 2>/dev/null ; then
+			if kill -9 $@ 2>&1 1>/dev/null ; then
 				return ${SUCCESS}
 			else
 				return ${FAILURE}
 			fi
 		}
+		
+		
+		function stop_qbox_server() {
+			local pid=$(get_qboxServer_pid)
+			
+			if [ "${pid}" != "" ]; then
+				server_stop ${pid} && { rm -f ${qbox_server_running} 1>&2 2>/dev/null; return ${SUCCESS}; }
+			else
+				if ! check_is_file ${qbox_server_running}; then 
+					{ echo ${STOP_VM_REQUEST} | nc ${HOST_IP} 4040; } &
+					_pid_=$!
+					sleep 1
+					server_stop ${_pid_}
+					
+					wait ${_pid_} 2>&1 1>/dev/null
+				fi 
+				
+				stop_qbox_server 2>&1 1>/dev/null
+			fi 
+		}
 
 		#test server is runing
 		function server_is_not_running() {
-			if check_is_file ${test_serv_running}; then
+			if check_is_file ${test_serv_running} || check_is_file ${qbox_server_running}; then
 				return ${FAILURE}
 			else
 				return ${SUCCESS}
@@ -760,11 +771,12 @@ elif [[ $1 = "<strings_definitions.h>" ]]; then
 			[PROMPT_USB_DEVICE]="[$$]Choose_a_Pointing_device_for_the_Virtual_Machine.\n\tOptions:\n\t\t1._Virtual_Mouse\n\t\t2._Pointer_device_like_a_touchscreen\n\t\t3._Default" \
 			[PROMPT_SOUND_MODULE]="[$$]choose_the_sound_card_to_emulate.\n\tOptions:\n\t\t1._Creative_SoundBlaster_16_sound_card\n\t\t2._ENSONIQ_AudioPCI_ES1370_sound_card\n\t\t3._Intel_HD_Audio_Controller_and_HDA_codec" \
 			[COND_ALREADY_CONFIGURED]="Already_configured.\nDo_you_want_to_reconfigure" \
-			[STRING_FOR_FULLSCRN_NOTIFICATION]="The_Virtual_Machine_is_booting._To_exit_from_fullscreen_mode_to_SDL_window_mode, press CTL+ALT+F_key_combination"
+			[STRING_FOR_FULLSCRN_NOTIFICATION]="The_Virtual_Machine_is_booting._To_exit_from_fullscreen_mode_to_SDL_window_mode, press CTL+ALT+F_key_combination" \
 			[STRING_STOPPED_VM]="Stopped_Virtual_Machine_successfully" \
 			[STRINGS_DELETE_VM]="Successfully_deleted_" \
 			[STRINGS_EXPORT_VM]="Exported_Virtual_Machine_to_Desktop" \
-			[STRING_DEEP_REMOVE]="[$$]Do_you_want_to_remove_all_created_virtual machines?"
+			[STRING_DEEP_REMOVE]="[$$]Do_you_want_to_remove_all_created_virtual_machines?" \
+			[STRING_STOP_QBOX_REMOTE_MANAGER]="Stopped_QBox_Remote_Manager_successfully_"
 		)
 
 		function get_string_by_name(){

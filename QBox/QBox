@@ -235,29 +235,28 @@ case $1 in
 									
 			pid_t=${pid_host_ip%%|*}
 			host_ip_t=${pid_host_ip##*|}
-			pid_QS=$pid_t
 			
 			declare -a msg_arr=("[${pid_t}]using_host_ip:${host_ip_t}" "[${pid_t}]starting_httpd..." \
-							"[${pid_t}]httpd_started_at_${tm_t}..." "[${pid_t}]httpd_listening_on_port_4020" \
-							"[${pid_QS}]starting_QBox_server..." "[${pid_QS}]QBox_server_on_port_4040..." \
-							"[${pid_QS}]getting_qbox_server_pid..." "[$pid_QS]QBox_server_started_at_$(date +%T)..." \
-							"[${pid_t}]trying_to_open_browser..." "[${pid_t}]Access:http://${host_ip_t}:4020" )
+							"[${pid_t}]httpd_started_at_${tm_t}" "[${pid_t}]httpd_listening_on_port_4020" \
+							"[${pid_t}]starting_QBox_server..." "[${pid_t}]QBox_server_on_port_4040" \
+							"[${pid_t}]getting_qbox_server_pid" "[$pid_t]QBox_server_started_at_$(date +%T)" \
+							"[${pid_t}]trying_to_open_browser" "[${pid_t}]Access:http://${host_ip_t}:4020" )
 								
 			[ ${pid_t} -ne -1  ] && {
 				for (( index=0; index<${#msg_arr[@]}; index++ )); do 
 					echo -e "${msg_arr[$index]//_/ }"
-					sleep 2
+					sleep 1.2
 						
 					[ $index -eq 4 ] && { qbox_server_start; }
-					
 					[ $index -eq 6 ] && {
 						pid_QS=$(get_qboxServer_pid)
 						
-						[ $pid_QS -eq -1 ] && { echo "qbox server could not start"; kill -9 ${pid_t} 2>/dev/null; exit 1; }
+						if [[ -n ${pid_QS} ]]; then
+							[ $pid_QS -gt ${PID_MAX} ] && { echo "qbox server could not start"; kill -9 ${pid_t} 2>/dev/null; exit 1; } 
+						fi 
 					}
 					
 					[ $index -eq 8 ] && {
-						
 						if [ "${host_ip_t}" = "127.0.0.1" ] || [ "${host_ip_t}" = "localhost" ]; then
 							browser=$(which xdg-open || which gnome-open ) && {
 								${browser} "http://localhost:4020/www" 2>&1 1>/dev/null
@@ -266,7 +265,7 @@ case $1 in
 					}
 						
 					[ $index -eq 9 ] && { 
-						echo "${pid_t}|${tm_t}|http://${host_ip_t}:4020|${pid_QS}">${test_serv_running}
+						echo "${pid_t}|${tm_t}|http://${host_ip_t}:4020">${test_serv_running}
 						
 						#pressing any key to exit
 						tput bold
@@ -274,8 +273,11 @@ case $1 in
 						tput sgr0
 						read
 						
-						server_stop ${pid_t} && { rm -f ${test_serv_running} 2>/dev/null; } 
-						server_stop ${pid_QS} && { rm -f ${qbox_server_running} 2>/dev/null; }
+						server_stop $(return_first_field ${test_serv_running}) && { rm -f ${test_serv_running} 2>/dev/null; } 
+						stop_qbox_server 2>&1 1>/dev/null && {
+							show_notification low ${QBOX_DIR}/icon/qbox_shortcut.png "${pid_t}" \
+							"$(get_string_by_name STRING_STOP_QBOX_REMOTE_MANAGER)"
+						}
 					}
 				done 
 			}
@@ -283,10 +285,10 @@ case $1 in
 			pid_t=$(return_first_field ${test_serv_running})	
 			tm_t=$(return_second_field ${test_serv_running})
 			url=$(return_n_field ${test_serv_running} 3 "|")
-			pid_QS=$(return_n_field ${test_serv_running} 4 "|")
+			pid_QS=$(get_qboxServer_pid)
 			
-			printf "Server already started at ${tm_t} with pids of ${pid_t} ${pid_QS} on url ${url} \n"
-			echo -n "Do you want to stop the server?[y/[N]]"
+			printf "Server already started at ${tm_t} with pid of ${pid_t} on url ${url} \n"
+			echo -n "Do you want to stop the server?[y/[N]] "
 			read -n 1
 
 			case ${REPLY} in 

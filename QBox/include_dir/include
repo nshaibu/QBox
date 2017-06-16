@@ -630,7 +630,6 @@ elif [[ $1 = "<disk_details.h>" ]]; then
 		[ $? -ne ${SUCCESS} ] && _return=${FAILURE}
 		
 		logger_logging ${LOGS_FILE}
-
 		return ${_return}
 	}
 
