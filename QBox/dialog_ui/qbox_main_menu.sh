@@ -21,8 +21,6 @@
 
 : ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
 
-. ${LIB_DIR}/include
-
 . ${LIB_DIR}/import '<init.h>'
 . ${LIB_DIR}/import '<qdb_database.h>'
 . ${LIB_DIR}/import '<boot_vm.h>'

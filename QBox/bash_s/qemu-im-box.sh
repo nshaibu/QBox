@@ -182,7 +182,7 @@ while true; do
 			
 			
 			echo -e "[$$]Saving Virtual Machine..."
-			bash ${BASIC_BASH}/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+			. ${BASIC_BASH}/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
 			%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${REDIRECT0} %${TAP0} \
 			%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
 			%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${REDIRECT1} %${TAP1} \

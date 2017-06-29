@@ -21,8 +21,7 @@
 
 : ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
 
-. ${LIB_DIR}/include
-
+. ${LIB_DIR}/define_macros
 
 if [[ $1 = "<init.h>" ]]; then
 
@@ -30,7 +29,8 @@ if [[ $1 = "<init.h>" ]]; then
 		DEFINE INIT_H
 
 		. ${LIB_DIR}/import '<qdb_database.h>'
-
+		. ${LIB_DIR}/import '<interpreters.h>'
+		
 		##global variables
 		: ${HD_IMG_DIR:="$HOME/.img_qemubox"}
 		: ${TEMP_FOLDER:="${HD_IMG_DIR}/.tmp_qbox"}
@@ -71,9 +71,9 @@ if [[ $1 = "<init.h>" ]]; then
 
 					if [ ! -d /proc/$i ]; then
 						name="^$i\$"
-						echo $(gawk -F "|" -v var=$name '$2 !~ var {print $0}' ${PID_DB}) > ${TEMP_FOLDER}/vms.tt
+						echo $(${AWK_INT} -F "|" -v var=$name '$2 !~ var {print $0}' ${PID_DB}) > ${TEMP_FOLDER}/vms.tt
 						##replace black or space character with newline character
-						sed -e 's/[[:blank:]]\+/\n/g' ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
+						${SED_INT} -e 's/[[:blank:]]\+/\n/g' ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
 						rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null
 					fi
 				done
@@ -145,9 +145,11 @@ elif [[ $1 = "<notify.h>" ]]; then
 		DEFINE NOTIFY_H
 
 		. ${LIB_DIR}/import '<init.h>'
+		. ${LIB_DIR}/include '<basic_utils.h>'
 
 		: ${NOTICE:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% notify-send`}
-
+		install_pkg NOTICE notify-send
+		
 		function show_notification() {
 			local _urgency="-u $1"
 			local _icon_=$( [ "$2" = "NO_ICON" ] && echo || echo -n "-i $2" )
@@ -158,6 +160,23 @@ elif [[ $1 = "<notify.h>" ]]; then
 			[ -n  ${NOTICE} ] && { ${NOTICE} ${_urgency} -t 2 ${_icon_} "${summary}" "${body}" 2>/dev/null; }
 		}
 	} # NOTIFY_H
+	
+elif [[ $1 = "<interpreters.h>" ]]; then
+	NOT_DEFINE ${INTERPRETERS_H} && {
+		DEFINE INTERPRETERS_H
+		
+		. ${LIB_DIR}/import '<init.h>'
+		source ${LIB_DIR}/include '<basic_utils.h>'
+		
+		: ${SED_INT:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% sed`}
+		install_pkg SED_INT sed
+		
+		: ${PYTHON_INT:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% python`}
+		install_pkg PYTHON_INT python
+		
+		: ${AWK_INT:=`${BASIC_BASH}/check_pkg_install.sh %CHECK_RUN% awk`}
+		install_pkg AWK_INT awk
+	} ##INTERPRETERS_H
 
 elif [[ $1 = "<qdb_database.h>" ]]; then
 
@@ -207,7 +226,7 @@ elif [[ $1 = "<qdb_database.h>" ]]; then
 		# value, input file, output file
 		function complement_of() {
 			local search="^$1\$"
-			gawk -F "|" -v var=$search '$1 !~ var {print $0}' $2 1>$3
+			${AWK_INT} -F "|" -v var=$search '$1 !~ var {print $0}' $2 1>$3
 
 		}
 
@@ -425,7 +444,8 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 		DEFINE BOOT_VM_H
 
 		. ${LIB_DIR}/import '<qdb_database.h>'
-
+		. ${LIB_DIR}/import '<interpreters.h>'
+		
 		if NOT_DEFINE ${TRUE_TEST_H} || NOT_DEFINE ${LOGGS_H}; then
 			. ${LIB_DIR}/include '<true_test.h>'
 			. ${LIB_DIR}/include '<loggs.h>'
@@ -437,7 +457,7 @@ elif [[ $1 = "<boot_vm.h>" ]]; then
 			local boot_file_loc="${BOOT_DIR}/$1"
 
 			if check_is_file ${boot_file_loc}; then
-				boot_config=$(cat ${boot_file_loc} | cut -d"|" -f2 | sed ':a;N;$!ba;s/\n/ /g')
+				boot_config=$(cat ${boot_file_loc} | cut -d"|" -f2 | ${SED_INT} ':a;N;$!ba;s/\n/ /g')
 
 				boot_config=`echo ${boot_config} | tr -s " "` ##Replace multiple space char with a space char
 
@@ -649,7 +669,7 @@ elif [[ $1 = "<http_server.h>" ]]; then
 
 							if [ ! -d /proc/$i ]; then
 								name="^$i\$"
-								echo $(gawk -F "|" -v var=$name -f ${QBOX_DIR}/awk/complement.awk ${PID_DB}) > ${TEMP_FOLDER}/vms.tt
+								echo $(awk -F "|" -v var=$name -f ${QBOX_DIR}/awk/complement.awk ${PID_DB}) > ${TEMP_FOLDER}/vms.tt
 								##replace black or space character with newline character
 								sed -e "s/[[:blank:]]\+/\n/g" ${TEMP_FOLDER}/vms.tt 2>/dev/null 1> ${QDB_FOLDER}/pid.qdb
 								rm -f ${TEMP_FOLDER}/vms.tt 2>/dev/null

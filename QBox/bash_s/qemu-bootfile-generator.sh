@@ -19,15 +19,15 @@
 
 #===========================================================================================
 
-##global varaibles
-HD_IMG_DIR=$HOME/.img_qemubox ##contains harddisk images
-QDB_FOLDER=${HD_IMG_DIR}/.qdb ##qbox database files location
-TEMP_FOLDER=${HD_IMG_DIR}/.tmp_qbox
-BOOT_DIR=${HD_IMG_DIR}/.qemuboot ##contains bootfiles
+: ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
+
+. ${LIB_DIR}/include
+
+. ${LIB_DIR}/import '<init.h>'
+. ${LIB_DIR}/import '<interpreters.h>'
+
 VM_BOOTFILE_NAME=""
 
-QBOX_DIR=/usr/local/bin/QBox
-: ${LIB_DIR:=$HOME/my_script/QB}
 ##check and create boot folder
 if ! [ -d ${BOOT_DIR} ];then
 	mkdir ${BOOT_DIR}
@@ -38,10 +38,10 @@ echo $* > ${TEMP_FOLDER}/.bootparam.tt
 echo $(basename $1) > ${TEMP_FOLDER}/.bootfile.tt
 
 ##naming the bootfile with the name of harddisk image
-VM_BOOTFILE_NAME=`sed s/img/qvm/ ${TEMP_FOLDER}/.bootfile.tt`
+VM_BOOTFILE_NAME=`${SED_INT} s/img/qvm/ ${TEMP_FOLDER}/.bootfile.tt`
 rm -f ${TEMP_FOLDER}/.bootfile.tt 2>/dev/null
 
-cut --delimiter=" " --complement -f1 ${TEMP_FOLDER}/.bootparam.tt | gawk -F% -f ${LIB_DIR}/QBox/awk/qemu-bootfile-generator.awk > ${BOOT_DIR}/${VM_BOOTFILE_NAME}
+cut --delimiter=" " --complement -f1 ${TEMP_FOLDER}/.bootparam.tt | ${AWK_INT} -F% -f ${QBOX_DIR}/awk/qemu-bootfile-generator.awk > ${BOOT_DIR}/${VM_BOOTFILE_NAME}
 
 rm -f ${TEMP_FOLDER}/.bootparam.tt 2>/dev/null
 

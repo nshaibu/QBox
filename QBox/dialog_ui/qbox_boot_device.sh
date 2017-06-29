@@ -2,7 +2,7 @@
 
 : ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
 
-. ${LIB_DIR}/include
+. ${LIB_DIR}/define_macros
 
 if NOT_DEFINE ${CURSES_DIALOG_H} || NOT_DEFINE ${BASIC_UTILS_H} || NOT_DEFINE ${BOOT_SYSTEM_H}; then
 	. ${LIB_DIR}/include '<curses_dialog.h>'
@@ -27,9 +27,9 @@ function until_is_iso_file() {
 		[ $_return -eq ${DIALOG_CANCEL} ] && break 2
 	done
 	
+	eval $2="${value}"
 	detect_architecture $value
 	architecture_type_choice $?
-	
 }
 
 
@@ -59,9 +59,9 @@ while true; do
 				case ${test_return} in 
 					${DIALOG_OK}) 
 						if [[ $value -eq 1 ]]; then
-							until_is_iso_file $value
+							until_is_iso_file $value iso_file
 							
-							VM_CDROM="-cdrom ${value}"
+							VM_CDROM="-cdrom ${iso_file}"
 						else
 							VM_CDROM="-cdrom /dev/fb0"
 						fi 
@@ -83,9 +83,8 @@ while true; do
 				case ${test_return} in 
 					${DIALOG_OK}) 
 						if [[ $value -eq 1 ]]; then
-							until_is_iso_file $value
-							
-							VM_CDROM="-cdrom ${value}"
+							until_is_iso_file $value iso_file
+							VM_CDROM="-cdrom ${iso_file}"
 						else
 							VM_CDROM="-cdrom /dev/cdrom"
 						fi 	

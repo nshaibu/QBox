@@ -1,0 +1,33 @@
+#!/bin/bash
+
+: ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
+
+declare -i SUCCESS=0
+declare -i FAILURE=1
+
+#-----------------------define---------------------
+
+function DEFINE() {
+	[ ${#@} -eq 1 ] && eval $1=0 || eval $1=$2
+}
+
+function UNDEFINE() {
+	eval $1=""
+}
+
+function DEFINE_D() {
+	local _return=${FAILURE}
+	
+	[ "$1" = "0" ] && _return=${SUCCESS}
+	return ${_return}
+}
+
+function NOT_DEFINE() {
+	local _return=${FAILURE}
+	[ "$1" != "0" ] && _return=${SUCCESS}
+	
+	return ${_return}
+}
+
+#--------------------Define------------------------------------
+

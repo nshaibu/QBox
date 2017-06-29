@@ -31,52 +31,30 @@
 
 : ${PYTHON_LOC:=${QBOX_DIR}/python3}
 : ${BASIC_BASH:=${QBOX_DIR}/bash_s}
-: ${LIB_DIR:=$HOME/my_script/QB/QBox/include_dir}
+: ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
 
-#-----------------------define---------------------
-
-function DEFINE() {
-	[ ${#@} -eq 1 ] && eval $1=0 || eval $1=$2
-}
-
-function UNDEFINE() {
-	eval $1=""
-}
-
-function DEFINE_D() {
-	local _return=${FAILURE}
-	
-	[ "$1" = "0" ] && _return=${SUCCESS}
-	return ${_return}
-}
-
-function NOT_DEFINE() {
-	local _return=${FAILURE}
-	[ "$1" != "0" ] && _return=${SUCCESS}
-	
-	return ${_return}
-}
-
-#--------------------Define------------------------------------
+. ${LIB_DIR}/define_macros
 
 if [[ $1 = "<loggs.h>" ]]; then
+	DEFINE LOGGS_H
 
-DEFINE LOGGS_H
+	: ${LOGS_FILE:="${TEMP_FOLDER}/.error.tt"}
+	. ${LIB_DIR}/import '<interpreters.h>'
 
-: ${LOGS_FILE:="${TEMP_FOLDER}/.error.tt"}
-
-##logger_func
-##logger_func sed ':a;N;$!ba;s/\n/ /g'
-#1. :a create a label 'a'
-#2. N append the next line to the pattern space
-#3. $! if not the last line, ba branch (go to) label 'a'
-#4. s substitute, /\n/ regex for new line, / / by a space, /g global match (as many times as it can)
-function logger_logging(){
-	if [ -f $1 ]; then
-		${QBOX_DIR}/bin/qemubox_logger "`sed ':a;N;$!ba;s/\n/ /g' $1`" ${LOG_DIR}/qboxlog
-		rm -f $1
-	fi
-}
+	##logger_func
+	##logger_func sed ':a;N;$!ba;s/\n/ /g'
+	#1. :a create a label 'a'
+	#2. N append the next line to the pattern space
+	#3. $! if not the last line, ba branch (go to) label 'a'
+	#4. s substitute, /\n/ regex for new line, / / by a space, /g global match (as many times as it can)
+	function logger_logging(){
+		if [ -f $1 ] && [ "`<$1`" != ""  ]; then
+			${QBOX_DIR}/bin/qemubox_logger "`${SED_INT} ':a;N;$!ba;s/\n/ /g' $1`" ${LOG_DIR}/qboxlog
+			rm -f $1
+		fi
+		
+		[ -f $1 ] && { rm -f $1; }
+	}
 
 elif [[ "$1" = "<network.h>" ]]; then
 	DEFINE NETWORK_H 0
@@ -270,7 +248,9 @@ elif [[ "$1" = "<network.h>" ]]; then
 
 elif [[ "$1" = "<architecture.h>" ]]; then
 	DEFINE ARCHITECTURE_H 0
-
+	
+	. ${LIB_DIR}/import '<interpreters.h>'
+	
 	QEMU=
 	VM_NAME=
 	CPU=
@@ -365,7 +345,7 @@ elif [[ "$1" = "<architecture.h>" ]]; then
 	function detect_architecture() {
 		local iso_file_name=$(basename $1)
 		
-		local arch=$(echo ${iso_file_name} | gawk -f ${QBOX_DIR}/awk/qemu-s-arch.awk)
+		local arch=$(echo ${iso_file_name} | ${AWK_INT} -f ${QBOX_DIR}/awk/qemu-s-arch.awk)
 		
 		case ${arch} in 
 			x86_64|x86|amd64|i686) 
@@ -686,7 +666,6 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 		while : ; do 
 			#Thu 23 Mar 2017 07:13:30 PM GMT -----Checking that values are set-------
 			[ ${_move_boot} -eq ${FAILURE} ] && [ ${_move_save} -eq ${FAILURE} ] && {
-				
 				eval tmp_param='$'${CONFIG_PARAMS[$i]}
 				
 				if check_is_set $tmp_param; then
@@ -695,7 +674,7 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 					echo "checking $(String_to_Lower ${CONFIG_PARAMS[$i]}) ($percentage%)"
 					echo "XXX"
 					
-					[ $i -eq ${#CONFIG_PARAMS[@]} ] && { _move_boot=${SUCCESS}; }
+					[ $i -eq $(expr ${#CONFIG_PARAMS[@]} - 1) ] && { _move_boot=${SUCCESS}; }
 				else
 						let "err_set = ${ERR_VALUE_NOT_SET}"
 						break
@@ -710,10 +689,8 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				echo "XXX"	
 				
 				if NOT_DEFINE ${DIRECT_LINUX_BOOT}; then
-					
 					${QEMU} ${VM_NAME} ${NUM_CPU} ${RAM_SIZE} ${default_install_network} ${QEMU_GRAPH} ${QEMU_SOUND} \
 					${QEMU_USB} ${HD_BI_IMG} ${VM_CDROM} ${KVM_ENABLE} ${BOOT_ORDER} 2>${LOGS_FILE}
-				
 				else 
 					${QEMU} ${VM_NAME} ${default_install_network} ${KERNEL} ${INITRD} ${KERNEL_CMD} 2>${LOGS_FILE}
 				fi 
@@ -735,10 +712,12 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				echo $percentage
 				echo "Saving ${VM_NAME:6:18} ($percentage%)"
 				echo "XXX"	
+				
 				DEFINE_D ${DIRECT_LINUX_BOOT} && { issaved=$1; } 
+				
 				[ $issaved -ne ${SUCCESS} ] && {
 					
-					bash ${BASIC_BASH}/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
+					. ${BASIC_BASH}/qemu-bootfile-generator.sh ${Disk_Name} ${QEMU} %${VM_NAME} %${CPU} %${CORE} %${RAM_SIZE} \
 					%${VGA} %${DISPLAY_} %${NETWORK0} %${VLAN0} %${MAC0} %${MODEL0} %${USER0} %${VLAN_USER0} %${REDIRECT0} %${TAP0} \
 					%${VLAN_TAP0} %${FD_TAP0} %${IFNAME0} %${SCRIPT0} %${SOCKET0} %${VLAN_SOCKET0} %${FD_SOCKET0} %${LISTEN0} %${CONNECT0} \
 					%${MCAST0} %${NETWORK1} %${VLAN1} %${MAC1} %${MODEL1} %${USER1} %${VLAN_USER1} %${REDIRECT1} %${TAP1} \
@@ -756,8 +735,6 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 				sleep 1			
 			}
 			
-			
-			
 			(( i_var=i ))
 			(( i+=1 ))
 			
@@ -768,7 +745,6 @@ elif [[ $1 = "<boot_system.h>" ]]; then
 			fi 
 			
 			[ $percentage -ge 100 ] && break
-			
 			sleep 0.3
 		done } | ${DIALOG} --gauge "Please wait" 7 70 0
 		
@@ -813,15 +789,20 @@ elif [[ $1 = "<vnc_info.h>" ]]; then
 	VNC_PORT=`expr ${VNC_DISPLAY} + 5900`
 elif [[ $1 = "<host_ip.h>" ]]; then
 	DEFINE HOST_IP_H
+	if NOT_DEFINE ${LOGGS_H}; then
+		source ${LIB_DIR}/include '<loggs.h>'
+	fi 
 
-	HOST_IP=`python ${PYTHON_LOC}/netiface_deter.py`
+	HOST_IP=`${PYTHON_INT} ${PYTHON_LOC}/netiface_deter.py 2>${LOGS_FILE}`
 	[ "${HOST_IP}" = "" ] && HOST_IP="127.0.0.1"
+	logger_logging ${LOGS_FILE}
 elif [[ $1 = "<basic_utils.h>" ]]; then
 	DEFINE BASIC_UTILS_H
 	#basic system utilities
 	
 	. ${LIB_DIR}/import '<strings_definitions.h>'
 	. ${LIB_DIR}/import '<init.h>'
+	. ${LIB_DIR}/import '<interpreters.h>'
 	
 	if NOT_DEFINE ${TRUE_TEST_H}; then
 		. ${LIB_DIR}/include '<true_test.h>'
@@ -837,11 +818,11 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	}
 	
 	function String_to_Upper() {
-		echo $(echo $1 | awk '{print toupper($0)}')
+		echo $(echo $1 | ${AWK_INT} '{print toupper($0)}')
 	}
 	
 	function String_to_Lower() {
-		echo $(echo $1 | awk '{print tolower($0)}')
+		echo $(echo $1 | ${AWK_INT} '{print tolower($0)}')
 	}
 	
 	function check_is_iso_file() {
@@ -934,7 +915,7 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	
 		if check_is_set $(String_to_Upper $1) ; then
 			local search="^$1\$"
-			local unique=$(gawk -F "|" -v var=$search '$1 ~ var {print $1}' ${QDB_FOLDER}/vms.qdb 2>/dev/null)
+			local unique=$(${AWK_INT} -F "|" -v var=$search '$1 ~ var {print $1}' ${QDB_FOLDER}/vms.qdb 2>/dev/null)
 			[ -z ${unique} ] && _return=${SUCCESS}
 		fi 
 	
@@ -1060,13 +1041,12 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 	function get_value_for_field() {
 		local value=""
 		local file_name=$2
-		local value=$(gawk -F "|" -v var="^$1\$" '$1 ~ var {print $2}' ${file_name})
+		local value=$(${AWK_INT} -F "|" -v var="^$1\$" '$1 ~ var {print $2}' ${file_name})
 		
 		[ "$value" != "" ] && { echo -n "$value"; } || { echo -n ""; }
 	}
 
 	function package_install_func() {
-	
 		local pkg_man="`{ type yum >/dev/null 2>&1 && which yum; } || { type apt-get >/dev/null 2>&1 && which apt-get; }`"
 	
 		[ ${INST_CON} -eq 0 ] && {
@@ -1079,7 +1059,7 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 		}
 	
 		echo -e "Installing [$1]..." && sudo ${pkg_man} install $1 -y >/dev/null 2>&1
-		[ $? -eq 0 ] && echo -e "[OK]" || { 
+		[ $? -eq 0 ] && { echo -e "[OK]"; return ${SUCCESS}; } || { 
 			echo -e "[ERROR]"
 			package_install_func $1 
 		}
@@ -1098,8 +1078,9 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 				if [ $? -eq 0 ]; then
 					INST_CON=0
 					package_install_func $1
+					return $?
 				else
-				  _return_="`which $1`"
+				  : #_return_="`which $1`"
 				fi
 			;;
 			dialog) 
@@ -1109,33 +1090,40 @@ elif [[ $1 = "<basic_utils.h>" ]]; then
 				if [ $? -eq 0 ]; then
 					clear
 					INST_CON=0
-				    package_install_func $1
-
+				   package_install_func $1
+					return $?
 				else
-					_return_="`which $1`"
+					: #_return_="`which $1`"
 				fi 
 			;;
 			1) 
 				echo "Package $1 Required"
-				echo -e "QBox required $1 to continue..\n Do you want to install it?[YES/no] "
-				hld=$(yes_no)
+				echo -en "QBox required $1 to continue..\n Do you want to install it?[YES/no] "
+				read 
 			
-				if [ $hld -eq 0 ]; then
-		    		INST_CON=0
-		    		package_install_func $1
-				else
-					_return_="`which $1`"
-				fi
+				case $REPLY in 
+		    		[Yy]|[Yy][Ee][Ss]) 
+		    			INST_CON=0
+		    			package_install_func $1
+		    			return $?
+					;;
+					*) ;; #_return_="`which $1`"
+				esac
 			;;
 		esac
 	}
+	
+	
+	function install_pkg(){
+		declare -A PKG_NAME=( [ncat]="nmap" [dialog]="dialog" [awk]="awk" \
+									[python]="python" [php]="phpmyadmin" [notify-send]="notify-osd" \
+									[sed]="sed" )
 
-	function install_pkg() {
 		eval y='$'$1
 
 		[ "$y" = "" ] && {
-			pkg_display_download $2
-			eval $1=`which $2`
+			pkg_display_download ${PKG_NAME[$2]} && { eval $1="`which $2`"; }
 		}
 	}
+	
 fi
