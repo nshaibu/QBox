@@ -21,6 +21,7 @@
 : ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
 
 . ${LIB_DIR}/import '<init.h>'
+. ${LIB_DIR}/import '<interpreters.h>'
 
 INFO_FILE_=$1
 DESCRIPTION=${QDB_FOLDER}/description.qdb
@@ -104,11 +105,11 @@ function  print_scr(){
 #################################
 #		SETTIGS GENERAL			#
 #################################
-_name=$(gawk -F "|" -v var="vm_name" '$1 ~ var {print $2}' ${INFO_FILE_} | sed s/-//g)
+_name=$(${AWK_INT} -F "|" -v var="vm_name" '$1 ~ var {print $2}' ${INFO_FILE_} | ${SED_INT} s/-//g)
 			
 #-----------------------------------PROCESSING DATA----------------------------------------0
 _name=${_name:5}
-descrip=`gawk -F "|" -v var=${_name} '$1 ~ var {print $2}' ${DESCRIPTION}`
+descrip=`${AWK_INT} -F "|" -v var=${_name} '$1 ~ var {print $2}' ${DESCRIPTION}`
 
 ARR_CONTAINER=("Name:$_name" "Operating_System:${descrip}")
 
@@ -118,10 +119,10 @@ print_scr 0 %GENERAL%
 #################################
 #		SETINGS SYSTEM			#
 #################################
-_arch_=$(gawk -F "|" -v var="archtype" '$1 ~ var {print $2}' ${INFO_FILE_})
-_numcpu_=$(gawk -F "|" -v var="smp" '$1 ~ var {print $2}' ${INFO_FILE_})
-_ram_=$(gawk -F "|" -v var="ram" '$1 ~ var {print $2}' ${INFO_FILE_})
-_kvm_=`gawk -F "|" -v var="kvm" '$1 ~ var {print $2}' ${INFO_FILE_} `
+_arch_=$(${AWK_INT} -F "|" -v var="archtype" '$1 ~ var {print $2}' ${INFO_FILE_})
+_numcpu_=$(${AWK_INT} -F "|" -v var="smp" '$1 ~ var {print $2}' ${INFO_FILE_})
+_ram_=$(${AWK_INT} -F "|" -v var="ram" '$1 ~ var {print $2}' ${INFO_FILE_})
+_kvm_=`${AWK_INT} -F "|" -v var="kvm" '$1 ~ var {print $2}' ${INFO_FILE_} `
 			
 ##-----------------------------------PROCESSING DATA----------------------------------------
 _arch_=`basename $_arch_ 2>/dev/null`
@@ -162,7 +163,7 @@ print_scr 3 %SYSTEM%
 #################################		
 #		SETINGS AUDIO			#
 #################################
-_snd_=$(gawk -F "|" -v var="audio" '$1 ~ var {print $2}' ${INFO_FILE_} )
+_snd_=$(${AWK_INT} -F "|" -v var="audio" '$1 ~ var {print $2}' ${INFO_FILE_} )
 			
 			
 ##-----------------------------------PROCESSING DATA----------------------------------------
@@ -189,10 +190,10 @@ print_scr 8 %AUDIO%
 #################################		
 #		SETINGS DISPLAY			#
 #################################
-disptype=$(gawk -F "|" -v var="display" '$1 ~ var {print $2}' ${INFO_FILE_} )
-dispcard=`gawk -F "|" -v var="vga" '$1 ~ var {print $2}' ${INFO_FILE_}`
-kydlayout=$(gawk -F "|" -v var="keyboard" '$1 ~ var {print $2}' ${INFO_FILE_} )
-fullscrn=$(gawk -F "|" -v var="fullscreen" '$1 ~ var {print $2}' ${INFO_FILE_} )
+disptype=$(${AWK_INT} -F "|" -v var="display" '$1 ~ var {print $2}' ${INFO_FILE_} )
+dispcard=`${AWK_INT} -F "|" -v var="vga" '$1 ~ var {print $2}' ${INFO_FILE_}`
+kydlayout=$(${AWK_INT} -F "|" -v var="keyboard" '$1 ~ var {print $2}' ${INFO_FILE_} )
+fullscrn=$(${AWK_INT} -F "|" -v var="fullscreen" '$1 ~ var {print $2}' ${INFO_FILE_} )
 			
 			
 ##-----------------------------------PROCESSING DATA----------------------------------------
@@ -212,7 +213,7 @@ case ${disptype:9:3} in
 esac
  
 #-------------------------------------------------------------------------------------------
-_kydl_=`echo ${kydlayout:3} | awk '{print toupper($0)}'`
+_kydl_=`echo ${kydlayout:3} | ${AWK_INT} '{print toupper($0)}'`
 #-------------------------------------------------------------------------------------------
 if [[ -n "${fullscrn}" ]]; then
 	 _fullscr_="Enabled" 
@@ -228,7 +229,7 @@ print_scr 11 %DISPLAY%
 #################################		
 #		SETINGS NETWORK			#
 #################################
-_netty_=$(gawk -F "|" -v var="model0" '$1 ~ var {print $2}' ${INFO_FILE_})
+_netty_=$(${AWK_INT} -F "|" -v var="model0" '$1 ~ var {print $2}' ${INFO_FILE_})
 			
 			
 ##-----------------------------------PROCESSING DATA----------------------------------------

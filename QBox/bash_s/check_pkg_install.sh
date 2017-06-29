@@ -19,33 +19,96 @@
 
 #===========================================================================================
 
-trap 'exit 0' INT
-
 : ${LIB_DIR:=/usr/local/bin/QBox/include_dir}
+: ${HD_IMG_DIR:="$HOME/.img_qemubox"}
+: ${TEMP_FOLDER:="${HD_IMG_DIR}/.tmp_qbox"}
 
-. ${LIB_DIR}/import '<init.h>'
+	function yes_no() {
+		read -n 1 resp
+		case "$resp" in 
+			[Nn]) echo 1;;
+			*) echo 0 ;;
+		esac
+	}
 
-if NOT_DEFINE ${LOGGS_H} || NOT_DEFINE ${BASIC_UTILS_H}; then
-	. ${LIB_DIR}/include '<loggs.h>'
-	. ${LIB_DIR}/include '<basic_utils.h>'
-fi 
+	function package_install_func() {
+	
+		local pkg_man="`{ type yum >/dev/null 2>&1 && which yum; } || { type apt-get >/dev/null 2>&1 && which apt-get; }`"
+	
+		[ ${INST_CON} -eq 0 ] && {
+			tput setaf 9
+			echo -e "\n	NOTICE!!!\nQBox will now try to install [$1]\nIn case of [INSTALL-ERROR-LOOPS] press [CTRL+C] to exit\n"
+			tput sgr0
+			sleep 3 && INST_CON=10
+			echo -e "Updating Cache..." && sudo ${pkg_man} update >/dev/null 2>&1
+			[ $? -eq 0 ] && echo -e "[OK]" || echo -e "[ERROR]"
+		}
+	
+		echo -e "Installing [$1]..." && sudo ${pkg_man} install $1 -y >/dev/null 2>&1
+		[ $? -eq 0 ] && { echo -e "[OK]"; return ${SUCCESS}; } || { 
+			echo -e "[ERROR]"
+			package_install_func $1 
+		}
+	}
+
+	function pkg_display_download(){
+		path_error_display="`{ type zenity >/dev/null 2>&1 && which zenity; } || { type dialog >/dev/null 2>&1 && which dialog; } || { echo 1; }`"
+		base_n="`[ "${path_error_display}" = "1" ] && echo 1 || basename $path_error_display`"
+		
+		case "$base_n" in 
+			zenity) 
+				${path_error_display} \
+						--question --title="Package $1 Required"  --width=30 --height=20 --window-icon=question \
+						--text="QBox required $1 to continue..\n Do you want to install it?" >/dev/null 2>&1
+					
+				if [ $? -eq 0 ]; then
+					INST_CON=0
+					package_install_func $1
+					return $?
+				else
+				  _return_="`which $1`"
+				fi
+			;;
+			dialog) 
+				${path_error_display} \
+						--no-shadow --title "Package $1 Required" --yesno "QBox required $1 to continue..\n Do you want to install it?" 18 50
+			
+				if [ $? -eq 0 ]; then
+					clear
+					INST_CON=0
+				   package_install_func $1
+					return $?
+				else
+					_return_="`which $1`"
+				fi 
+			;;
+			1) 
+				echo "Package $1 Required"
+				echo -e "QBox required $1 to continue..\n Do you want to install it?[YES/no] "
+				hld=$(yes_no)
+			
+				if [ $hld -eq 0 ]; then
+		    		INST_CON=0
+		    		package_install_func $1
+		    		return $?
+				else
+					_return_="`which $1`"
+				fi
+			;;
+		esac
+	}
 _return_=""
 
-function yes_no() {
-	read -n 1 resp
-	case "$resp" in 
-		[Nn]) echo 1;;
-		*) echo 0 ;;
-	esac
-}
 
 function pkg_installed(){
 	local _return=1
 	#set return to zero if package not install
 	case "$1" in 
 		qemu-img) type $1 >/dev/null 2>&1 || { local _return=0; echo "qemu" > ${TEMP_FOLDER}/.CHECK_IFNOT_INSTALL; } ;;
-		brctl) type $1 >/dev/null 2>&1 || { local _return=0; echo "bridge-utils" >> ${TEMP_FOLDER}/.CHECK_IFNOT_INSTALL; } ;;
-		tunctl) type $1 >/dev/null 2>&1 || { local _return=0; echo "uml-utilities" >> ${TEMP_FOLDER}/.CHECK_IFNOT_INSTALL; } ;;
+		awk) type $1 >/dev/null 2>&1 || { local _return=0; echo "awk" >> ${TEMP_FOLDER}/.CHECK_IFNOT_INSTALL; } ;;
+		python) type $1 >/dev/null 2>&1 || { local _return=0; echo "python" >> ${TEMP_FOLDER}/.CHECK_IFNOT_INSTALL; } ;;
+		dialog) type $1 >/dev/null 2>&1 || { local _return=0; echo "dialog" >> ${TEMP_FOLDER}/.CHECK_IFNOT_INSTALL; } ;;
+		nmap) type $1 >/dev/null 2>&1 || { local _return=0; echo "nmap" >> ${TEMP_FOLDER}/.CHECK_IFNOT_INSTALL; } ;;
 	esac
 	
 	echo $_return
@@ -74,10 +137,12 @@ function show_if(){
 
 if [[ $1 = "%CHECK_START%" ]]; then
 ##qemu(qemu-img),bridge-utils(brctl),uml-utilities(tunctl),check mark(U+2713), cross mark(U+274C)
-	echo -e "\tQemu-utilities		$(show_if $(pkg_installed qemu-img))" && sleep 1
-	echo -e "\tBridge-utilities	$(show_if $(pkg_installed brctl))" && sleep 1
-	echo -e "\tUml-utilities		$(show_if $(pkg_installed tunctl))" && sleep 1
-									
+	echo -e "\tQemu-utilities           $(show_if $(pkg_installed qemu-img))" && sleep 0.5
+	echo -e "\tAwk interpreter          $(show_if $(pkg_installed awk))" && sleep 0.5
+	echo -e "\tPython Interpreter       $(show_if $(pkg_installed python))" && sleep 0.5
+	echo -e "\tDialog                   $(show_if $(pkg_installed dialog))" && sleep 0.5
+	echo -e "\tNmap                     $(show_if $(pkg_installed nmap))" && sleep 0.5
+	
 	let "x=0"
 	if [[ -f ${TEMP_FOLDER}/.CHECK_IFNOT_INSTALL ]]; then
 		
@@ -96,10 +161,9 @@ if [[ $1 = "%CHECK_START%" ]]; then
 	fi
 						
 elif [[ $1 = "%CHECK_RUN%" ]]; then
-								
 	if type $2 >/dev/null 2>&1 ; then
 		_return_="$(which $2)" 
 	fi
 	
-	echo ${_return_}
+	echo -n "${_return_}"
 fi

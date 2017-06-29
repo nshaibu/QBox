@@ -23,7 +23,7 @@
 
 echo -ne "\033]0;QBox Easy VM Manager \007"
 
-. ${LIB_DIR}/include
+. ${LIB_DIR}/define_macros
 
 . ${LIB_DIR}/import '<init.h>'
 . ${LIB_DIR}/import '<qdb_database.h>'
@@ -245,7 +245,7 @@ case $1 in
 			[ ${pid_t} -ne -1  ] && {
 				for (( index=0; index<${#msg_arr[@]}; index++ )); do 
 					echo -e "${msg_arr[$index]//_/ }"
-					sleep 1.2
+					sleep 0.6
 						
 					[ $index -eq 4 ] && { qbox_server_start; }
 					[ $index -eq 6 ] && {
@@ -259,7 +259,7 @@ case $1 in
 					[ $index -eq 8 ] && {
 						if [ "${host_ip_t}" = "127.0.0.1" ] || [ "${host_ip_t}" = "localhost" ]; then
 							browser=$(which xdg-open || which gnome-open ) && {
-								${browser} "http://localhost:4020/www" 2>&1 1>/dev/null
+								: #${browser} "http://localhost:4020/www" 2>&1 1>/dev/null
 							}
 						fi
 					}
@@ -529,7 +529,7 @@ case $1 in
 						}
 					fi
 			;;
-				7) . ${BASIC_BASH}/qboxhttpd.sh ;;
+				7) : ;;
 				8) . ${BASIC_BASH}/direct_linux_boot.sh ;;
 				*)
 					clear
