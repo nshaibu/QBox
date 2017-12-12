@@ -1,10 +1,9 @@
 Copyright (C) 2017 Nafiu Shaibu [github/nshaibu].
-
-
-# QBox EASY VM MANAGER  
- 
+++++++++++++++++++++++++
++ QBox EASY VM MANAGER +
+++++++++++++++++++++++++
 QBox is a virtual machine launcher for the QEMU virtual machine 
-monitor. Qbox allows users to create and manager virtual managers 
+monitor. Qbox allows users create and manager virtual machines 
 easily.
 
 # INSTALLATION
@@ -15,7 +14,7 @@ Then type the command below at the bash prompt:
 
   CMD_PROMPT> sudo ./install.sh.
   
-# UNINSTALLATION
+# REMOVE QBox
 ++++++++++++++
 To uninstall QBox type the command below: 
   CMD_PROMPT> sudo QBox unistall
