@@ -6,7 +6,6 @@ monitor. Qbox allows users create and manage virtual machines
 easily.
 
 ## INSTALLATION
-++++++++++++++
 To install QBox Easy VM Manager, change to the directory 
 containing the code after you have unzip it(if is compressed).
 Then type the command below at the bash prompt: 
@@ -15,7 +14,6 @@ Then type the command below at the bash prompt:
 ```
   
 ##  REMOVE QBox
-++++++++++++++
 To uninstall QBox type the command below:
 ```
   CMD_PROMPT> sudo QBox unistall
