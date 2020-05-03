@@ -16,7 +16,7 @@ Then type the command below at the bash prompt:
 ##  REMOVE QBox
 To uninstall QBox type the command below:
 ```
-  CMD_PROMPT> sudo QBox unistall
+  CMD_PROMPT> sudo QBox uninstall
 ```
   or
 ```
