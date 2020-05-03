@@ -5,6 +5,14 @@ QBox is a virtual machine launcher for the QEMU virtual machine
 monitor. Qbox allows users create and manage virtual machines 
 easily.
 
+```
+                 _/_/_/      _/_/_/                       
+               _/     _/   _/     _/     _/_/     _/   _/
+              _/      _/  _/ _/_/_/    _/    _/   _/  _/ 
+             _/      _/  _/       _/  _/     _/    _/  _/ 
+             _/_/_/\_\ _/_/_/_/_/     _/_/_/     _/   _/                                                       "
+```
+
 ## INSTALLATION
 To install QBox Easy VM Manager, change to the directory 
 containing the code after you have unzip it(if is compressed).
