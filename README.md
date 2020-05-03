@@ -1,5 +1,7 @@
 Copyright (C) 2016 Nafiu Shaibu [github/nshaibu].
 
+This was the project I did during my sophomore peroid at Kwame Nkrumah University Of Science And Technology(KNUST).
+
 # QBox EASY VM MANAGER
 QBox is a virtual machine launcher for the QEMU virtual machine 
 monitor. Qbox allows users create and manage virtual machines 
