@@ -18,7 +18,9 @@ easily.
 ## INSTALLATION
 To install QBox Easy VM Manager, change to the directory 
 containing the code after you have unzip it(if is compressed).
+
 Then type the command below at the bash prompt: 
+
 ```
   CMD_PROMPT> sudo ./install.sh
 ```
